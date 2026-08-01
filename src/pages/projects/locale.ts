@@ -1,0 +1,320 @@
+export const projectsLocale = {
+  "en-US": {
+    // Nav / resources
+    "projects.resources.projects": "Projects",
+    "projects.resources.project": "Project",
+    "projects.resources.projects.description":
+      "Projects, their tasks and delivery milestones.",
+    "projects.resources.tasks": "Task board",
+    "projects.resources.task": "Task",
+    "projects.resources.tasks.description":
+      "A kanban board of every task by status.",
+    "projects.resources.milestones": "Milestones",
+    "projects.resources.milestone": "Milestone",
+    "projects.resources.milestones.description": "Key dates across all projects.",
+
+    // Common
+    "projects.common.close": "Close",
+    "projects.common.cancel": "Cancel",
+    "projects.common.actions": "Actions",
+    "projects.common.saving": "Saving...",
+    "projects.common.saveChanges": "Save changes",
+
+    // Enums — project status
+    "projects.enums.projectStatus.planning": "Planning",
+    "projects.enums.projectStatus.active": "Active",
+    "projects.enums.projectStatus.on_hold": "On hold",
+    "projects.enums.projectStatus.done": "Done",
+    // Enums — task status
+    "projects.enums.taskStatus.todo": "To do",
+    "projects.enums.taskStatus.in_progress": "In progress",
+    "projects.enums.taskStatus.review": "Review",
+    "projects.enums.taskStatus.done": "Done",
+    // Enums — task priority
+    "projects.enums.taskPriority.low": "Low",
+    "projects.enums.taskPriority.med": "Medium",
+    "projects.enums.taskPriority.high": "High",
+
+    // Pickers
+    "projects.pickers.select": "Select...",
+    "projects.pickers.search": "Search...",
+    "projects.pickers.noResults": "No results",
+    "projects.pickers.clear": "Clear selection",
+    "projects.pickers.project.placeholder": "Select a project",
+    "projects.pickers.user.placeholder": "Assign a person",
+
+    // Projects list columns
+    "projects.projects.columns.project": "Project",
+    "projects.projects.columns.status": "Status",
+    "projects.projects.columns.owner": "Owner",
+    "projects.projects.columns.due": "Due",
+
+    // Project form
+    "projects.projects.drawer.create.title": "New project",
+    "projects.projects.drawer.create.desc": "Spin up a new project.",
+    "projects.projects.drawer.edit.title": "Edit project",
+    "projects.projects.drawer.edit.desc": "Update scope, status and timing.",
+    "projects.projects.fields.name": "Project name",
+    "projects.projects.fields.name.placeholder": "e.g. Phoenix Platform Rebuild",
+    "projects.projects.fields.name.required": "Project name is required",
+    "projects.projects.fields.code": "Code",
+    "projects.projects.fields.code.placeholder": "PRJ-001",
+    "projects.projects.fields.status": "Status",
+    "projects.projects.fields.owner": "Owner",
+    "projects.projects.fields.startDate": "Start date",
+    "projects.projects.fields.dueDate": "Due date",
+    "projects.projects.actions.create": "Create project",
+    "projects.projects.actions.creating": "Creating...",
+
+    // Project show
+    "projects.projects.show.title.untitled": "Untitled project",
+    "projects.projects.show.desc": "Tasks and milestones for this project.",
+    "projects.projects.show.error.title": "Unable to load project",
+    "projects.projects.show.error.desc":
+      "The project may no longer exist, or you may not have permission to view it.",
+    "projects.projects.show.overview": "Overview",
+    "projects.projects.show.fields.code": "Code",
+    "projects.projects.show.fields.status": "Status",
+    "projects.projects.show.fields.owner": "Owner",
+    "projects.projects.show.fields.startDate": "Start date",
+    "projects.projects.show.fields.dueDate": "Due date",
+    "projects.projects.show.tasks": "Tasks",
+    "projects.projects.show.addTask": "Add task",
+    "projects.projects.show.milestones": "Milestones",
+    "projects.projects.show.addMilestone": "Add milestone",
+    "projects.projects.show.tasks.empty": "No tasks yet. Add the first one.",
+    "projects.projects.show.milestones.empty": "No milestones scheduled yet.",
+
+    // Tasks columns
+    "projects.tasks.columns.task": "Task",
+    "projects.tasks.columns.status": "Status",
+    "projects.tasks.columns.priority": "Priority",
+    "projects.tasks.columns.assignee": "Assignee",
+    "projects.tasks.columns.due": "Due",
+
+    // Milestones columns / status
+    "projects.milestones.columns.milestone": "Milestone",
+    "projects.milestones.columns.target": "Target",
+    "projects.milestones.columns.status": "Status",
+    "projects.milestones.columns.project": "Project",
+    "projects.milestones.status.completed": "Completed",
+    "projects.milestones.status.pending": "Pending",
+    "projects.milestones.markCompleted": "Mark completed",
+
+    // Stats
+    "projects.stats.kpi.activeProjects": "Active projects",
+    "projects.stats.kpi.openTasks": "Open tasks",
+    "projects.stats.kpi.overdue": "Overdue",
+    "projects.stats.kpi.overdueHint": "past due date",
+    "projects.stats.kpi.completion": "Task completion",
+    "projects.stats.kpi.completionHint": "across all tasks",
+    "projects.stats.kpi.totalCount": "{{count}} total",
+    "projects.stats.charts.projectsByStatus": "Projects by status",
+    "projects.stats.charts.projectsByStatus.desc": "Portfolio breakdown.",
+    "projects.stats.charts.tasksByStatus": "Tasks by status",
+    "projects.stats.charts.tasksByStatus.desc": "Where work sits on the board.",
+
+    // Task board
+    "projects.board.title": "Task board",
+    "projects.board.subtitle":
+      "Drag a card between columns to move it through the workflow.",
+    "projects.board.newTask": "New task",
+    "projects.board.error.title": "Unable to load tasks",
+    "projects.board.error.desc": "Check your connection and try again.",
+    "projects.board.dropHere": "Drop a task here",
+    "projects.board.unassigned": "Unassigned",
+
+    // Task form
+    "projects.tasks.drawer.create.title": "New task",
+    "projects.tasks.drawer.create.desc": "Add a task to the board.",
+    "projects.tasks.drawer.edit.title": "Edit task",
+    "projects.tasks.drawer.edit.desc": "Update status, priority and assignment.",
+    "projects.tasks.fields.title": "Task",
+    "projects.tasks.fields.title.placeholder": "e.g. Migrate auth service",
+    "projects.tasks.fields.title.required": "Task title is required",
+    "projects.tasks.fields.project": "Project",
+    "projects.tasks.fields.project.required":
+      "Pick the project this task belongs to",
+    "projects.tasks.fields.status": "Status",
+    "projects.tasks.fields.priority": "Priority",
+    "projects.tasks.fields.assignee": "Assignee",
+    "projects.tasks.fields.dueDate": "Due date",
+    "projects.tasks.actions.add": "Add task",
+    "projects.tasks.actions.adding": "Adding...",
+
+    // Milestone form
+    "projects.milestones.drawer.create.title": "New milestone",
+    "projects.milestones.drawer.create.desc":
+      "Add a milestone to track a key date.",
+    "projects.milestones.drawer.edit.title": "Edit milestone",
+    "projects.milestones.drawer.edit.desc":
+      "Update the target date or completion.",
+    "projects.milestones.fields.name": "Milestone",
+    "projects.milestones.fields.name.placeholder": "e.g. Production launch",
+    "projects.milestones.fields.name.required": "Milestone name is required",
+    "projects.milestones.fields.project": "Project",
+    "projects.milestones.fields.project.required":
+      "Pick the project this milestone belongs to",
+    "projects.milestones.fields.targetDate": "Target date",
+    "projects.milestones.fields.completed": "Completed",
+    "projects.milestones.fields.completed.hint":
+      "Mark this milestone as reached.",
+    "projects.milestones.actions.add": "Add milestone",
+    "projects.milestones.actions.adding": "Adding...",
+  },
+  "zh-CN": {
+    // Nav / resources
+    "projects.resources.projects": "项目",
+    "projects.resources.project": "项目",
+    "projects.resources.projects.description": "项目及其任务与交付里程碑。",
+    "projects.resources.tasks": "任务看板",
+    "projects.resources.task": "任务",
+    "projects.resources.tasks.description": "按状态展示所有任务的看板。",
+    "projects.resources.milestones": "里程碑",
+    "projects.resources.milestone": "里程碑",
+    "projects.resources.milestones.description": "所有项目的关键日期。",
+
+    // Common
+    "projects.common.close": "关闭",
+    "projects.common.cancel": "取消",
+    "projects.common.actions": "操作",
+    "projects.common.saving": "保存中...",
+    "projects.common.saveChanges": "保存修改",
+
+    // Enums — project status
+    "projects.enums.projectStatus.planning": "规划中",
+    "projects.enums.projectStatus.active": "进行中",
+    "projects.enums.projectStatus.on_hold": "暂停",
+    "projects.enums.projectStatus.done": "已完成",
+    // Enums — task status
+    "projects.enums.taskStatus.todo": "待办",
+    "projects.enums.taskStatus.in_progress": "进行中",
+    "projects.enums.taskStatus.review": "评审",
+    "projects.enums.taskStatus.done": "已完成",
+    // Enums — task priority
+    "projects.enums.taskPriority.low": "低",
+    "projects.enums.taskPriority.med": "中",
+    "projects.enums.taskPriority.high": "高",
+
+    // Pickers
+    "projects.pickers.select": "请选择...",
+    "projects.pickers.search": "搜索...",
+    "projects.pickers.noResults": "无结果",
+    "projects.pickers.clear": "清除选择",
+    "projects.pickers.project.placeholder": "选择项目",
+    "projects.pickers.user.placeholder": "指派负责人",
+
+    // Projects list columns
+    "projects.projects.columns.project": "项目",
+    "projects.projects.columns.status": "状态",
+    "projects.projects.columns.owner": "负责人",
+    "projects.projects.columns.due": "截止",
+
+    // Project form
+    "projects.projects.drawer.create.title": "新建项目",
+    "projects.projects.drawer.create.desc": "创建一个新项目。",
+    "projects.projects.drawer.edit.title": "编辑项目",
+    "projects.projects.drawer.edit.desc": "更新范围、状态与时间安排。",
+    "projects.projects.fields.name": "项目名称",
+    "projects.projects.fields.name.placeholder": "例如：凤凰平台重构",
+    "projects.projects.fields.name.required": "请填写项目名称",
+    "projects.projects.fields.code": "编号",
+    "projects.projects.fields.code.placeholder": "PRJ-001",
+    "projects.projects.fields.status": "状态",
+    "projects.projects.fields.owner": "负责人",
+    "projects.projects.fields.startDate": "开始日期",
+    "projects.projects.fields.dueDate": "截止日期",
+    "projects.projects.actions.create": "创建项目",
+    "projects.projects.actions.creating": "创建中...",
+
+    // Project show
+    "projects.projects.show.title.untitled": "未命名项目",
+    "projects.projects.show.desc": "该项目的任务与里程碑。",
+    "projects.projects.show.error.title": "无法加载项目",
+    "projects.projects.show.error.desc":
+      "该项目可能已不存在，或你没有查看权限。",
+    "projects.projects.show.overview": "概览",
+    "projects.projects.show.fields.code": "编号",
+    "projects.projects.show.fields.status": "状态",
+    "projects.projects.show.fields.owner": "负责人",
+    "projects.projects.show.fields.startDate": "开始日期",
+    "projects.projects.show.fields.dueDate": "截止日期",
+    "projects.projects.show.tasks": "任务",
+    "projects.projects.show.addTask": "添加任务",
+    "projects.projects.show.milestones": "里程碑",
+    "projects.projects.show.addMilestone": "添加里程碑",
+    "projects.projects.show.tasks.empty": "暂无任务，添加第一个吧。",
+    "projects.projects.show.milestones.empty": "暂无里程碑安排。",
+
+    // Tasks columns
+    "projects.tasks.columns.task": "任务",
+    "projects.tasks.columns.status": "状态",
+    "projects.tasks.columns.priority": "优先级",
+    "projects.tasks.columns.assignee": "负责人",
+    "projects.tasks.columns.due": "截止",
+
+    // Milestones columns / status
+    "projects.milestones.columns.milestone": "里程碑",
+    "projects.milestones.columns.target": "目标日期",
+    "projects.milestones.columns.status": "状态",
+    "projects.milestones.columns.project": "项目",
+    "projects.milestones.status.completed": "已完成",
+    "projects.milestones.status.pending": "待完成",
+    "projects.milestones.markCompleted": "标记为完成",
+
+    // Stats
+    "projects.stats.kpi.activeProjects": "进行中的项目",
+    "projects.stats.kpi.openTasks": "未完成任务",
+    "projects.stats.kpi.overdue": "逾期",
+    "projects.stats.kpi.overdueHint": "已过截止日期",
+    "projects.stats.kpi.completion": "任务完成率",
+    "projects.stats.kpi.completionHint": "全部任务",
+    "projects.stats.kpi.totalCount": "共 {{count}} 项",
+    "projects.stats.charts.projectsByStatus": "项目状态分布",
+    "projects.stats.charts.projectsByStatus.desc": "项目组合分布。",
+    "projects.stats.charts.tasksByStatus": "任务状态分布",
+    "projects.stats.charts.tasksByStatus.desc": "看板上的工作分布。",
+
+    // Task board
+    "projects.board.title": "任务看板",
+    "projects.board.subtitle": "在列之间拖动卡片，推进任务的工作流。",
+    "projects.board.newTask": "新建任务",
+    "projects.board.error.title": "无法加载任务",
+    "projects.board.error.desc": "请检查网络连接后重试。",
+    "projects.board.dropHere": "将任务拖放到此处",
+    "projects.board.unassigned": "未分配",
+
+    // Task form
+    "projects.tasks.drawer.create.title": "新建任务",
+    "projects.tasks.drawer.create.desc": "向看板添加一个任务。",
+    "projects.tasks.drawer.edit.title": "编辑任务",
+    "projects.tasks.drawer.edit.desc": "更新状态、优先级与负责人。",
+    "projects.tasks.fields.title": "任务",
+    "projects.tasks.fields.title.placeholder": "例如：迁移认证服务",
+    "projects.tasks.fields.title.required": "请填写任务标题",
+    "projects.tasks.fields.project": "项目",
+    "projects.tasks.fields.project.required": "请选择该任务所属的项目",
+    "projects.tasks.fields.status": "状态",
+    "projects.tasks.fields.priority": "优先级",
+    "projects.tasks.fields.assignee": "负责人",
+    "projects.tasks.fields.dueDate": "截止日期",
+    "projects.tasks.actions.add": "添加任务",
+    "projects.tasks.actions.adding": "添加中...",
+
+    // Milestone form
+    "projects.milestones.drawer.create.title": "新建里程碑",
+    "projects.milestones.drawer.create.desc": "添加里程碑以跟踪关键日期。",
+    "projects.milestones.drawer.edit.title": "编辑里程碑",
+    "projects.milestones.drawer.edit.desc": "更新目标日期或完成状态。",
+    "projects.milestones.fields.name": "里程碑",
+    "projects.milestones.fields.name.placeholder": "例如：正式上线",
+    "projects.milestones.fields.name.required": "请填写里程碑名称",
+    "projects.milestones.fields.project": "项目",
+    "projects.milestones.fields.project.required": "请选择该里程碑所属的项目",
+    "projects.milestones.fields.targetDate": "目标日期",
+    "projects.milestones.fields.completed": "已完成",
+    "projects.milestones.fields.completed.hint": "标记该里程碑已达成。",
+    "projects.milestones.actions.add": "添加里程碑",
+    "projects.milestones.actions.adding": "添加中...",
+  },
+};

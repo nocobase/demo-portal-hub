@@ -1,0 +1,172 @@
+import { PackageOpen, Truck } from "lucide-react";
+import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
+import { AccessDenied } from "@/components/access-control/access-denied";
+import { CanAccess } from "@/components/access-control/can-access";
+import { procurementRoutes } from "./routes";
+import { PurchaseOrdersLayout } from "./purchase-orders/list";
+import {
+  PurchaseOrderCreate,
+  PurchaseOrderEdit,
+} from "./purchase-orders/create-edit";
+import { PurchaseOrderShow } from "./purchase-orders/show";
+import { PoItemCreate, PoItemEdit } from "./purchase-orders/item-form";
+import { SuppliersLayout } from "./suppliers/list";
+import { SupplierCreate, SupplierEdit } from "./suppliers/create-edit";
+import { SupplierShow } from "./suppliers/show";
+
+const denied = <AccessDenied />;
+
+const purchaseOrderRoutes: AppRouteDefinition = {
+  name: "hub_po_purchase_orders",
+  path: procurementRoutes.purchaseOrders,
+  element: <PurchaseOrdersLayout />,
+  resource: {
+    meta: {
+      label: "Purchase Orders",
+      singularLabel: "Purchase Order",
+      i18nKey: "procurement.resources.purchaseOrders",
+      i18nSingularKey: "procurement.resources.purchaseOrder",
+      i18nOptions: { ns: "starter" },
+      descriptionI18nKey: "procurement.resources.purchaseOrders.description",
+      priority: 10,
+      icon: <Truck />,
+      description:
+        "Raise and track purchase orders, line items and supplier spend.",
+      canCreate: true,
+      canDelete: true,
+      acl: { type: "collection" },
+    },
+  },
+  children: [
+    {
+      name: "hub_po_purchase_orders.create",
+      path: "create",
+      resourceAction: "create",
+      element: (
+        <CanAccess resource="hub_po_purchase_orders" action="create" fallback={denied}>
+          <PurchaseOrderCreate />
+        </CanAccess>
+      ),
+    },
+    {
+      name: "hub_po_purchase_orders.edit",
+      path: "edit/:id",
+      resourceAction: "edit",
+      element: (
+        <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
+          <PurchaseOrderEdit />
+        </CanAccess>
+      ),
+    },
+    {
+      name: "hub_po_purchase_orders.show",
+      path: "show/:id",
+      resourceAction: "show",
+      element: (
+        <CanAccess resource="hub_po_purchase_orders" action="show" fallback={denied}>
+          <PurchaseOrderShow />
+        </CanAccess>
+      ),
+      children: [
+        {
+          name: "hub_po_purchase_orders.show.edit",
+          path: "edit",
+          element: (
+            <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
+              <PurchaseOrderEdit />
+            </CanAccess>
+          ),
+        },
+        {
+          name: "hub_po_purchase_orders.show.items.create",
+          path: "items/create",
+          element: (
+            <CanAccess resource="hub_po_items" action="create" fallback={denied}>
+              <PoItemCreate />
+            </CanAccess>
+          ),
+        },
+        {
+          name: "hub_po_purchase_orders.show.items.edit",
+          path: "items/edit/:itemId",
+          element: (
+            <CanAccess resource="hub_po_items" action="edit" fallback={denied}>
+              <PoItemEdit />
+            </CanAccess>
+          ),
+        },
+      ],
+    },
+  ],
+};
+
+const supplierRoutes: AppRouteDefinition = {
+  name: "hub_po_suppliers",
+  path: procurementRoutes.suppliers,
+  element: <SuppliersLayout />,
+  resource: {
+    meta: {
+      label: "Suppliers",
+      singularLabel: "Supplier",
+      i18nKey: "procurement.resources.suppliers",
+      i18nSingularKey: "procurement.resources.supplier",
+      i18nOptions: { ns: "starter" },
+      descriptionI18nKey: "procurement.resources.suppliers.description",
+      priority: 11,
+      icon: <PackageOpen />,
+      description: "Vendors you buy from, with ratings and order history.",
+      canCreate: true,
+      canDelete: true,
+      acl: { type: "collection" },
+    },
+  },
+  children: [
+    {
+      name: "hub_po_suppliers.create",
+      path: "create",
+      resourceAction: "create",
+      element: (
+        <CanAccess resource="hub_po_suppliers" action="create" fallback={denied}>
+          <SupplierCreate />
+        </CanAccess>
+      ),
+    },
+    {
+      name: "hub_po_suppliers.edit",
+      path: "edit/:id",
+      resourceAction: "edit",
+      element: (
+        <CanAccess resource="hub_po_suppliers" action="edit" fallback={denied}>
+          <SupplierEdit />
+        </CanAccess>
+      ),
+    },
+    {
+      name: "hub_po_suppliers.show",
+      path: "show/:id",
+      resourceAction: "show",
+      element: (
+        <CanAccess resource="hub_po_suppliers" action="show" fallback={denied}>
+          <SupplierShow />
+        </CanAccess>
+      ),
+      children: [
+        {
+          name: "hub_po_suppliers.show.edit",
+          path: "edit",
+          element: (
+            <CanAccess resource="hub_po_suppliers" action="edit" fallback={denied}>
+              <SupplierEdit />
+            </CanAccess>
+          ),
+        },
+      ],
+    },
+  ],
+};
+
+export const procurementModule: { routes: AppRouteDefinition[] } = {
+  routes: [purchaseOrderRoutes, supplierRoutes],
+};
+
+export default procurementModule;
