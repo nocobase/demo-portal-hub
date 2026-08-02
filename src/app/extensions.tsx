@@ -103,6 +103,9 @@ const resourceGroupParent: Record<string, string> = {
   hub_fin_expenses: "group_finance",
   // Support — Helpdesk
   hub_hd_tickets: "group_support",
+  "helpdesk-dashboard": "group_support",
+  hub_sales_forecast: "group_revenue",
+  "finance-reports": "group_finance",
   // Knowledge
   knowledge_overview: "group_knowledge",
   hub_kb_articles: "group_knowledge",

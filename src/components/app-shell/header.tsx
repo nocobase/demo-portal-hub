@@ -64,14 +64,12 @@ function DesktopHeader() {
         "z-40"
       )}
     >
-      <div className="flex min-w-0 items-center gap-4">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
         <Brand logoClassName="h-7" />
         <div className="h-6 w-px shrink-0 bg-border" />
-        <div className="min-w-0 overflow-x-auto">
-          <TopNav />
-        </div>
+        <TopNav />
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2 pl-2">
         <SettingsLink />
         <ThemeToggle />
         <UserDropdown />
@@ -104,7 +102,7 @@ function MobileHeader() {
           <UserDropdown />
         </div>
       </div>
-      <div className="overflow-x-auto border-t border-border/70 px-3 py-1.5">
+      <div className="flex border-t border-border/70 px-3 py-1.5">
         <TopNav />
       </div>
     </header>

@@ -1,4 +1,5 @@
 export const starter = {
+  "shell.more": "更多",
   "groups.revenue": "营收",
   "groups.delivery": "交付",
   "groups.people": "人事",
