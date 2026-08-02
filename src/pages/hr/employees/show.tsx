@@ -1,9 +1,11 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Pencil } from "lucide-react";
-import { useParams } from "react-router";
+import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useNavigate, useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
+import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
@@ -14,7 +16,10 @@ import {
   formatDate,
   labelFor,
 } from "../constants";
-import { hrRoutes } from "../routes";
+import {
+  useContextualCloseTo,
+  useOpenContextualChild,
+} from "../route-surfaces";
 import {
   DetailItems,
   DrawerSection,
@@ -28,8 +33,10 @@ import type { EmployeeRecord, LeaveRequestRecord } from "../types";
 export function EmployeeShow() {
   const translate = useTranslate();
   const locale = useLocale();
-  const closeTo = hrRoutes.employees;
+  const openChild = useOpenContextualChild();
+  const closeTo = useContextualCloseTo();
   const { id } = useParams<{ id: string }>();
+  const nestedDrawer = useOutlet();
   const { result: record, query } = useShow<EmployeeRecord>({
     resource: "hub_hr_employees",
     id,
@@ -56,6 +63,7 @@ export function EmployeeShow() {
       )}
       closeLabel={translate("hr.common.close", { ns: "starter" }, "Close")}
       closeTo={closeTo}
+      nested={nestedDrawer}
       actions={
         record ? (
           <EditButton
@@ -63,6 +71,7 @@ export function EmployeeShow() {
             recordItemId={record.id}
             variant="outline"
             size="icon-sm"
+            onClick={() => openChild("edit")}
           >
             <Pencil />
           </EditButton>
@@ -137,7 +146,13 @@ export function EmployeeShow() {
             {id ? (
               <>
                 <Separator />
-                <LeaveHistorySection employeeId={id} locale={locale} />
+                <ReportsSection managerId={id} />
+                <Separator />
+                <LeaveHistorySection
+                  employeeId={id}
+                  locale={locale}
+                  openChild={openChild}
+                />
               </>
             ) : null}
           </div>
@@ -147,12 +162,73 @@ export function EmployeeShow() {
   );
 }
 
+type OpenChild = (to: string) => void;
+
+function ReportsSection({ managerId }: { managerId: string }) {
+  const translate = useTranslate();
+  const navigate = useNavigate();
+  const { result } = useList<EmployeeRecord>({
+    resource: "hub_hr_employees",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "name", order: "asc" }],
+    filters: [{ field: "manager_id", operator: "eq", value: managerId }],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  return (
+    <DrawerSection
+      title={translate("hr.employees.detail.reports", { ns: "starter" }, "Direct reports")}
+    >
+      <SimpleTable
+        headers={[
+          translate("hr.employees.fields.name", { ns: "starter" }, "Name"),
+          translate("hr.employees.fields.title", { ns: "starter" }, "Title"),
+          translate("hr.employees.fields.status", { ns: "starter" }, "Status"),
+        ]}
+      >
+        {result.data.length === 0 ? (
+          <EmptyRow
+            colSpan={3}
+            text={translate(
+              "hr.employees.detail.reportsEmpty",
+              { ns: "starter" },
+              "No one reports to this person."
+            )}
+          />
+        ) : (
+          result.data.map((report) => (
+            <tr
+              key={String(report.id)}
+              className="cursor-pointer hover:bg-accent/40"
+              onClick={() => navigate(`/employees/show/${report.id}`)}
+            >
+              <td className="px-3 py-2 font-medium text-primary underline-offset-2 hover:underline">
+                {report.name || "—"}
+              </td>
+              <td className="px-3 py-2">{report.job_title || "—"}</td>
+              <td className="px-3 py-2">
+                <EnumBadge
+                  value={report.status ?? "active"}
+                  label={labelFor(EMPLOYEE_STATUSES, report.status ?? "active", translate)}
+                />
+              </td>
+            </tr>
+          ))
+        )}
+      </SimpleTable>
+    </DrawerSection>
+  );
+}
+
 function LeaveHistorySection({
   employeeId,
   locale,
+  openChild,
 }: {
   employeeId: string;
   locale: string;
+  openChild: OpenChild;
 }) {
   const translate = useTranslate();
   const { result } = useList<LeaveRequestRecord>({
@@ -165,18 +241,27 @@ function LeaveHistorySection({
   });
 
   return (
-    <DrawerSection title={translate("hr.employees.detail.leaveHistory", { ns: "starter" }, "Leave history")}>
+    <DrawerSection
+      title={translate("hr.employees.detail.leaveHistory", { ns: "starter" }, "Leave history")}
+      action={
+        <Button variant="outline" size="sm" onClick={() => openChild("leave/create")}>
+          <Plus />
+          {translate("hr.employees.actions.logLeave", { ns: "starter" }, "Log leave")}
+        </Button>
+      }
+    >
       <SimpleTable
         headers={[
           translate("hr.leave.fields.type", { ns: "starter" }, "Type"),
           translate("hr.leave.fields.dates", { ns: "starter" }, "Dates"),
           translate("hr.leave.fields.days", { ns: "starter" }, "Days"),
           translate("hr.leave.fields.status", { ns: "starter" }, "Status"),
+          translate("hr.common.actions", { ns: "starter" }, "Actions"),
         ]}
       >
         {result.data.length === 0 ? (
           <EmptyRow
-            colSpan={4}
+            colSpan={5}
             text={translate(
               "hr.employees.detail.leaveEmpty",
               { ns: "starter" },
@@ -185,7 +270,11 @@ function LeaveHistorySection({
           />
         ) : (
           result.data.map((leave) => (
-            <tr key={String(leave.id)}>
+            <tr
+              key={String(leave.id)}
+              className="cursor-pointer hover:bg-accent/40"
+              onClick={() => openChild(`leave/edit/${encodeURIComponent(String(leave.id))}`)}
+            >
               <td className="px-3 py-2">
                 <EnumBadge
                   value={leave.type ?? "annual"}
@@ -202,6 +291,28 @@ function LeaveHistorySection({
                   value={leave.status ?? "pending"}
                   label={labelFor(LEAVE_STATUSES, leave.status ?? "pending", translate)}
                 />
+              </td>
+              <td className="px-3 py-2">
+                <div className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      openChild(`leave/edit/${encodeURIComponent(String(leave.id))}`)
+                    }
+                  >
+                    <Pencil />
+                  </Button>
+                  <DeleteButton
+                    resource="hub_hr_leave_requests"
+                    recordItemId={leave.id}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 />
+                  </DeleteButton>
+                </div>
               </td>
             </tr>
           ))

@@ -21,6 +21,7 @@ import { useOpenContextualChild } from "../route-surfaces";
 import { EnumBadge, useLocale } from "../shared";
 import type { ProjectRecord } from "../types";
 import { ProjectStats } from "./stats";
+import { ProjectTimeline } from "./timeline";
 
 export function ProjectsLayout() {
   return (
@@ -69,14 +70,20 @@ function ProjectList() {
         ),
         enableSorting: true,
         cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.name || "—"}</span>
+          <button
+            type="button"
+            onClick={() => openChild(`show/${row.original.id}`)}
+            className="flex flex-col text-left"
+          >
+            <span className="font-medium underline-offset-2 hover:underline">
+              {row.original.name || "—"}
+            </span>
             {row.original.code ? (
               <span className="text-xs text-muted-foreground">
                 {row.original.code}
               </span>
             ) : null}
-          </div>
+          </button>
         ),
       }),
       columnHelper.accessor("status", {
@@ -178,6 +185,7 @@ function ProjectList() {
   return (
     <ListView resource="hub_pj_projects">
       <ProjectStats />
+      <ProjectTimeline />
       <DataTable table={table} />
       <Outlet />
     </ListView>

@@ -19,7 +19,7 @@ import {
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
 import { DepartmentPicker } from "../pickers";
-import { hrRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { DepartmentFormValues, DepartmentRecord } from "../types";
 
 function DepartmentFormFields({
@@ -119,7 +119,7 @@ function DepartmentFormFields({
 
 export const DepartmentCreate = () => {
   const translate = useTranslate();
-  const closeTo = hrRoutes.departments;
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -184,7 +184,7 @@ function DepartmentCreateForm() {
 export const DepartmentEdit = () => {
   const translate = useTranslate();
   const { id } = useParams<{ id: string }>();
-  const closeTo = hrRoutes.departments;
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>

@@ -1,7 +1,7 @@
 import { useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -10,6 +10,7 @@ import { DataTableFilterCombobox } from "@/components/data-table/data-table-filt
 import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
 import { ACTIVITY_TYPES, formatDateTime, labelFor } from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
@@ -102,8 +103,14 @@ function ActivityList() {
           "Subject"
         ),
         enableSorting: false,
-        cell: ({ getValue }) => (
-          <span className="font-medium">{getValue() || "—"}</span>
+        cell: ({ getValue, row }) => (
+          <button
+            type="button"
+            className="font-medium text-left text-primary underline-offset-2 hover:underline"
+            onClick={() => openChild(`show/${row.original.id}`)}
+          >
+            {getValue() || "—"}
+          </button>
         ),
       }),
       columnHelper.accessor((record) => record.deal, {
@@ -120,9 +127,18 @@ function ActivityList() {
         id: "actions",
         header: translate("sales.common.actions", { ns: "starter" }, "Actions"),
         enableSorting: false,
-        size: 112,
+        size: 144,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
+            <ShowButton
+              resource="hub_sales_activities"
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+              onClick={() => openChild(`show/${row.original.id}`)}
+            >
+              <Eye />
+            </ShowButton>
             <EditButton
               resource="hub_sales_activities"
               recordItemId={row.original.id}

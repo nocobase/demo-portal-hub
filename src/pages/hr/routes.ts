@@ -6,7 +6,9 @@ export const hrRoutes = {
   departments: "/departments",
   departmentsCreate: "/departments/create",
   departmentsEdit: "/departments/edit/:id",
+  departmentsShow: "/departments/show/:id",
   leave: "/leave",
   leaveCreate: "/leave/create",
   leaveEdit: "/leave/edit/:id",
+  leaveShow: "/leave/show/:id",
 } as const;

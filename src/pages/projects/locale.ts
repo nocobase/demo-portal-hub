@@ -161,6 +161,45 @@ export const projectsLocale = {
       "Mark this milestone as reached.",
     "projects.milestones.actions.add": "Add milestone",
     "projects.milestones.actions.adding": "Adding...",
+
+    // Project progress + timeline
+    "projects.projects.show.progress": "Progress",
+    "projects.projects.show.progress.hint": "{{done}} of {{total}} tasks done ({{pct}}%)",
+    "projects.timeline.title": "Project timeline",
+    "projects.timeline.desc": "Start-to-due span for every scheduled project.",
+
+    // Task show (detail drawer)
+    "projects.tasks.show.title.untitled": "Untitled task",
+    "projects.tasks.show.desc": "Task details and checklist.",
+    "projects.tasks.show.error.title": "Unable to load task",
+    "projects.tasks.show.error.desc":
+      "The task may no longer exist, or you may not have permission to view it.",
+    "projects.tasks.show.overview": "Overview",
+    "projects.tasks.show.checklist": "Checklist ({{done}}/{{total}})",
+    "projects.tasks.checklist.add": "Add item",
+    "projects.tasks.checklist.item": "Item",
+    "projects.tasks.checklist.empty": "No checklist items yet.",
+    "projects.tasks.checklist.fields.title.required":
+      "Checklist item text is required",
+    "projects.tasks.checklist.fields.title.placeholder": "e.g. Write test cases",
+    "projects.tasks.checklist.fields.done": "Done",
+    "projects.tasks.checklist.drawer.create.title": "New checklist item",
+    "projects.tasks.checklist.drawer.create.desc":
+      "Add a step to this task's checklist.",
+    "projects.tasks.checklist.drawer.edit.title": "Edit checklist item",
+    "projects.tasks.checklist.drawer.edit.desc":
+      "Update the checklist item text or status.",
+    "projects.tasks.checklist.actions.add": "Add item",
+    "projects.tasks.checklist.actions.adding": "Adding...",
+
+    // Milestone show (detail drawer)
+    "projects.milestones.show.title.untitled": "Untitled milestone",
+    "projects.milestones.show.desc": "Milestone details.",
+    "projects.milestones.show.error.title": "Unable to load milestone",
+    "projects.milestones.show.error.desc":
+      "The milestone may no longer exist, or you may not have permission to view it.",
+    "projects.milestones.show.overview": "Overview",
+    "projects.milestones.markPending": "Mark pending",
   },
   "zh-CN": {
     // Nav / resources
@@ -316,5 +355,39 @@ export const projectsLocale = {
     "projects.milestones.fields.completed.hint": "标记该里程碑已达成。",
     "projects.milestones.actions.add": "添加里程碑",
     "projects.milestones.actions.adding": "添加中...",
+
+    // Project progress + timeline
+    "projects.projects.show.progress": "进度",
+    "projects.projects.show.progress.hint": "已完成 {{done}}/{{total}} 项任务（{{pct}}%）",
+    "projects.timeline.title": "项目时间线",
+    "projects.timeline.desc": "所有已排期项目的起止时间跨度。",
+
+    // Task show (detail drawer)
+    "projects.tasks.show.title.untitled": "未命名任务",
+    "projects.tasks.show.desc": "任务详情与检查清单。",
+    "projects.tasks.show.error.title": "无法加载任务",
+    "projects.tasks.show.error.desc": "该任务可能已不存在，或你没有查看权限。",
+    "projects.tasks.show.overview": "概览",
+    "projects.tasks.show.checklist": "检查清单（{{done}}/{{total}}）",
+    "projects.tasks.checklist.add": "添加检查项",
+    "projects.tasks.checklist.item": "检查项",
+    "projects.tasks.checklist.empty": "暂无检查项。",
+    "projects.tasks.checklist.fields.title.required": "请填写检查项内容",
+    "projects.tasks.checklist.fields.title.placeholder": "例如：编写测试用例",
+    "projects.tasks.checklist.fields.done": "已完成",
+    "projects.tasks.checklist.drawer.create.title": "新建检查项",
+    "projects.tasks.checklist.drawer.create.desc": "为该任务的检查清单添加一项。",
+    "projects.tasks.checklist.drawer.edit.title": "编辑检查项",
+    "projects.tasks.checklist.drawer.edit.desc": "更新检查项内容或状态。",
+    "projects.tasks.checklist.actions.add": "添加",
+    "projects.tasks.checklist.actions.adding": "添加中...",
+
+    // Milestone show (detail drawer)
+    "projects.milestones.show.title.untitled": "未命名里程碑",
+    "projects.milestones.show.desc": "里程碑详情。",
+    "projects.milestones.show.error.title": "无法加载里程碑",
+    "projects.milestones.show.error.desc": "该里程碑可能已不存在，或你没有查看权限。",
+    "projects.milestones.show.overview": "概览",
+    "projects.milestones.markPending": "标记为待完成",
   },
 };

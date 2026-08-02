@@ -1,14 +1,16 @@
 import { useGetLocale, useTranslate, useUpdate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { Check, Eye, Pencil, Trash2, X } from "lucide-react";
 import { useMemo } from "react";
+import { useNavigate } from "react-router";
 import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableFilterCombobox } from "@/components/data-table/data-table-filter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,6 +38,7 @@ function LeaveList() {
   const translate = useTranslate();
   const getLocale = useGetLocale();
   const locale = getLocale();
+  const navigate = useNavigate();
   const { mutate: updateLeave } = useUpdate<LeaveRequestRecord>();
 
   const setStatus = (id: string | number, status: string) =>
@@ -78,12 +81,18 @@ function LeaveList() {
         header: translate("hr.leave.fields.employee", { ns: "starter" }, "Employee"),
         enableSorting: false,
         cell: ({ row, getValue }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{getValue() || "—"}</span>
+          <button
+            type="button"
+            className="flex flex-col text-left"
+            onClick={() => navigate(`/leave/show/${row.original.id}`)}
+          >
+            <span className="font-medium text-primary underline-offset-2 hover:underline">
+              {getValue() || "—"}
+            </span>
             <span className="text-xs text-muted-foreground">
               {row.original.employee?.job_title || ""}
             </span>
-          </div>
+          </button>
         ),
       }),
       columnHelper.accessor("type", {
@@ -150,7 +159,7 @@ function LeaveList() {
         id: "actions",
         header: translate("hr.common.actions", { ns: "starter" }, "Actions"),
         enableSorting: false,
-        size: 200,
+        size: 232,
         cell: ({ row }) => {
           const isPending = (row.original.status ?? "pending") === "pending";
           return (
@@ -186,6 +195,14 @@ function LeaveList() {
                   {translate("hr.leave.actions.reopen", { ns: "starter" }, "Reopen")}
                 </Button>
               )}
+              <ShowButton
+                resource="hub_hr_leave_requests"
+                recordItemId={row.original.id}
+                variant="ghost"
+                size="icon"
+              >
+                <Eye />
+              </ShowButton>
               <EditButton
                 resource="hub_hr_leave_requests"
                 recordItemId={row.original.id}
@@ -208,7 +225,7 @@ function LeaveList() {
         },
       }),
     ];
-  }, [locale, setStatus, statusOptions, translate, typeOptions]);
+  }, [locale, navigate, setStatus, statusOptions, translate, typeOptions]);
 
   const table = useTable<LeaveRequestRecord>({
     columns,

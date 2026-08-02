@@ -108,6 +108,7 @@ function DepartmentTree() {
                   node={node}
                   headcountByDept={headcountByDept}
                   onEdit={(id) => navigate(`/departments/edit/${id}`)}
+                  onShow={(id) => navigate(`/departments/show/${id}`)}
                 />
               ))}
             </ul>
@@ -122,10 +123,12 @@ function TreeRow({
   node,
   headcountByDept,
   onEdit,
+  onShow,
 }: {
   node: TreeNode;
   headcountByDept: Map<string, number>;
   onEdit: (id: string | number) => void;
+  onShow: (id: string | number) => void;
 }) {
   const translate = useTranslate();
   const [open, setOpen] = useState(true);
@@ -161,16 +164,20 @@ function TreeRow({
         <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-blue-500/12 text-blue-600 dark:text-blue-400">
           <Building2 className="size-4" />
         </span>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm font-medium">{node.name}</span>
-            {node.code ? (
-              <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
-                {node.code}
-              </span>
-            ) : null}
-          </div>
-        </div>
+        <button
+          type="button"
+          className="flex min-w-0 flex-1 items-center gap-2 text-left"
+          onClick={() => onShow(node.id)}
+        >
+          <span className="truncate text-sm font-medium text-primary underline-offset-2 hover:underline">
+            {node.name}
+          </span>
+          {node.code ? (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] font-medium text-muted-foreground">
+              {node.code}
+            </span>
+          ) : null}
+        </button>
         <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           {headcount}{" "}
           {headcount === 1
@@ -205,6 +212,7 @@ function TreeRow({
               node={child}
               headcountByDept={headcountByDept}
               onEdit={onEdit}
+              onShow={onShow}
             />
           ))}
         </ul>

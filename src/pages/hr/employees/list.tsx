@@ -3,6 +3,7 @@ import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
+import { useNavigate } from "react-router";
 import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { DataTable } from "@/components/data-table/data-table";
@@ -36,6 +37,7 @@ function EmployeeList() {
   const translate = useTranslate();
   const getLocale = useGetLocale();
   const locale = getLocale();
+  const navigate = useNavigate();
 
   const statusOptions = useMemo(
     () =>
@@ -64,7 +66,15 @@ function EmployeeList() {
           </div>
         ),
         enableSorting: true,
-        cell: ({ getValue }) => getValue() || "—",
+        cell: ({ getValue, row }) => (
+          <button
+            type="button"
+            className="font-medium text-primary underline-offset-2 hover:underline"
+            onClick={() => navigate(`/employees/show/${row.original.id}`)}
+          >
+            {getValue() || "—"}
+          </button>
+        ),
       }),
       columnHelper.accessor("job_title", {
         id: "job_title",
@@ -163,7 +173,7 @@ function EmployeeList() {
         ),
       }),
     ];
-  }, [locale, statusOptions, translate]);
+  }, [locale, navigate, statusOptions, translate]);
 
   const table = useTable<EmployeeRecord>({
     columns,

@@ -1,4 +1,10 @@
-import { Activity, Building2, UserPlus, Workflow } from "lucide-react";
+import {
+  Activity,
+  Building2,
+  TrendingUp,
+  UserPlus,
+  Workflow,
+} from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -9,14 +15,18 @@ import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { ActivityCreate, ActivityEdit } from "@/pages/sales/activities/form";
 import { ActivitiesLayout } from "@/pages/sales/activities/list";
+import { ActivityShow } from "@/pages/sales/activities/show";
 import { AccountCreate, AccountEdit } from "@/pages/sales/accounts/form";
 import { AccountsLayout } from "@/pages/sales/accounts/list";
 import { AccountShow } from "@/pages/sales/accounts/show";
 import { ContactCreate, ContactEdit } from "@/pages/sales/contacts/form";
 import { DealCreate, DealEdit } from "@/pages/sales/deals/form";
 import { PipelinePage } from "@/pages/sales/deals/pipeline";
+import { DealShow } from "@/pages/sales/deals/show";
+import { ForecastPage } from "@/pages/sales/insights/forecast";
 import { LeadCreate, LeadEdit } from "@/pages/sales/leads/form";
 import { LeadsLayout } from "@/pages/sales/leads/list";
+import { ConvertLead, LeadShow } from "@/pages/sales/leads/show";
 
 // Path constants for the Sales module. The pipeline board is the primary
 // surface and is mounted at /deals (Home quick-links target this).
@@ -25,6 +35,7 @@ export const salesRoutes = {
   accounts: "/accounts",
   leads: "/leads",
   activities: "/activities",
+  forecast: "/forecast",
 } as const;
 
 const denied = <AccessDenied />;
@@ -39,6 +50,12 @@ function AccountNestedDealCreate() {
 function AccountNestedDealEdit() {
   const { id } = useParams<{ id: string }>();
   return <DealEdit presetAccountId={id} idParam="dealId" />;
+}
+
+// Activity logged from inside a deal drawer: preset the deal.
+function DealNestedActivityCreate() {
+  const { id } = useParams<{ id: string }>();
+  return <ActivityCreate presetDealId={id} />;
 }
 
 const accountContextChildren = (prefix: string): AppRouteDefinition[] => [
@@ -84,6 +101,68 @@ const accountContextChildren = (prefix: string): AppRouteDefinition[] => [
     element: (
       <CanAccess resource="hub_sales_deals" action="edit" fallback={denied}>
         <AccountNestedDealEdit />
+      </CanAccess>
+    ),
+  },
+];
+
+const dealContextChildren = (prefix: string): AppRouteDefinition[] => [
+  {
+    name: `${prefix}.edit`,
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_sales_deals" action="edit" fallback={denied}>
+        <DealEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: `${prefix}.activities.create`,
+    path: "activities/create",
+    element: (
+      <CanAccess
+        resource="hub_sales_activities"
+        action="create"
+        fallback={denied}
+      >
+        <DealNestedActivityCreate />
+      </CanAccess>
+    ),
+  },
+];
+
+const leadContextChildren = (prefix: string): AppRouteDefinition[] => [
+  {
+    name: `${prefix}.edit`,
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_sales_leads" action="edit" fallback={denied}>
+        <LeadEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: `${prefix}.convert`,
+    path: "convert",
+    element: (
+      <CanAccess resource="hub_sales_accounts" action="create" fallback={denied}>
+        <ConvertLead />
+      </CanAccess>
+    ),
+  },
+];
+
+const activityContextChildren = (prefix: string): AppRouteDefinition[] => [
+  {
+    name: `${prefix}.edit`,
+    path: "edit",
+    element: (
+      <CanAccess
+        resource="hub_sales_activities"
+        action="edit"
+        fallback={denied}
+      >
+        <ActivityEdit />
       </CanAccess>
     ),
   },
@@ -135,7 +214,42 @@ const routes = defineAppRoutes([
           </CanAccess>
         ),
       },
+      {
+        name: "hub_sales_deals.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_sales_deals" action="show" fallback={denied}>
+            <DealShow />
+          </CanAccess>
+        ),
+        children: dealContextChildren("hub_sales_deals.show"),
+      },
     ],
+  },
+  {
+    name: "hub_sales_forecast",
+    path: salesRoutes.forecast,
+    element: (
+      <CanAccess resource="hub_sales_deals" action="list" fallback={denied}>
+        <ForecastPage />
+      </CanAccess>
+    ),
+    resource: {
+      meta: {
+        label: "Forecast",
+        singularLabel: "Forecast",
+        i18nKey: "sales.resources.forecast",
+        i18nSingularKey: "sales.resources.forecast",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "sales.resources.forecast.description",
+        priority: 14,
+        icon: <TrendingUp />,
+        description: "Win-rate funnel and owner leaderboard.",
+        canCreate: false,
+        acl: { type: "collection" },
+      },
+    },
   },
   {
     name: "hub_sales_accounts",
@@ -235,6 +349,17 @@ const routes = defineAppRoutes([
           </CanAccess>
         ),
       },
+      {
+        name: "hub_sales_leads.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_sales_leads" action="show" fallback={denied}>
+            <LeadShow />
+          </CanAccess>
+        ),
+        children: leadContextChildren("hub_sales_leads.show"),
+      },
     ],
   },
   {
@@ -284,6 +409,21 @@ const routes = defineAppRoutes([
             <ActivityEdit />
           </CanAccess>
         ),
+      },
+      {
+        name: "hub_sales_activities.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess
+            resource="hub_sales_activities"
+            action="show"
+            fallback={denied}
+          >
+            <ActivityShow />
+          </CanAccess>
+        ),
+        children: activityContextChildren("hub_sales_activities.show"),
       },
     ],
   },

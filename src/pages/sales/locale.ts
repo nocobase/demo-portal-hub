@@ -23,6 +23,9 @@ export const salesLocale = {
     "sales.resources.activity": "Activity",
     "sales.resources.activities.description":
       "Calls, emails and meetings logged against deals.",
+    "sales.resources.forecast": "Forecast",
+    "sales.resources.forecast.description":
+      "Win-rate funnel and owner leaderboard.",
 
     // Enums — deal stage
     "sales.enums.dealStage.inquiry": "Inquiry",
@@ -99,6 +102,32 @@ export const salesLocale = {
     "sales.deals.validation.amountMin": "Amount cannot be negative",
     "sales.deals.actions.add": "Add deal",
     "sales.deals.empty": "No deals for this account yet.",
+    "sales.deals.drawer.show.description":
+      "Value, stage and activity history for this deal.",
+    "sales.deals.detail.unnamed": "Untitled deal",
+    "sales.deals.detail.profile": "Overview",
+    "sales.deals.detail.createdAt": "Created",
+    "sales.deals.detail.activities": "Activity history",
+    "sales.deals.detail.loadError.title": "Unable to load deal",
+    "sales.deals.detail.loadError.description":
+      "The deal may no longer exist, or you may not have permission to view it.",
+
+    // Forecast / leaderboard
+    "sales.forecast.kpi.pipelineValue": "Open pipeline",
+    "sales.forecast.kpi.wonValue": "Won (all time)",
+    "sales.forecast.kpi.winRate": "Win rate",
+    "sales.forecast.kpi.avgDealSize": "Avg deal size",
+    "sales.forecast.funnel.title": "Conversion funnel",
+    "sales.forecast.leaderboard.title": "Owner leaderboard",
+    "sales.forecast.leaderboard.owner": "Owner",
+    "sales.forecast.leaderboard.wonValue": "Won",
+    "sales.forecast.leaderboard.winRate": "Win rate",
+    "sales.forecast.leaderboard.deals": "Deals",
+    "sales.forecast.leaderboard.empty": "No deals yet.",
+    "sales.forecast.leaderboard.unassigned": "Unassigned",
+    "sales.forecast.loadError.title": "Unable to load forecast",
+    "sales.forecast.loadError.description":
+      "Check your connection and try again.",
 
     // Accounts
     "sales.accounts.drawer.create.title": "New account",
@@ -129,6 +158,9 @@ export const salesLocale = {
     "sales.accounts.columns.industry": "Industry",
     "sales.accounts.columns.owner": "Owner",
     "sales.accounts.columns.website": "Website",
+    "sales.accounts.detail.timeline": "Timeline",
+    "sales.accounts.detail.timeline.empty":
+      "No activity logged for this account's deals yet.",
 
     // Contacts
     "sales.contacts.drawer.create.title": "New contact",
@@ -167,6 +199,28 @@ export const salesLocale = {
     "sales.leads.placeholder.company": "e.g. Vertex Logistics",
     "sales.leads.placeholder.source": "Select source",
     "sales.leads.validation.name": "Lead name is required",
+    "sales.leads.drawer.show.description":
+      "Lead details, qualification and conversion.",
+    "sales.leads.detail.unnamed": "Unnamed lead",
+    "sales.leads.detail.profile": "Profile",
+    "sales.leads.detail.createdAt": "Captured",
+    "sales.leads.detail.convert": "Convert",
+    "sales.leads.detail.converted": "Converted",
+    "sales.leads.detail.loadError.title": "Unable to load lead",
+    "sales.leads.detail.loadError.description":
+      "The lead may no longer exist, or you may not have permission to view it.",
+    "sales.leads.detail.convert.title": "Convert lead",
+    "sales.leads.detail.convert.description":
+      "Create an account, contact and deal from this lead.",
+    "sales.leads.detail.convert.accountName": "Account name",
+    "sales.leads.detail.convert.contactName": "Primary contact",
+    "sales.leads.detail.convert.dealTitle": "Deal title",
+    "sales.leads.detail.convert.dealAmount": "Deal amount (optional)",
+    "sales.leads.detail.convert.dealTitleDefault": "New opportunity",
+    "sales.leads.detail.convert.submit": "Convert lead",
+    "sales.leads.detail.convert.submitting": "Converting...",
+    "sales.leads.detail.convert.error":
+      "Conversion failed. Check the fields and try again.",
 
     // Activities
     "sales.activities.drawer.create.title": "Log activity",
@@ -174,6 +228,8 @@ export const salesLocale = {
       "Record a call, email or meeting against a deal.",
     "sales.activities.drawer.edit.title": "Edit activity",
     "sales.activities.drawer.edit.description": "Update this logged activity.",
+    "sales.activities.drawer.show.description":
+      "Full details of this logged activity.",
     "sales.activities.form.create": "Log activity",
     "sales.activities.form.creating": "Logging...",
     "sales.activities.fields.type": "Type",
@@ -185,6 +241,14 @@ export const salesLocale = {
     "sales.activities.placeholder.notes": "What was discussed, next steps...",
     "sales.activities.validation.subject": "Subject is required",
     "sales.activities.validation.deal": "Link this activity to a deal",
+    "sales.activities.actions.log": "Log activity",
+    "sales.activities.empty": "No activity logged for this deal yet.",
+    "sales.activities.detail.unnamed": "Untitled activity",
+    "sales.activities.detail.profile": "Details",
+    "sales.activities.detail.noNotes": "No notes recorded.",
+    "sales.activities.detail.loadError.title": "Unable to load activity",
+    "sales.activities.detail.loadError.description":
+      "The activity may no longer exist, or you may not have permission to view it.",
   },
   "zh-CN": {
     // Common
@@ -207,6 +271,8 @@ export const salesLocale = {
     "sales.resources.activities": "活动记录",
     "sales.resources.activity": "活动",
     "sales.resources.activities.description": "记录与商机相关的电话、邮件和会议。",
+    "sales.resources.forecast": "销售预测",
+    "sales.resources.forecast.description": "赢单率漏斗与负责人排行榜。",
 
     // Enums — deal stage
     "sales.enums.dealStage.inquiry": "询价",
@@ -282,6 +348,30 @@ export const salesLocale = {
     "sales.deals.validation.amountMin": "金额不能为负数",
     "sales.deals.actions.add": "添加商机",
     "sales.deals.empty": "该客户暂无商机。",
+    "sales.deals.drawer.show.description": "该商机的金额、阶段和活动记录。",
+    "sales.deals.detail.unnamed": "未命名商机",
+    "sales.deals.detail.profile": "概览",
+    "sales.deals.detail.createdAt": "创建时间",
+    "sales.deals.detail.activities": "活动记录",
+    "sales.deals.detail.loadError.title": "无法加载商机",
+    "sales.deals.detail.loadError.description":
+      "该商机可能已不存在，或你没有查看权限。",
+
+    // Forecast / leaderboard
+    "sales.forecast.kpi.pipelineValue": "进行中管道金额",
+    "sales.forecast.kpi.wonValue": "累计赢单金额",
+    "sales.forecast.kpi.winRate": "赢单率",
+    "sales.forecast.kpi.avgDealSize": "平均商机金额",
+    "sales.forecast.funnel.title": "转化漏斗",
+    "sales.forecast.leaderboard.title": "负责人排行榜",
+    "sales.forecast.leaderboard.owner": "负责人",
+    "sales.forecast.leaderboard.wonValue": "赢单金额",
+    "sales.forecast.leaderboard.winRate": "赢单率",
+    "sales.forecast.leaderboard.deals": "商机数",
+    "sales.forecast.leaderboard.empty": "暂无商机。",
+    "sales.forecast.leaderboard.unassigned": "未指派",
+    "sales.forecast.loadError.title": "无法加载销售预测",
+    "sales.forecast.loadError.description": "请检查网络连接后重试。",
 
     // Accounts
     "sales.accounts.drawer.create.title": "新建客户",
@@ -310,6 +400,8 @@ export const salesLocale = {
     "sales.accounts.columns.industry": "行业",
     "sales.accounts.columns.owner": "负责人",
     "sales.accounts.columns.website": "网站",
+    "sales.accounts.detail.timeline": "时间线",
+    "sales.accounts.detail.timeline.empty": "该客户名下商机暂无活动记录。",
 
     // Contacts
     "sales.contacts.drawer.create.title": "新建联系人",
@@ -345,12 +437,33 @@ export const salesLocale = {
     "sales.leads.placeholder.company": "例如：Vertex Logistics",
     "sales.leads.placeholder.source": "选择来源",
     "sales.leads.validation.name": "请填写线索姓名",
+    "sales.leads.drawer.show.description": "线索详情、甄别与转化。",
+    "sales.leads.detail.unnamed": "未命名线索",
+    "sales.leads.detail.profile": "资料",
+    "sales.leads.detail.createdAt": "获取时间",
+    "sales.leads.detail.convert": "转化",
+    "sales.leads.detail.converted": "已转化",
+    "sales.leads.detail.loadError.title": "无法加载线索",
+    "sales.leads.detail.loadError.description":
+      "该线索可能已不存在，或你没有查看权限。",
+    "sales.leads.detail.convert.title": "转化线索",
+    "sales.leads.detail.convert.description":
+      "基于该线索创建客户、联系人和商机。",
+    "sales.leads.detail.convert.accountName": "客户名称",
+    "sales.leads.detail.convert.contactName": "主要联系人",
+    "sales.leads.detail.convert.dealTitle": "商机名称",
+    "sales.leads.detail.convert.dealAmount": "商机金额（可选）",
+    "sales.leads.detail.convert.dealTitleDefault": "新商机",
+    "sales.leads.detail.convert.submit": "转化线索",
+    "sales.leads.detail.convert.submitting": "转化中...",
+    "sales.leads.detail.convert.error": "转化失败，请检查字段后重试。",
 
     // Activities
     "sales.activities.drawer.create.title": "记录活动",
     "sales.activities.drawer.create.description": "记录与商机相关的电话、邮件或会议。",
     "sales.activities.drawer.edit.title": "编辑活动",
     "sales.activities.drawer.edit.description": "更新这条活动记录。",
+    "sales.activities.drawer.show.description": "该活动记录的完整详情。",
     "sales.activities.form.create": "记录活动",
     "sales.activities.form.creating": "记录中...",
     "sales.activities.fields.type": "类型",
@@ -362,5 +475,13 @@ export const salesLocale = {
     "sales.activities.placeholder.notes": "沟通了什么、下一步计划...",
     "sales.activities.validation.subject": "请填写主题",
     "sales.activities.validation.deal": "请将此活动关联到一笔商机",
+    "sales.activities.actions.log": "记录活动",
+    "sales.activities.empty": "该商机暂无活动记录。",
+    "sales.activities.detail.unnamed": "未命名活动",
+    "sales.activities.detail.profile": "详情",
+    "sales.activities.detail.noNotes": "暂无备注。",
+    "sales.activities.detail.loadError.title": "无法加载活动",
+    "sales.activities.detail.loadError.description":
+      "该活动可能已不存在，或你没有查看权限。",
   },
 };

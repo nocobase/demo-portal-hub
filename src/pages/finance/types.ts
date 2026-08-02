@@ -45,3 +45,12 @@ export type InvoiceFormValues = {
   due_date: string;
   status: string;
 };
+
+export type InvoiceLineItem = {
+  id: number;
+  invoice_id: number;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+};

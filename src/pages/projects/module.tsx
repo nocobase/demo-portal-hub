@@ -9,12 +9,15 @@ import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { MilestonesLayout } from "@/pages/projects/milestones/list";
 import { MilestoneCreate, MilestoneEdit } from "@/pages/projects/milestones/form";
+import { MilestoneShow } from "@/pages/projects/milestones/show";
 import { ProjectsLayout } from "@/pages/projects/projects/list";
 import { ProjectCreate, ProjectEdit } from "@/pages/projects/projects/form";
 import { ProjectShow } from "@/pages/projects/projects/show";
 import { projectRoutes } from "@/pages/projects/routes";
 import { TaskBoardPage } from "@/pages/projects/tasks/board";
+import { ChecklistCreate, ChecklistEdit } from "@/pages/projects/tasks/checklist";
 import { TaskCreate, TaskEdit } from "@/pages/projects/tasks/form";
+import { TaskShow } from "@/pages/projects/tasks/show";
 
 const denied = <AccessDenied />;
 
@@ -39,6 +42,60 @@ function ProjectScopedMilestoneEdit() {
   const { id } = useParams<{ id: string }>();
   return <MilestoneEdit presetProjectId={id} idParam="msId" />;
 }
+
+// --- Nested task-scoped surfaces (inside the task detail drawer) -----------
+
+function TaskScopedChecklistCreate() {
+  const { id } = useParams<{ id: string }>();
+  return <ChecklistCreate presetTaskId={id} />;
+}
+
+function TaskScopedChecklistEdit() {
+  const { id } = useParams<{ id: string }>();
+  return <ChecklistEdit presetTaskId={id} />;
+}
+
+const taskShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_pj_tasks.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_pj_tasks" action="edit" fallback={denied}>
+        <TaskEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_pj_tasks.show.checklist.create",
+    path: "checklist/create",
+    element: (
+      <CanAccess resource="hub_pj_checklist" action="create" fallback={denied}>
+        <TaskScopedChecklistCreate />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_pj_tasks.show.checklist.edit",
+    path: "checklist/edit/:itemId",
+    element: (
+      <CanAccess resource="hub_pj_checklist" action="edit" fallback={denied}>
+        <TaskScopedChecklistEdit />
+      </CanAccess>
+    ),
+  },
+];
+
+const milestoneShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_pj_milestones.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_pj_milestones" action="edit" fallback={denied}>
+        <MilestoneEdit />
+      </CanAccess>
+    ),
+  },
+];
 
 const projectShowChildren: AppRouteDefinition[] = [
   {
@@ -188,6 +245,17 @@ export const projectsModule = {
             </CanAccess>
           ),
         },
+        {
+          name: "hub_pj_tasks.show",
+          path: "show/:id",
+          resourceAction: "show",
+          element: (
+            <CanAccess resource="hub_pj_tasks" action="show" fallback={denied}>
+              <TaskShow />
+            </CanAccess>
+          ),
+          children: taskShowChildren,
+        },
       ],
     },
     {
@@ -230,6 +298,17 @@ export const projectsModule = {
               <MilestoneEdit />
             </CanAccess>
           ),
+        },
+        {
+          name: "hub_pj_milestones.show",
+          path: "show/:id",
+          resourceAction: "show",
+          element: (
+            <CanAccess resource="hub_pj_milestones" action="show" fallback={denied}>
+              <MilestoneShow />
+            </CanAccess>
+          ),
+          children: milestoneShowChildren,
         },
       ],
     },

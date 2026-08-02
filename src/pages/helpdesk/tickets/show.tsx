@@ -7,7 +7,7 @@ import {
   useTranslate,
 } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
-import { Pencil, RotateCw, Send } from "lucide-react";
+import { ArrowRightLeft, Pencil, RotateCw, Send } from "lucide-react";
 import { useNavigate, useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { EditButton } from "@/components/resources/buttons/edit";
@@ -91,6 +91,15 @@ export const TicketShow = () => {
             >
               <RotateCw />
             </RefreshButton>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              aria-label={translate("helpdesk.show.changeStatus", { ns: "starter" }, "Change status")}
+              title={translate("helpdesk.show.changeStatus", { ns: "starter" }, "Change status")}
+              onClick={() => navigate("status")}
+            >
+              <ArrowRightLeft />
+            </Button>
             <EditButton
               resource={TICKETS}
               recordItemId={ticket.id}

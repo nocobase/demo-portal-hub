@@ -3,12 +3,15 @@
 // alongside it in the same nav group.
 export const financeRoutes = {
   dashboard: "/finance",
+  reports: "/finance/reports",
   invoices: "/invoices",
   invoiceCreate: "/invoices/create",
   invoiceEdit: "/invoices/edit/:id",
+  invoiceShow: "/invoices/show/:id",
   expenses: "/expenses",
   expenseCreate: "/expenses/create",
   expenseEdit: "/expenses/edit/:id",
+  expenseShow: "/expenses/show/:id",
 } as const;
 
 export const invoiceEditPath = (id: string | number) =>

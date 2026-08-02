@@ -49,3 +49,18 @@ export type CategoryNode = CategoryRecord & {
   descendantIds: string[];
   articleCount: number;
 };
+
+export type FeedbackRecord = {
+  id: string | number;
+  article_id?: string | number | null;
+  rating?: string | null;
+  comment?: string | null;
+  author_id?: string | number | null;
+  author?: UserRef | null;
+  createdAt?: string;
+};
+
+export type FeedbackFormValues = {
+  rating: string;
+  comment: string;
+};

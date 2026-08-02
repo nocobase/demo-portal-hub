@@ -69,8 +69,14 @@ function AccountList() {
           </div>
         ),
         enableSorting: true,
-        cell: ({ getValue }) => (
-          <span className="font-medium">{getValue() || "—"}</span>
+        cell: ({ getValue, row }) => (
+          <button
+            type="button"
+            className="font-medium text-left text-primary underline-offset-2 hover:underline"
+            onClick={() => openChild(`show/${row.original.id}`)}
+          >
+            {getValue() || "—"}
+          </button>
         ),
       }),
       columnHelper.accessor("industry", {

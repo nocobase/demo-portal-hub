@@ -1,4 +1,5 @@
 import { CalendarCheck, Network, Users } from "lucide-react";
+import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
@@ -11,14 +12,77 @@ import {
   DepartmentEdit,
 } from "@/pages/hr/departments/create-edit";
 import { DepartmentsLayout } from "@/pages/hr/departments/tree";
+import { DepartmentShow } from "@/pages/hr/departments/show";
 import { EmployeeCreate, EmployeeEdit } from "@/pages/hr/employees/create-edit";
 import { EmployeesLayout } from "@/pages/hr/employees/list";
 import { EmployeeShow } from "@/pages/hr/employees/show";
 import { LeaveCreate, LeaveEdit } from "@/pages/hr/leave/create-edit";
 import { LeaveLayout } from "@/pages/hr/leave/list";
+import { LeaveShow } from "@/pages/hr/leave/show";
 import { hrRoutes } from "@/pages/hr/routes";
 
 const denied = <AccessDenied />;
+
+// Leave entries opened from inside an employee drawer: preset the employee
+// and return to that employee's detail drawer on close (contextual nav state).
+function EmployeeNestedLeaveCreate() {
+  const { id } = useParams<{ id: string }>();
+  return <LeaveCreate presetEmployeeId={id} />;
+}
+
+const employeeShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_hr_employees.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_hr_employees" action="edit" fallback={denied}>
+        <EmployeeEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_hr_employees.show.leave.create",
+    path: "leave/create",
+    element: (
+      <CanAccess resource="hub_hr_leave_requests" action="create" fallback={denied}>
+        <EmployeeNestedLeaveCreate />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_hr_employees.show.leave.edit",
+    path: "leave/edit/:leaveId",
+    element: (
+      <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
+        <LeaveEdit idParam="leaveId" />
+      </CanAccess>
+    ),
+  },
+];
+
+const departmentShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_hr_departments.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_hr_departments" action="edit" fallback={denied}>
+        <DepartmentEdit />
+      </CanAccess>
+    ),
+  },
+];
+
+const leaveShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_hr_leave_requests.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
+        <LeaveEdit />
+      </CanAccess>
+    ),
+  },
+];
 
 const routes: AppRouteDefinition[] = defineAppRoutes([
   {
@@ -72,6 +136,7 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
             <EmployeeShow />
           </CanAccess>
         ),
+        children: employeeShowChildren,
       },
     ],
   },
@@ -116,6 +181,17 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
           </CanAccess>
         ),
       },
+      {
+        name: "hub_hr_departments.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_hr_departments" action="show" fallback={denied}>
+            <DepartmentShow />
+          </CanAccess>
+        ),
+        children: departmentShowChildren,
+      },
     ],
   },
   {
@@ -158,6 +234,17 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
             <LeaveEdit />
           </CanAccess>
         ),
+      },
+      {
+        name: "hub_hr_leave_requests.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_hr_leave_requests" action="show" fallback={denied}>
+            <LeaveShow />
+          </CanAccess>
+        ),
+        children: leaveShowChildren,
       },
     ],
   },

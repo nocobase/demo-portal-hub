@@ -6,6 +6,7 @@ export const knowledgeRoutes = {
   articlesCreate: "/articles/create",
   articlesEdit: "/articles/edit/:id",
   articlesShow: "/articles/show/:id",
+  articlesFeedback: "/articles/show/:id/feedback",
   categories: "/categories",
   categoriesCreate: "/categories/create",
   categoriesEdit: "/categories/edit/:id",

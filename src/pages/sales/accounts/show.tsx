@@ -1,5 +1,6 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Mail, Pencil, Phone, Plus, Trash2, Users } from "lucide-react";
+import { useMemo } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { DeleteButton } from "@/components/resources/buttons/delete";
@@ -10,10 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import {
+  ACTIVITY_TYPES,
   DEAL_STAGES,
   INDUSTRIES,
   formatCurrency,
   formatDate,
+  formatDateTime,
   labelFor,
 } from "../constants";
 import {
@@ -28,7 +31,7 @@ import {
   SimpleTable,
   useLocale,
 } from "../shared";
-import type { AccountRecord, ContactRecord, DealRecord } from "../types";
+import type { AccountRecord, ActivityRecord, ContactRecord, DealRecord } from "../types";
 
 export function AccountShow() {
   const translate = useTranslate();
@@ -167,6 +170,8 @@ export function AccountShow() {
                   locale={locale}
                   openChild={openChild}
                 />
+                <Separator />
+                <TimelineSection accountId={id} locale={locale} />
               </>
             ) : null}
           </div>
@@ -388,6 +393,107 @@ function DealsSection({
           ))
         )}
       </SimpleTable>
+    </DrawerSection>
+  );
+}
+
+function activityIcon(type: string | null | undefined) {
+  switch (type) {
+    case "email":
+      return Mail;
+    case "meeting":
+      return Users;
+    default:
+      return Phone;
+  }
+}
+
+// Cross-entity timeline: pulls this account's deals, then every activity
+// logged against any of those deals, merged into one chronological feed.
+function TimelineSection({
+  accountId,
+  locale,
+}: {
+  accountId: string;
+  locale: string;
+}) {
+  const translate = useTranslate();
+  const { result: dealsResult } = useList<DealRecord>({
+    resource: "hub_sales_deals",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    filters: [{ field: "account_id", operator: "eq", value: accountId }],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+  const dealIds = useMemo(
+    () => dealsResult.data.map((deal) => deal.id),
+    [dealsResult.data]
+  );
+
+  const { result: activitiesResult } = useList<ActivityRecord>({
+    resource: "hub_sales_activities",
+    pagination: { mode: "server", currentPage: 1, pageSize: 50 },
+    sorters: [{ field: "date", order: "desc" }],
+    filters:
+      dealIds.length > 0
+        ? [{ field: "deal_id", operator: "in", value: dealIds }]
+        : [],
+    meta: { appends: ["deal"] },
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: dealIds.length > 0 },
+  });
+
+  return (
+    <DrawerSection
+      title={translate(
+        "sales.accounts.detail.timeline",
+        { ns: "starter" },
+        "Timeline"
+      )}
+    >
+      {dealIds.length === 0 || activitiesResult.data.length === 0 ? (
+        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+          {translate(
+            "sales.accounts.detail.timeline.empty",
+            { ns: "starter" },
+            "No activity logged for this account's deals yet."
+          )}
+        </p>
+      ) : (
+        <ol className="space-y-3">
+          {activitiesResult.data.map((activity) => {
+            const Icon = activityIcon(activity.type);
+            return (
+              <li key={String(activity.id)} className="flex gap-3">
+                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-500/12 text-blue-600 dark:text-blue-400">
+                  <Icon className="size-3.5" />
+                </span>
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                    <span className="text-sm font-medium">
+                      {activity.subject || "—"}
+                    </span>
+                    <span className="text-xs whitespace-nowrap text-muted-foreground">
+                      {formatDateTime(activity.date, locale)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <EnumBadge
+                      value={activity.type ?? "call"}
+                      label={labelFor(ACTIVITY_TYPES, activity.type ?? "call", translate)}
+                    />
+                    {activity.deal?.title ? (
+                      <span className="text-xs text-muted-foreground">
+                        {activity.deal.title}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      )}
     </DrawerSection>
   );
 }

@@ -5,6 +5,7 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { ArticleFeedback } from "@/pages/knowledge/articles/feedback";
 import { ArticleCreate, ArticleEdit } from "@/pages/knowledge/articles/form";
 import { ArticlesLayout } from "@/pages/knowledge/articles/list";
 import { ArticleShow } from "@/pages/knowledge/articles/show";
@@ -90,6 +91,15 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         element: (
           <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
             <ArticleEdit returnTo="show" />
+          </CanAccess>
+        ),
+      },
+      {
+        name: "hub_kb_articles.show.feedback",
+        path: "feedback",
+        element: (
+          <CanAccess resource="hub_kb_article_feedback" action="create" fallback={denied}>
+            <ArticleFeedback />
           </CanAccess>
         ),
       },

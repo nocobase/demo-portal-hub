@@ -305,7 +305,7 @@ export function PipelinePage() {
                           key={String(deal.id)}
                           deal={deal}
                           locale={locale}
-                          onOpen={() => openChild(`edit/${deal.id}`)}
+                          onOpen={() => openChild(`show/${deal.id}`)}
                         />
                       ))
                     )}

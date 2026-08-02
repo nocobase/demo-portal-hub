@@ -79,6 +79,7 @@ export const knowledgeLocale = {
     // Article reader (show)
     "knowledge.reader.back": "Back to articles",
     "knowledge.reader.edit": "Edit",
+    "knowledge.reader.giveFeedback": "Give feedback",
     "knowledge.reader.error.title": "Unable to load article",
     "knowledge.reader.error.description":
       "The article may no longer exist, or you may not have permission to view it.",
@@ -86,6 +87,22 @@ export const knowledgeLocale = {
     "knowledge.reader.updatedPrefix": "Updated",
     "knowledge.reader.views": "views",
     "knowledge.reader.empty": "This article has no content yet.",
+    "knowledge.reader.related.title": "Related articles",
+
+    // Feedback (nested drawer + panel)
+    "knowledge.feedback.drawer.title": "Leave feedback",
+    "knowledge.feedback.drawer.description":
+      "Tell the author whether this article was helpful.",
+    "knowledge.feedback.fields.rating": "Was this article helpful?",
+    "knowledge.feedback.fields.comment": "Comment (optional)",
+    "knowledge.feedback.fields.comment.placeholder":
+      "What worked, or what's missing?",
+    "knowledge.feedback.rating.helpful": "Helpful",
+    "knowledge.feedback.rating.notHelpful": "Not helpful",
+    "knowledge.feedback.submit": "Submit feedback",
+    "knowledge.feedback.panel.title": "Feedback",
+    "knowledge.feedback.panel.empty":
+      "No feedback yet. Be the first to weigh in.",
 
     // Categories list
     "knowledge.categories.title": "Categories",
@@ -211,6 +228,7 @@ export const knowledgeLocale = {
     // Article reader (show)
     "knowledge.reader.back": "返回文章列表",
     "knowledge.reader.edit": "编辑",
+    "knowledge.reader.giveFeedback": "反馈",
     "knowledge.reader.error.title": "无法加载文章",
     "knowledge.reader.error.description":
       "该文章可能已不存在,或您没有查看权限。",
@@ -218,6 +236,19 @@ export const knowledgeLocale = {
     "knowledge.reader.updatedPrefix": "更新于",
     "knowledge.reader.views": "次浏览",
     "knowledge.reader.empty": "这篇文章暂无内容。",
+    "knowledge.reader.related.title": "相关文章",
+
+    // Feedback (nested drawer + panel)
+    "knowledge.feedback.drawer.title": "提交反馈",
+    "knowledge.feedback.drawer.description": "告诉作者这篇文章是否对你有帮助。",
+    "knowledge.feedback.fields.rating": "这篇文章对你有帮助吗?",
+    "knowledge.feedback.fields.comment": "评论(可选)",
+    "knowledge.feedback.fields.comment.placeholder": "哪里做得好,或者缺了什么?",
+    "knowledge.feedback.rating.helpful": "有帮助",
+    "knowledge.feedback.rating.notHelpful": "没帮助",
+    "knowledge.feedback.submit": "提交反馈",
+    "knowledge.feedback.panel.title": "反馈",
+    "knowledge.feedback.panel.empty": "暂无反馈,来抢个沙发。",
 
     // Categories list
     "knowledge.categories.title": "分类",

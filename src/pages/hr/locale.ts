@@ -56,6 +56,14 @@ export const hrLocale = {
     "hr.stats.chart.title": "Headcount by department",
     "hr.stats.chart.description": "Active and on-leave staff per team.",
     "hr.stats.chart.empty": "No staff assigned yet.",
+    "hr.stats.statusChart.title": "Status breakdown",
+    "hr.stats.statusChart.description": "Active, on-leave and terminated headcount.",
+    "hr.stats.tenureChart.title": "Tenure",
+    "hr.stats.tenureChart.description": "How long the current team has been with us.",
+    "hr.stats.tenure.lt1": "< 1 year",
+    "hr.stats.tenure.1to3": "1–3 years",
+    "hr.stats.tenure.3to5": "3–5 years",
+    "hr.stats.tenure.5plus": "5+ years",
 
     // employees — fields
     "hr.employees.fields.name": "Name",
@@ -88,8 +96,11 @@ export const hrLocale = {
     "hr.employees.detail.loadError.description":
       "The record may no longer exist, or you may not have permission to view it.",
     "hr.employees.detail.profile": "Profile",
+    "hr.employees.detail.reports": "Direct reports",
+    "hr.employees.detail.reportsEmpty": "No one reports to this person.",
     "hr.employees.detail.leaveHistory": "Leave history",
     "hr.employees.detail.leaveEmpty": "No leave requests on record.",
+    "hr.employees.actions.logLeave": "Log leave",
 
     // departments
     "hr.departments.title": "Departments",
@@ -116,6 +127,14 @@ export const hrLocale = {
       "Create a team and optionally nest it under a parent.",
     "hr.departments.drawer.edit.title": "Edit department",
     "hr.departments.drawer.edit.description": "Rename or re-parent this team.",
+    "hr.departments.drawer.show.description": "Team headcount and current members.",
+    "hr.departments.detail.unnamed": "Department",
+    "hr.departments.detail.loadError.title": "Unable to load department",
+    "hr.departments.detail.loadError.description":
+      "The department may no longer exist, or you may not have permission to view it.",
+    "hr.departments.detail.info": "Info",
+    "hr.departments.detail.members": "Members",
+    "hr.departments.detail.membersEmpty": "No one is assigned to this department yet.",
 
     // leave
     "hr.leave.fields.employee": "Employee",
@@ -141,6 +160,12 @@ export const hrLocale = {
     "hr.leave.drawer.create.description": "Log time off for a team member.",
     "hr.leave.drawer.edit.title": "Edit leave request",
     "hr.leave.drawer.edit.description": "Update the details of this request.",
+    "hr.leave.drawer.show.description": "Review the request and record a decision.",
+    "hr.leave.detail.unnamed": "Leave request",
+    "hr.leave.detail.loadError.title": "Unable to load request",
+    "hr.leave.detail.loadError.description":
+      "The request may no longer exist, or you may not have permission to view it.",
+    "hr.leave.detail.info": "Request",
   },
   "zh-CN": {
     // resources / nav
@@ -197,6 +222,14 @@ export const hrLocale = {
     "hr.stats.chart.title": "各部门人数",
     "hr.stats.chart.description": "各团队在职与休假的员工数。",
     "hr.stats.chart.empty": "尚未分配员工。",
+    "hr.stats.statusChart.title": "状态分布",
+    "hr.stats.statusChart.description": "在职、休假与离职人数分布。",
+    "hr.stats.tenureChart.title": "司龄分布",
+    "hr.stats.tenureChart.description": "当前团队在职时长分布。",
+    "hr.stats.tenure.lt1": "不满 1 年",
+    "hr.stats.tenure.1to3": "1–3 年",
+    "hr.stats.tenure.3to5": "3–5 年",
+    "hr.stats.tenure.5plus": "5 年以上",
 
     // employees — fields
     "hr.employees.fields.name": "姓名",
@@ -228,8 +261,11 @@ export const hrLocale = {
     "hr.employees.detail.loadError.description":
       "该记录可能已不存在,或你没有查看权限。",
     "hr.employees.detail.profile": "档案",
+    "hr.employees.detail.reports": "直接下属",
+    "hr.employees.detail.reportsEmpty": "暂无下属汇报给此人。",
     "hr.employees.detail.leaveHistory": "休假记录",
     "hr.employees.detail.leaveEmpty": "暂无休假记录。",
+    "hr.employees.actions.logLeave": "登记休假",
 
     // departments
     "hr.departments.title": "部门",
@@ -253,6 +289,14 @@ export const hrLocale = {
     "hr.departments.drawer.create.description": "创建团队,并可选择嵌套到上级部门下。",
     "hr.departments.drawer.edit.title": "编辑部门",
     "hr.departments.drawer.edit.description": "重命名或调整此团队的上级。",
+    "hr.departments.drawer.show.description": "团队人数与当前成员。",
+    "hr.departments.detail.unnamed": "部门",
+    "hr.departments.detail.loadError.title": "无法加载部门",
+    "hr.departments.detail.loadError.description":
+      "该记录可能已不存在,或你没有查看权限。",
+    "hr.departments.detail.info": "信息",
+    "hr.departments.detail.members": "成员",
+    "hr.departments.detail.membersEmpty": "该部门暂未分配成员。",
 
     // leave
     "hr.leave.fields.employee": "员工",
@@ -278,5 +322,11 @@ export const hrLocale = {
     "hr.leave.drawer.create.description": "为团队成员登记休假。",
     "hr.leave.drawer.edit.title": "编辑休假申请",
     "hr.leave.drawer.edit.description": "更新此申请的详情。",
+    "hr.leave.drawer.show.description": "查看申请详情并作出审批决定。",
+    "hr.leave.detail.unnamed": "休假申请",
+    "hr.leave.detail.loadError.title": "无法加载申请",
+    "hr.leave.detail.loadError.description":
+      "该记录可能已不存在,或你没有查看权限。",
+    "hr.leave.detail.info": "申请详情",
   },
 };

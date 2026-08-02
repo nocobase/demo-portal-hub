@@ -31,7 +31,7 @@ import {
   optionLabel,
   type Option,
 } from "../constants";
-import { financeRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { Expense, ExpenseFormValues, UserRef } from "../types";
 
 const DEFAULTS: ExpenseFormValues = {
@@ -45,6 +45,7 @@ const DEFAULTS: ExpenseFormValues = {
 
 export function ExpenseCreate() {
   const t = useTranslate();
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -55,7 +56,7 @@ export function ExpenseCreate() {
           "Log an employee expense claim for review."
         )}
         closeLabel={t("finance.common.close", "Close")}
-        closeTo={financeRoutes.expenses}
+        closeTo={closeTo}
         beforeClose={beforeClose}
       >
         <ExpenseForm mode="create" />
@@ -67,6 +68,7 @@ export function ExpenseCreate() {
 
 export function ExpenseEdit() {
   const t = useTranslate();
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -77,7 +79,7 @@ export function ExpenseEdit() {
           "Update the claim details or status."
         )}
         closeLabel={t("finance.common.close", "Close")}
-        closeTo={financeRoutes.expenses}
+        closeTo={closeTo}
         beforeClose={beforeClose}
       >
         <ExpenseForm mode="edit" />

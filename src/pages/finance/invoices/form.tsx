@@ -26,7 +26,7 @@ import {
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
 import { INVOICE_STATUSES, optionLabel } from "../constants";
-import { financeRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { Invoice, InvoiceFormValues } from "../types";
 
 const DEFAULTS: InvoiceFormValues = {
@@ -40,6 +40,7 @@ const DEFAULTS: InvoiceFormValues = {
 
 export function InvoiceCreate() {
   const t = useTranslate();
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -50,7 +51,7 @@ export function InvoiceCreate() {
           "Issue a new invoice to a client."
         )}
         closeLabel={t("finance.common.close", "Close")}
-        closeTo={financeRoutes.invoices}
+        closeTo={closeTo}
         beforeClose={beforeClose}
       >
         <InvoiceForm mode="create" />
@@ -62,6 +63,7 @@ export function InvoiceCreate() {
 
 export function InvoiceEdit() {
   const t = useTranslate();
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -72,7 +74,7 @@ export function InvoiceEdit() {
           "Update invoice details or status."
         )}
         closeLabel={t("finance.common.close", "Close")}
-        closeTo={financeRoutes.invoices}
+        closeTo={closeTo}
         beforeClose={beforeClose}
       >
         <InvoiceForm mode="edit" />

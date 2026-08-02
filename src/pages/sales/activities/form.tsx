@@ -13,6 +13,10 @@ import { useContextualCloseTo } from "../route-surfaces";
 import type { ActivityFormValues, ActivityRecord } from "../types";
 import { ActivityFormFields } from "./fields";
 
+type ActivitySurfaceProps = {
+  presetDealId?: string;
+};
+
 const toServerValues = (values: ActivityFormValues) => {
   const { deal_id, ...rest } = values;
   return {
@@ -21,7 +25,7 @@ const toServerValues = (values: ActivityFormValues) => {
   } as unknown as ActivityFormValues;
 };
 
-export const ActivityCreate = () => {
+export const ActivityCreate = ({ presetDealId }: ActivitySurfaceProps = {}) => {
   const translate = useTranslate();
   const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
@@ -42,14 +46,14 @@ export const ActivityCreate = () => {
         closeLabel={translate("sales.common.close", { ns: "starter" }, "Close")}
         beforeClose={beforeClose}
       >
-        <ActivityCreateForm />
+        <ActivityCreateForm presetDealId={presetDealId} />
       </RouteDrawer>
       {confirmation}
     </>
   );
 };
 
-function ActivityCreateForm() {
+function ActivityCreateForm({ presetDealId }: ActivitySurfaceProps) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
   const {
@@ -67,7 +71,7 @@ function ActivityCreateForm() {
       subject: "",
       notes: "",
       date: null,
-      deal_id: null,
+      deal_id: presetDealId ? String(presetDealId) : null,
     },
   });
 
@@ -78,7 +82,7 @@ function ActivityCreateForm() {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <ActivityFormFields form={form} />
+          <ActivityFormFields form={form} presetDealId={presetDealId} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>

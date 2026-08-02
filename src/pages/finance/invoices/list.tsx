@@ -2,6 +2,7 @@ import { useList, useTranslate } from "@refinedev/core";
 import {
   AlertTriangle,
   DollarSign,
+  Eye,
   FileClock,
   Pencil,
   Trash2,
@@ -14,6 +15,7 @@ import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import {
   Card,
   CardContent,
@@ -31,6 +33,7 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { INVOICE_STATUSES, lookup, optionLabel } from "../constants";
+import { useOpenContextualChild } from "../route-surfaces";
 import { fmtDate, money, PageHeader, Pill, StatCard } from "../shared";
 import type { Invoice } from "../types";
 
@@ -56,6 +59,7 @@ export function InvoiceListPage() {
 
 function InvoiceList() {
   const t = useTranslate();
+  const openChild = useOpenContextualChild();
   const { result, query } = useList<Invoice>({
     resource: RESOURCE,
     pagination: { mode: "off" },
@@ -148,7 +152,7 @@ function InvoiceList() {
                   <TableHead>{t("finance.invoices.col.issued", "Issued")}</TableHead>
                   <TableHead>{t("finance.invoices.col.due", "Due")}</TableHead>
                   <TableHead>{t("finance.invoices.col.status", "Status")}</TableHead>
-                  <TableHead className="w-[104px] text-right">{t("finance.common.actions", "Actions")}</TableHead>
+                  <TableHead className="w-[136px] text-right">{t("finance.common.actions", "Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -170,9 +174,21 @@ function InvoiceList() {
                     return (
                       <TableRow
                         key={inv.id}
-                        className={cn(overdue && "bg-red-500/[0.06] hover:bg-red-500/[0.09]")}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openChild(`show/${inv.id}`)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openChild(`show/${inv.id}`);
+                          }
+                        }}
+                        className={cn(
+                          "cursor-pointer",
+                          overdue && "bg-red-500/[0.06] hover:bg-red-500/[0.09]"
+                        )}
                       >
-                        <TableCell className="font-medium tabular-nums">
+                        <TableCell className="font-medium tabular-nums text-primary underline-offset-2 hover:underline">
                           {inv.invoice_number}
                         </TableCell>
                         <TableCell>{inv.client_name || "—"}</TableCell>
@@ -198,8 +214,19 @@ function InvoiceList() {
                             return <Pill option={opt} label={optionLabel(opt, t)} />;
                           })()}
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(event) => event.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
+                            <ShowButton
+                              resource={RESOURCE}
+                              recordItemId={inv.id}
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t("finance.invoices.view", "View invoice")}
+                              title={t("finance.invoices.view", "View invoice")}
+                              onClick={() => openChild(`show/${inv.id}`)}
+                            >
+                              <Eye />
+                            </ShowButton>
                             <EditButton
                               resource={RESOURCE}
                               recordItemId={inv.id}
@@ -207,6 +234,7 @@ function InvoiceList() {
                               size="icon"
                               aria-label={t("finance.invoices.edit", "Edit invoice")}
                               title={t("finance.invoices.edit", "Edit invoice")}
+                              onClick={() => openChild(`edit/${inv.id}`)}
                             >
                               <Pencil />
                             </EditButton>

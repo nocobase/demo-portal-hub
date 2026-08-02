@@ -1,4 +1,4 @@
-import { LifeBuoy } from "lucide-react";
+import { Gauge, LifeBuoy } from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -6,15 +6,34 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { HelpdeskDashboard } from "./dashboard";
 import { helpdeskRoutes } from "./routes";
 import { TicketCreate, TicketEdit } from "./tickets/create-edit";
 import { TicketsLayout } from "./tickets/list";
 import { TicketShow } from "./tickets/show";
+import { TicketStatusChange } from "./tickets/status-change";
 
 const RESOURCE = "hub_hd_tickets";
 const denied = <AccessDenied />;
 
 const routes: AppRouteDefinition[] = defineAppRoutes([
+  {
+    name: "helpdesk-dashboard",
+    path: helpdeskRoutes.dashboard,
+    element: <HelpdeskDashboard />,
+    resource: {
+      meta: {
+        label: "Workload",
+        i18nKey: "helpdesk.resources.dashboard",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "helpdesk.resources.dashboard.description",
+        priority: 61,
+        icon: <Gauge />,
+        description: "SLA health, queue workload and the priority mix.",
+        acl: false,
+      },
+    },
+  },
   {
     name: RESOURCE,
     path: helpdeskRoutes.tickets,
@@ -72,6 +91,15 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
             element: (
               <CanAccess resource={RESOURCE} action="edit" fallback={denied}>
                 <TicketEdit returnTo="show" />
+              </CanAccess>
+            ),
+          },
+          {
+            name: `${RESOURCE}.show.status`,
+            path: "status",
+            element: (
+              <CanAccess resource={RESOURCE} action="edit" fallback={denied}>
+                <TicketStatusChange />
               </CanAccess>
             ),
           },

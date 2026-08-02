@@ -62,3 +62,17 @@ export type MilestoneFormValues = {
   done: boolean;
   project_id: string | null;
 };
+
+export type ChecklistRecord = {
+  id: string | number;
+  title?: string;
+  done?: boolean | null;
+  task?: TaskRecord | null;
+  createdAt?: string;
+};
+
+export type ChecklistFormValues = {
+  title: string;
+  done: boolean;
+  task_id: string | null;
+};

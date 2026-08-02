@@ -8,6 +8,7 @@ export const financeLocale = {
     "finance.resources.invoice": "Invoice",
     "finance.resources.expenses": "Expenses",
     "finance.resources.expense": "Expense",
+    "finance.resources.reports": "Reports",
 
     // Common
     "finance.common.actions": "Actions",
@@ -99,6 +100,27 @@ export const financeLocale = {
     "finance.invoices.empty": "No invoices yet.",
     "finance.invoices.edit": "Edit invoice",
     "finance.invoices.delete": "Delete invoice",
+    "finance.invoices.view": "View invoice",
+
+    // Invoices — detail drawer
+    "finance.invoices.detail.unnamed": "Invoice",
+    "finance.invoices.drawer.show.desc": "Line items and collection status for this invoice.",
+    "finance.invoices.detail.loadError.title": "Unable to load invoice",
+    "finance.invoices.detail.loadError.desc":
+      "The invoice may no longer exist, or you may not have permission to view it.",
+    "finance.invoices.detail.profile": "Invoice",
+    "finance.invoices.timeline.draft": "Draft",
+    "finance.invoices.timeline.sent": "Sent",
+    "finance.invoices.timeline.paid": "Paid",
+    "finance.invoices.timeline.overdue": "Overdue",
+    "finance.invoices.items.title": "Line items",
+    "finance.invoices.items.description": "Description",
+    "finance.invoices.items.qty": "Qty",
+    "finance.invoices.items.unitPrice": "Unit price",
+    "finance.invoices.items.lineTotal": "Line total",
+    "finance.invoices.items.empty": "No line items recorded.",
+    "finance.invoices.items.subtotal": "Items subtotal",
+    "finance.invoices.items.invoiceTotal": "invoice total",
 
     // Invoices — drawer / form
     "finance.invoices.drawer.create.title": "New invoice",
@@ -140,10 +162,28 @@ export const financeLocale = {
     "finance.expenses.empty": "No expenses yet.",
     "finance.expenses.edit": "Edit expense",
     "finance.expenses.delete": "Delete expense",
+    "finance.expenses.view": "View expense",
     "finance.expenses.action.approve": "Approve",
     "finance.expenses.action.reject": "Reject",
     "finance.expenses.notify.approved": "Expense approved",
     "finance.expenses.notify.rejected": "Expense rejected",
+
+    // Expenses — detail drawer
+    "finance.expenses.detail.unnamed": "Expense claim",
+    "finance.expenses.drawer.show.desc": "Claim details and approval status.",
+    "finance.expenses.detail.loadError.title": "Unable to load expense",
+    "finance.expenses.detail.loadError.desc":
+      "The claim may no longer exist, or you may not have permission to view it.",
+    "finance.expenses.detail.pendingNotice": "This claim is awaiting a decision.",
+    "finance.expenses.detail.profile": "Claim",
+
+    // Expenses — approve/reject decision drawer (nested under show)
+    "finance.expenses.decision.approveTitle": "Approve expense",
+    "finance.expenses.decision.rejectTitle": "Reject expense",
+    "finance.expenses.decision.approveDesc":
+      "This marks the claim approved and clears it for reimbursement.",
+    "finance.expenses.decision.rejectDesc":
+      "This marks the claim rejected. The employee can resubmit if needed.",
 
     // Expenses — drawer / form
     "finance.expenses.drawer.create.title": "New expense",
@@ -159,6 +199,28 @@ export const financeLocale = {
     "finance.expenses.field.employee": "Employee",
     "finance.expenses.field.employeePlaceholder": "Select an employee",
     "finance.expenses.form.create": "Create expense",
+
+    // Reports
+    "finance.reports.title": "Reports",
+    "finance.reports.subtitle":
+      "Breakdowns behind the headline numbers — aging, spend concentration and client collection.",
+    "finance.reports.aging.title": "Accounts receivable aging",
+    "finance.reports.aging.desc": "Unpaid invoice value grouped by how far past due it is.",
+    "finance.reports.aging.current": "Current",
+    "finance.reports.aging.d1_30": "1–30 days",
+    "finance.reports.aging.d31_60": "31–60 days",
+    "finance.reports.aging.d61_90": "61–90 days",
+    "finance.reports.aging.d90plus": "90+ days",
+    "finance.reports.aging.count_one": "{{count}} invoice",
+    "finance.reports.aging.count_other": "{{count}} invoices",
+    "finance.reports.employee.title": "Top spenders",
+    "finance.reports.employee.desc": "Approved + reimbursed spend by employee.",
+    "finance.reports.employee.empty": "No expense claims yet.",
+    "finance.reports.client.title": "Client collection",
+    "finance.reports.client.desc": "Invoiced vs. collected by client.",
+    "finance.reports.client.col.client": "Client",
+    "finance.reports.client.col.invoiced": "Invoiced",
+    "finance.reports.client.col.rate": "Collected",
   },
 
   "zh-CN": {
@@ -168,6 +230,7 @@ export const financeLocale = {
     "finance.resources.invoice": "发票",
     "finance.resources.expenses": "报销",
     "finance.resources.expense": "报销单",
+    "finance.resources.reports": "报表",
 
     // Common
     "finance.common.actions": "操作",
@@ -256,6 +319,26 @@ export const financeLocale = {
     "finance.invoices.empty": "暂无发票。",
     "finance.invoices.edit": "编辑发票",
     "finance.invoices.delete": "删除发票",
+    "finance.invoices.view": "查看发票",
+
+    // Invoices — detail drawer
+    "finance.invoices.detail.unnamed": "发票",
+    "finance.invoices.drawer.show.desc": "该发票的明细项和收款状态。",
+    "finance.invoices.detail.loadError.title": "无法加载发票",
+    "finance.invoices.detail.loadError.desc": "该发票可能已不存在,或您没有查看权限。",
+    "finance.invoices.detail.profile": "发票信息",
+    "finance.invoices.timeline.draft": "草稿",
+    "finance.invoices.timeline.sent": "已发送",
+    "finance.invoices.timeline.paid": "已付款",
+    "finance.invoices.timeline.overdue": "已逾期",
+    "finance.invoices.items.title": "明细项",
+    "finance.invoices.items.description": "说明",
+    "finance.invoices.items.qty": "数量",
+    "finance.invoices.items.unitPrice": "单价",
+    "finance.invoices.items.lineTotal": "小计",
+    "finance.invoices.items.empty": "暂无明细项记录。",
+    "finance.invoices.items.subtotal": "明细项小计",
+    "finance.invoices.items.invoiceTotal": "发票总额",
 
     // Invoices — drawer / form
     "finance.invoices.drawer.create.title": "新建发票",
@@ -295,10 +378,25 @@ export const financeLocale = {
     "finance.expenses.empty": "暂无报销。",
     "finance.expenses.edit": "编辑报销",
     "finance.expenses.delete": "删除报销",
+    "finance.expenses.view": "查看报销",
     "finance.expenses.action.approve": "批准",
     "finance.expenses.action.reject": "驳回",
     "finance.expenses.notify.approved": "报销已批准",
     "finance.expenses.notify.rejected": "报销已驳回",
+
+    // Expenses — detail drawer
+    "finance.expenses.detail.unnamed": "报销申请",
+    "finance.expenses.drawer.show.desc": "申请明细与审批状态。",
+    "finance.expenses.detail.loadError.title": "无法加载报销",
+    "finance.expenses.detail.loadError.desc": "该申请可能已不存在,或您没有查看权限。",
+    "finance.expenses.detail.pendingNotice": "该申请正等待审批决定。",
+    "finance.expenses.detail.profile": "申请信息",
+
+    // Expenses — approve/reject decision drawer (nested under show)
+    "finance.expenses.decision.approveTitle": "批准报销",
+    "finance.expenses.decision.rejectTitle": "驳回报销",
+    "finance.expenses.decision.approveDesc": "将该申请标记为已批准,可进入报销流程。",
+    "finance.expenses.decision.rejectDesc": "将该申请标记为已驳回,员工可重新提交。",
 
     // Expenses — drawer / form
     "finance.expenses.drawer.create.title": "新建报销",
@@ -313,5 +411,25 @@ export const financeLocale = {
     "finance.expenses.field.employee": "员工",
     "finance.expenses.field.employeePlaceholder": "选择员工",
     "finance.expenses.form.create": "创建报销",
+
+    // Reports
+    "finance.reports.title": "报表",
+    "finance.reports.subtitle": "关键数字背后的明细分解——账龄、支出集中度与客户回款。",
+    "finance.reports.aging.title": "应收账款账龄分析",
+    "finance.reports.aging.desc": "按逾期天数分组的未付发票金额。",
+    "finance.reports.aging.current": "未到期",
+    "finance.reports.aging.d1_30": "逾期1-30天",
+    "finance.reports.aging.d31_60": "逾期31-60天",
+    "finance.reports.aging.d61_90": "逾期61-90天",
+    "finance.reports.aging.d90plus": "逾期90天以上",
+    "finance.reports.aging.count_other": "{{count}} 张发票",
+    "finance.reports.employee.title": "支出最高员工",
+    "finance.reports.employee.desc": "按员工统计的已批准与已报销支出。",
+    "finance.reports.employee.empty": "暂无报销申请。",
+    "finance.reports.client.title": "客户回款情况",
+    "finance.reports.client.desc": "按客户统计的开票与回款对比。",
+    "finance.reports.client.col.client": "客户",
+    "finance.reports.client.col.invoiced": "开票金额",
+    "finance.reports.client.col.rate": "已收款",
   },
 };

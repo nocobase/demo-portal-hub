@@ -4,6 +4,9 @@ const enUS = {
   "helpdesk.resources.ticket": "Ticket",
   "helpdesk.resources.tickets.description":
     "Support tickets, priorities and the reply thread.",
+  "helpdesk.resources.dashboard": "Workload",
+  "helpdesk.resources.dashboard.description":
+    "SLA health, queue workload and the priority mix.",
 
   // Common
   "helpdesk.common.unassigned": "Unassigned",
@@ -40,6 +43,19 @@ const enUS = {
   "helpdesk.board.newTicket": "New ticket",
   "helpdesk.board.emptyColumn": "Nothing here",
   "helpdesk.board.untitled": "Untitled ticket",
+  "helpdesk.board.boardHeading": "Board",
+  "helpdesk.board.listHeading": "All tickets",
+  "helpdesk.board.viewBoard": "Board",
+  "helpdesk.board.viewList": "List",
+
+  // List columns
+  "helpdesk.list.columns.subject": "Ticket",
+  "helpdesk.list.columns.status": "Status",
+  "helpdesk.list.columns.priority": "Priority",
+  "helpdesk.list.columns.requester": "Requester",
+  "helpdesk.list.columns.assignee": "Assignee",
+  "helpdesk.list.columns.updated": "Updated",
+  "helpdesk.list.columns.actions": "Actions",
 
   // KPI tiles
   "helpdesk.kpi.open.label": "Open tickets",
@@ -61,6 +77,7 @@ const enUS = {
   "helpdesk.show.description":
     "Full history of this support request, with the reply thread.",
   "helpdesk.show.editTicket": "Edit ticket",
+  "helpdesk.show.changeStatus": "Change status",
   "helpdesk.show.errorTitle": "Unable to load ticket",
   "helpdesk.show.errorDescription":
     "The ticket may no longer exist, or you may not have permission to view it.",
@@ -68,6 +85,40 @@ const enUS = {
   "helpdesk.show.details": "Details",
   "helpdesk.show.opened": "Opened",
   "helpdesk.show.lastUpdated": "Last updated",
+
+  // Quick status-change (nested drawer)
+  "helpdesk.status.title": "Change status",
+  "helpdesk.status.description":
+    "Move this ticket to a different stage in the queue.",
+  "helpdesk.status.current": "Current status",
+  "helpdesk.status.apply": "Set",
+  "helpdesk.status.saving": "Updating...",
+
+  // Dashboard
+  "helpdesk.dashboard.title": "Workload & SLA",
+  "helpdesk.dashboard.subtitle":
+    "How healthy the queue is right now, who is carrying the load, and where priority sits.",
+  "helpdesk.dashboard.kpi.health.label": "SLA health",
+  "helpdesk.dashboard.kpi.health.sub": "Of {{count}} open tickets on track",
+  "helpdesk.dashboard.kpi.atRisk.label": "At risk",
+  "helpdesk.dashboard.kpi.atRisk.sub": "Past 70% of their SLA window",
+  "helpdesk.dashboard.kpi.breached.label": "SLA breached",
+  "helpdesk.dashboard.kpi.breached.sub": "Over the priority's response window",
+  "helpdesk.dashboard.kpi.agents.label": "Agents with load",
+  "helpdesk.dashboard.kpi.agents.sub": "Currently holding open tickets",
+  "helpdesk.dashboard.queue.title": "Queue workload",
+  "helpdesk.dashboard.queue.description":
+    "Open + pending tickets currently sitting with each agent.",
+  "helpdesk.dashboard.queue.empty": "Nothing in the queue.",
+  "helpdesk.dashboard.priority.title": "Open tickets by priority",
+  "helpdesk.dashboard.priority.description":
+    "The priority mix of everything still open.",
+  "helpdesk.dashboard.watchlist.title": "SLA watchlist",
+  "helpdesk.dashboard.watchlist.description":
+    "At-risk and breached tickets, most urgent first.",
+  "helpdesk.dashboard.watchlist.empty": "Nothing at risk right now.",
+  "helpdesk.dashboard.watchlist.breached": "Breached",
+  "helpdesk.dashboard.watchlist.atRisk": "At risk",
 
   // Field labels
   "helpdesk.fields.subject": "Subject",
@@ -111,6 +162,8 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.resources.tickets": "帮助台",
   "helpdesk.resources.ticket": "工单",
   "helpdesk.resources.tickets.description": "支持工单、优先级与回复记录。",
+  "helpdesk.resources.dashboard": "工作负载",
+  "helpdesk.resources.dashboard.description": "SLA 健康度、队列负载与优先级分布。",
 
   // Common
   "helpdesk.common.unassigned": "未分配",
@@ -147,6 +200,19 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.board.newTicket": "新建工单",
   "helpdesk.board.emptyColumn": "暂无工单",
   "helpdesk.board.untitled": "未命名工单",
+  "helpdesk.board.boardHeading": "看板",
+  "helpdesk.board.listHeading": "全部工单",
+  "helpdesk.board.viewBoard": "看板",
+  "helpdesk.board.viewList": "列表",
+
+  // List columns
+  "helpdesk.list.columns.subject": "工单",
+  "helpdesk.list.columns.status": "状态",
+  "helpdesk.list.columns.priority": "优先级",
+  "helpdesk.list.columns.requester": "报告人",
+  "helpdesk.list.columns.assignee": "处理人",
+  "helpdesk.list.columns.updated": "最后更新",
+  "helpdesk.list.columns.actions": "操作",
 
   // KPI tiles
   "helpdesk.kpi.open.label": "待处理工单",
@@ -167,12 +233,42 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.show.fallbackTitle": "工单",
   "helpdesk.show.description": "这条支持请求的完整记录，含回复往来。",
   "helpdesk.show.editTicket": "编辑工单",
+  "helpdesk.show.changeStatus": "变更状态",
   "helpdesk.show.errorTitle": "无法加载工单",
   "helpdesk.show.errorDescription": "该工单可能已不存在，或你没有查看权限。",
   "helpdesk.show.noDescription": "未提供描述。",
   "helpdesk.show.details": "详细信息",
   "helpdesk.show.opened": "创建时间",
   "helpdesk.show.lastUpdated": "最后更新",
+
+  // Quick status-change (nested drawer)
+  "helpdesk.status.title": "变更状态",
+  "helpdesk.status.description": "将该工单移动到队列中的其他阶段。",
+  "helpdesk.status.current": "当前状态",
+  "helpdesk.status.apply": "设为此项",
+  "helpdesk.status.saving": "更新中……",
+
+  // Dashboard
+  "helpdesk.dashboard.title": "工作负载与 SLA",
+  "helpdesk.dashboard.subtitle": "队列当前的健康状况、谁承担了多少工作，以及优先级分布。",
+  "helpdesk.dashboard.kpi.health.label": "SLA 健康度",
+  "helpdesk.dashboard.kpi.health.sub": "{{count}} 项待处理工单中处于正常范围",
+  "helpdesk.dashboard.kpi.atRisk.label": "有风险",
+  "helpdesk.dashboard.kpi.atRisk.sub": "已超过 SLA 窗口的 70%",
+  "helpdesk.dashboard.kpi.breached.label": "SLA 已超时",
+  "helpdesk.dashboard.kpi.breached.sub": "已超出该优先级的响应时限",
+  "helpdesk.dashboard.kpi.agents.label": "有负载的客服",
+  "helpdesk.dashboard.kpi.agents.sub": "当前持有待处理工单",
+  "helpdesk.dashboard.queue.title": "队列负载",
+  "helpdesk.dashboard.queue.description": "当前每位客服名下的待处理 / 处理中工单数。",
+  "helpdesk.dashboard.queue.empty": "队列中暂无工单。",
+  "helpdesk.dashboard.priority.title": "按优先级的待处理工单",
+  "helpdesk.dashboard.priority.description": "所有待处理工单的优先级分布。",
+  "helpdesk.dashboard.watchlist.title": "SLA 关注列表",
+  "helpdesk.dashboard.watchlist.description": "有风险与已超时的工单，最紧急的排在最前。",
+  "helpdesk.dashboard.watchlist.empty": "目前没有有风险的工单。",
+  "helpdesk.dashboard.watchlist.breached": "已超时",
+  "helpdesk.dashboard.watchlist.atRisk": "有风险",
 
   // Field labels
   "helpdesk.fields.subject": "主题",

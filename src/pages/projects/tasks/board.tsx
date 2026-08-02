@@ -151,7 +151,7 @@ export function TaskBoardPage() {
                         key={String(task.id)}
                         task={task}
                         locale={locale}
-                        onOpen={() => openChild(`edit/${task.id}`)}
+                        onOpen={() => openChild(`show/${task.id}`)}
                       />
                     ))
                   )}

@@ -1,7 +1,7 @@
 import { useTranslate, useUpdate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { CheckCircle2, Circle, Flag, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Eye, Flag, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { Outlet } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
@@ -12,6 +12,7 @@ import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
 import { formatDate, todayIso } from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
@@ -58,7 +59,11 @@ function MilestoneList() {
         ),
         enableSorting: true,
         cell: ({ row }) => (
-          <span className="flex items-center gap-2 font-medium">
+          <button
+            type="button"
+            onClick={() => openChild(`show/${row.original.id}`)}
+            className="flex items-center gap-2 text-left font-medium underline-offset-2 hover:underline"
+          >
             <Flag
               className={
                 "size-3.5 " +
@@ -68,7 +73,7 @@ function MilestoneList() {
               }
             />
             {row.original.name || "—"}
-          </span>
+          </button>
         ),
       }),
       columnHelper.accessor("project", {
@@ -157,6 +162,15 @@ function MilestoneList() {
                 <CheckCircle2 />
               </Button>
             )}
+            <ShowButton
+              resource="hub_pj_milestones"
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+              onClick={() => openChild(`show/${row.original.id}`)}
+            >
+              <Eye />
+            </ShowButton>
             <EditButton
               resource="hub_pj_milestones"
               recordItemId={row.original.id}

@@ -9,13 +9,13 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
-import { hrRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { EmployeeFormValues, EmployeeRecord } from "../types";
 import { EmployeeFormFields } from "./fields";
 
 export const EmployeeCreate = () => {
   const translate = useTranslate();
-  const closeTo = hrRoutes.employees;
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -90,7 +90,7 @@ function EmployeeCreateForm() {
 export const EmployeeEdit = () => {
   const translate = useTranslate();
   const { id } = useParams<{ id: string }>();
-  const closeTo = hrRoutes.employees;
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>

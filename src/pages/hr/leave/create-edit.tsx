@@ -9,7 +9,7 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
-import { hrRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { LeaveRequestFormValues, LeaveRequestRecord } from "../types";
 import { LeaveFormFields } from "./fields";
 
@@ -19,9 +19,13 @@ const normalize = (values: LeaveRequestFormValues) => ({
   end_date: values.end_date || null,
 });
 
-export const LeaveCreate = () => {
+type LeaveSurfaceProps = {
+  presetEmployeeId?: string;
+};
+
+export const LeaveCreate = ({ presetEmployeeId }: LeaveSurfaceProps = {}) => {
   const translate = useTranslate();
-  const closeTo = hrRoutes.leave;
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -36,14 +40,14 @@ export const LeaveCreate = () => {
         closeLabel={translate("hr.common.close", { ns: "starter" }, "Close")}
         beforeClose={beforeClose}
       >
-        <LeaveCreateForm />
+        <LeaveCreateForm presetEmployeeId={presetEmployeeId} />
       </RouteDrawer>
       {confirmation}
     </>
   );
 };
 
-function LeaveCreateForm() {
+function LeaveCreateForm({ presetEmployeeId }: LeaveSurfaceProps) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
   const {
@@ -57,7 +61,7 @@ function LeaveCreateForm() {
       onMutationSuccess: () => close({ skipBeforeClose: true }),
     },
     defaultValues: {
-      employee_id: null,
+      employee_id: presetEmployeeId ? String(presetEmployeeId) : null,
       type: "annual",
       start_date: null,
       end_date: null,
@@ -91,10 +95,15 @@ function LeaveCreateForm() {
   );
 }
 
-export const LeaveEdit = () => {
+export const LeaveEdit = ({
+  idParam = "id",
+}: {
+  idParam?: string;
+} = {}) => {
   const translate = useTranslate();
-  const { id } = useParams<{ id: string }>();
-  const closeTo = hrRoutes.leave;
+  const params = useParams();
+  const id = params[idParam];
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>

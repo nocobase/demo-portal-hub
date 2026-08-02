@@ -1,5 +1,5 @@
 import { useList, useTranslate, useUpdate } from "@refinedev/core";
-import { Check, Clock, Pencil, Trash2, Wallet, X } from "lucide-react";
+import { Check, Clock, Eye, Pencil, Trash2, Wallet, X } from "lucide-react";
 import { useMemo } from "react";
 import { Outlet } from "react-router";
 
@@ -7,6 +7,7 @@ import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EXPENSE_CATEGORIES, EXPENSE_STATUSES, lookup, optionLabel } from "../constants";
+import { useOpenContextualChild } from "../route-surfaces";
 import { fmtDate, money, PageHeader, Pill, StatCard } from "../shared";
 import type { Expense } from "../types";
 
@@ -51,6 +53,7 @@ function employeeName(exp: Expense): string {
 
 function ExpenseList() {
   const t = useTranslate();
+  const openChild = useOpenContextualChild();
   const { result, query } = useList<Expense>({
     resource: RESOURCE,
     pagination: { mode: "off" },
@@ -162,7 +165,7 @@ function ExpenseList() {
                   <TableHead className="text-right">{t("finance.expenses.col.amount", "Amount")}</TableHead>
                   <TableHead>{t("finance.expenses.col.spent", "Spent")}</TableHead>
                   <TableHead>{t("finance.expenses.col.status", "Status")}</TableHead>
-                  <TableHead className="w-[180px] text-right">{t("finance.common.actions", "Actions")}</TableHead>
+                  <TableHead className="w-[220px] text-right">{t("finance.common.actions", "Actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -184,8 +187,22 @@ function ExpenseList() {
                     const catOpt = lookup(EXPENSE_CATEGORIES, exp.category);
                     const statusOpt = lookup(EXPENSE_STATUSES, exp.status);
                     return (
-                      <TableRow key={exp.id}>
-                        <TableCell className="font-medium">{exp.title}</TableCell>
+                      <TableRow
+                        key={exp.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => openChild(`show/${exp.id}`)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openChild(`show/${exp.id}`);
+                          }
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <TableCell className="font-medium text-primary underline-offset-2 hover:underline">
+                          {exp.title}
+                        </TableCell>
                         <TableCell className="text-muted-foreground">
                           {employeeName(exp)}
                         </TableCell>
@@ -201,7 +218,7 @@ function ExpenseList() {
                         <TableCell>
                           <Pill option={statusOpt} label={optionLabel(statusOpt, t)} />
                         </TableCell>
-                        <TableCell>
+                        <TableCell onClick={(event) => event.stopPropagation()}>
                           <div className="flex items-center justify-end gap-1">
                             {pending ? (
                               <>
@@ -228,6 +245,17 @@ function ExpenseList() {
                               </>
                             ) : (
                               <>
+                                <ShowButton
+                                  resource={RESOURCE}
+                                  recordItemId={exp.id}
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={t("finance.expenses.view", "View expense")}
+                                  title={t("finance.expenses.view", "View expense")}
+                                  onClick={() => openChild(`show/${exp.id}`)}
+                                >
+                                  <Eye />
+                                </ShowButton>
                                 <EditButton
                                   resource={RESOURCE}
                                   recordItemId={exp.id}
@@ -235,6 +263,7 @@ function ExpenseList() {
                                   size="icon"
                                   aria-label={t("finance.expenses.edit", "Edit expense")}
                                   title={t("finance.expenses.edit", "Edit expense")}
+                                  onClick={() => openChild(`edit/${exp.id}`)}
                                 >
                                   <Pencil />
                                 </EditButton>

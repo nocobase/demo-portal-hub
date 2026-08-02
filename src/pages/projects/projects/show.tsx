@@ -1,5 +1,7 @@
 import { useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
+import ReactECharts from "echarts-for-react";
 import { CheckCircle2, Circle, Flag, Pencil, Plus, Trash2 } from "lucide-react";
+import { useMemo } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { DeleteButton } from "@/components/resources/buttons/delete";
@@ -9,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
+import { cn } from "@/lib/utils";
+import { useChartTheme } from "@/pages/home/theme";
 import {
   PROJECT_STATUSES,
   TASK_STATUSES,
@@ -138,6 +142,8 @@ export function ProjectShow() {
             {id ? (
               <>
                 <Separator />
+                <ProjectProgress projectId={id} />
+                <Separator />
                 <TasksSection projectId={id} locale={locale} />
                 <Separator />
                 <MilestonesSection projectId={id} locale={locale} />
@@ -147,6 +153,130 @@ export function ProjectShow() {
         )}
       </div>
     </RouteDrawer>
+  );
+}
+
+function ProjectProgress({ projectId }: { projectId: string }) {
+  const translate = useTranslate();
+  const chart = useChartTheme();
+  const { result: taskResult } = useList<TaskRecord>({
+    resource: "hub_pj_tasks",
+    pagination: { mode: "server", currentPage: 1, pageSize: 300 },
+    filters: [
+      { field: "hub_pj_task_project_id", operator: "eq", value: projectId },
+    ],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+  const { result: msResult } = useList<MilestoneRecord>({
+    resource: "hub_pj_milestones",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "due_date", order: "asc" }],
+    filters: [
+      { field: "hub_pj_ms_project_id", operator: "eq", value: projectId },
+    ],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const tasks = taskResult.data;
+  const milestones = msResult.data;
+  const doneCount = tasks.filter((task) => task.status === "done").length;
+  const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const today = todayIso();
+
+  const donutOption = useMemo(
+    () => ({
+      color: chart.palette,
+      tooltip: {
+        trigger: "item",
+        backgroundColor: chart.tooltipBg,
+        borderColor: chart.tooltipBorder,
+        textStyle: { color: chart.tooltipText, fontSize: 12 },
+        borderWidth: 1,
+      },
+      series: [
+        {
+          type: "pie",
+          radius: ["62%", "88%"],
+          avoidLabelOverlap: false,
+          padAngle: 2,
+          itemStyle: { borderRadius: 4 },
+          label: { show: false },
+          labelLine: { show: false },
+          data: TASK_STATUSES.map((status) => ({
+            name: translate(status.i18nKey, { ns: "starter" }, status.label),
+            value: tasks.filter((task) => (task.status ?? "todo") === status.value)
+              .length,
+          })).filter((entry) => entry.value > 0),
+        },
+      ],
+    }),
+    [tasks, chart, translate]
+  );
+
+  if (!tasks.length) return null;
+
+  return (
+    <section className="space-y-3">
+      <h3 className="text-sm font-medium">
+        {translate("projects.projects.show.progress", { ns: "starter" }, "Progress")}
+      </h3>
+      <div className="flex items-center gap-4">
+        <div className="flex-1 space-y-1.5">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {translate(
+              "projects.projects.show.progress.hint",
+              { ns: "starter", done: doneCount, total: tasks.length, pct },
+              `${doneCount} of ${tasks.length} tasks done (${pct}%)`
+            )}
+          </p>
+        </div>
+        <ReactECharts
+          key={`pj-progress-${chart.isDark}`}
+          option={donutOption}
+          style={{ width: 88, height: 88 }}
+          opts={{ renderer: "svg" }}
+        />
+      </div>
+      {milestones.length ? (
+        <div className="flex items-center overflow-x-auto pt-1">
+          {milestones.map((milestone, index) => {
+            const overdue =
+              !milestone.done && (milestone.due_date ?? "") < today;
+            return (
+              <div key={String(milestone.id)} className="flex shrink-0 items-center">
+                {index > 0 ? <span className="h-px w-6 shrink-0 bg-border" /> : null}
+                <div
+                  className="flex flex-col items-center gap-1 px-1"
+                  title={milestone.name ?? undefined}
+                >
+                  <span
+                    className={cn(
+                      "size-2.5 rounded-full",
+                      milestone.done
+                        ? "bg-emerald-500"
+                        : overdue
+                          ? "bg-red-500"
+                          : "bg-slate-300 dark:bg-slate-600"
+                    )}
+                  />
+                  <span className="max-w-16 truncate text-[10px] text-muted-foreground">
+                    {milestone.name}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+    </section>
   );
 }
 

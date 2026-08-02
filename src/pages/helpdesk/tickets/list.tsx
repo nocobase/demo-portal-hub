@@ -1,13 +1,20 @@
 import { useList, useTranslate } from "@refinedev/core";
+import { useTable } from "@refinedev/react-table";
+import { createColumnHelper } from "@tanstack/react-table";
 import ReactECharts from "echarts-for-react";
 import {
   CheckCircle2,
+  Eye,
   Inbox,
+  KanbanSquare,
   MessageSquare,
+  Pencil,
   Plus,
+  Table2,
+  Trash2,
   TriangleAlert,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link, Outlet } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -20,17 +27,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { DataTable } from "@/components/data-table/data-table";
+import {
+  DataTableFilterCombobox,
+  DataTableFilterDropdownText,
+} from "@/components/data-table/data-table-filter";
+import { DataTableSorter } from "@/components/data-table/data-table-sorter";
+import { DeleteButton } from "@/components/resources/buttons/delete";
+import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/pages/home/theme";
 import {
   BOARD_COLUMNS,
   TICKET_CATEGORIES,
   TICKET_PRIORITIES,
+  TICKET_STATUSES,
   labelFor,
+  relativeTime,
   statusClassFor,
 } from "../constants";
 import { getTicketShowPath, helpdeskRoutes } from "../routes";
-import { CategoryBadge, PriorityPill, UserChip } from "../shared";
+import {
+  CategoryBadge,
+  PriorityPill,
+  StatusPill,
+  UserChip,
+} from "../shared";
 import type { TicketRecord } from "../types";
 
 const RESOURCE = "hub_hd_tickets";
@@ -50,6 +74,7 @@ export function TicketsLayout() {
 function TicketBoard() {
   const translate = useTranslate();
   const chart = useChartTheme();
+  const [view, setView] = useState<"board" | "list">("board");
 
   const { result, query } = useList<TicketRecord>({
     resource: RESOURCE,
@@ -229,8 +254,36 @@ function TicketBoard() {
         </CardContent>
       </Card>
 
+      {/* View toggle */}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-sm font-medium text-muted-foreground">
+          {view === "board"
+            ? translate("helpdesk.board.boardHeading", { ns: "starter" }, "Board")
+            : translate("helpdesk.board.listHeading", { ns: "starter" }, "All tickets")}
+        </h3>
+        <Tabs value={view} onValueChange={(value) => setView(value as "board" | "list")}>
+          <TabsList>
+            <TabsTrigger value="board">
+              <KanbanSquare className="size-3.5" />
+              {translate("helpdesk.board.viewBoard", { ns: "starter" }, "Board")}
+            </TabsTrigger>
+            <TabsTrigger value="list">
+              <Table2 className="size-3.5" />
+              {translate("helpdesk.board.viewList", { ns: "starter" }, "List")}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
+      {view === "list" ? <TicketTable /> : null}
+
       {/* Board */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4",
+          view !== "board" && "hidden"
+        )}
+      >
         {BOARD_COLUMNS.map((column) => {
           const items = grouped.get(column.value) ?? [];
           return (
@@ -361,4 +414,182 @@ function ColumnSkeleton() {
       ))}
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// List view — a sortable, filterable table of every ticket. Clicking the
+// subject (or the show icon) opens the same URL-addressable detail drawer
+// as the board cards.
+// ---------------------------------------------------------------------------
+
+function TicketTable() {
+  const translate = useTranslate();
+
+  const statusOptions = useMemo(
+    () =>
+      TICKET_STATUSES.map((s) => ({
+        value: s.value,
+        label: labelFor(TICKET_STATUSES, s.value, translate),
+      })),
+    [translate]
+  );
+  const priorityOptions = useMemo(
+    () =>
+      TICKET_PRIORITIES.map((p) => ({
+        value: p.value,
+        label: labelFor(TICKET_PRIORITIES, p.value, translate),
+      })),
+    [translate]
+  );
+
+  const columns = useMemo(() => {
+    const columnHelper = createColumnHelper<TicketRecord>();
+    return [
+      columnHelper.accessor("subject", {
+        id: "subject",
+        header: ({ column, table }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.subject", { ns: "starter" }, "Ticket")}
+            </span>
+            <DataTableSorter column={column} />
+            <DataTableFilterDropdownText
+              column={column}
+              table={table}
+              defaultOperator="contains"
+              operators={["contains", "eq", "startswith"]}
+            />
+          </div>
+        ),
+        enableSorting: true,
+        cell: ({ row, getValue }) => (
+          <Link
+            to={getTicketShowPath(row.original.id)}
+            className="font-medium text-foreground hover:text-primary hover:underline"
+          >
+            {getValue() ||
+              translate("helpdesk.board.untitled", { ns: "starter" }, "Untitled ticket")}
+          </Link>
+        ),
+      }),
+      columnHelper.accessor("status", {
+        id: "status",
+        header: ({ column, table }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.status", { ns: "starter" }, "Status")}
+            </span>
+            <DataTableFilterCombobox
+              column={column}
+              table={table}
+              options={statusOptions}
+              defaultOperator="eq"
+              operators={["eq", "in"]}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        cell: ({ getValue }) => (
+          <StatusPill value={getValue()} label={labelFor(TICKET_STATUSES, getValue(), translate)} />
+        ),
+      }),
+      columnHelper.accessor("priority", {
+        id: "priority",
+        header: ({ column, table }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.priority", { ns: "starter" }, "Priority")}
+            </span>
+            <DataTableFilterCombobox
+              column={column}
+              table={table}
+              options={priorityOptions}
+              defaultOperator="eq"
+              operators={["eq", "in"]}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        cell: ({ getValue }) => (
+          <PriorityPill value={getValue()} label={labelFor(TICKET_PRIORITIES, getValue(), translate)} />
+        ),
+      }),
+      columnHelper.accessor((record) => record.requester, {
+        id: "requester",
+        header: translate("helpdesk.list.columns.requester", { ns: "starter" }, "Requester"),
+        enableSorting: false,
+        cell: ({ getValue }) => <UserChip user={getValue()} />,
+      }),
+      columnHelper.accessor((record) => record.assignee, {
+        id: "assignee",
+        header: translate("helpdesk.list.columns.assignee", { ns: "starter" }, "Assignee"),
+        enableSorting: false,
+        cell: ({ getValue }) => <UserChip user={getValue()} />,
+      }),
+      columnHelper.accessor("updatedAt", {
+        id: "updatedAt",
+        header: ({ column }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.updated", { ns: "starter" }, "Updated")}
+            </span>
+            <DataTableSorter column={column} />
+          </div>
+        ),
+        enableSorting: true,
+        cell: ({ getValue }) => (
+          <span className="text-xs text-muted-foreground">
+            {relativeTime(getValue(), translate)}
+          </span>
+        ),
+      }),
+      columnHelper.display({
+        id: "actions",
+        header: translate("helpdesk.list.columns.actions", { ns: "starter" }, "Actions"),
+        enableSorting: false,
+        size: 120,
+        cell: ({ row }) => (
+          <div className="flex items-center gap-1">
+            <ShowButton
+              resource={RESOURCE}
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+            >
+              <Eye />
+            </ShowButton>
+            <EditButton
+              resource={RESOURCE}
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+            >
+              <Pencil />
+            </EditButton>
+            <DeleteButton
+              resource={RESOURCE}
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 />
+            </DeleteButton>
+          </div>
+        ),
+      }),
+    ];
+  }, [priorityOptions, statusOptions, translate]);
+
+  const table = useTable<TicketRecord>({
+    columns,
+    refineCoreProps: {
+      resource: RESOURCE,
+      syncWithLocation: false,
+      meta: { appends: ["requester", "assignee"] },
+      sorters: { initial: [{ field: "createdAt", order: "desc" }] },
+    },
+  });
+
+  return <DataTable table={table} />;
 }
