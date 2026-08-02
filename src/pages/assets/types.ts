@@ -45,3 +45,30 @@ export type AssignmentFormValues = {
   returned_date: string | null;
   note: string;
 };
+
+export type MaintenanceRecord = {
+  id: number | string;
+  title?: string | null;
+  type?: string | null;
+  status?: string | null;
+  scheduled_date?: string | null;
+  completed_date?: string | null;
+  cost?: number | null;
+  vendor?: string | null;
+  notes?: string | null;
+  assetId?: number | string | null;
+  asset?: AssetRecord | null;
+  createdAt?: string | null;
+};
+
+export type MaintenanceFormValues = {
+  title: string;
+  assetId: number | string | null;
+  type: string | null;
+  status: string | null;
+  scheduled_date: string | null;
+  completed_date: string | null;
+  cost: number | null;
+  vendor: string;
+  notes: string;
+};

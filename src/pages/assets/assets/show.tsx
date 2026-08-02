@@ -11,11 +11,15 @@ import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import {
   ASSET_CATEGORIES,
   ASSET_STATUSES,
+  MAINTENANCE_STATUSES,
+  MAINTENANCE_TYPES,
   assigneeName,
   categoryBadgeClass,
   formatCurrency,
   formatDate,
   labelFor,
+  maintenanceStatusBadgeClass,
+  maintenanceTypeBadgeClass,
   statusBadgeClass,
   todayIso,
 } from "../constants";
@@ -31,7 +35,11 @@ import {
   SimpleTable,
   useLocale,
 } from "../shared";
-import type { AssetRecord, AssignmentRecord } from "../types";
+import type {
+  AssetRecord,
+  AssignmentRecord,
+  MaintenanceRecord,
+} from "../types";
 
 export function AssetShow() {
   const translate = useTranslate();
@@ -154,6 +162,8 @@ export function AssetShow() {
                   assetStatus={record?.status ?? "in_stock"}
                   locale={locale}
                 />
+                <Separator />
+                <MaintenanceHistory assetId={id} locale={locale} />
               </>
             ) : null}
           </div>
@@ -305,6 +315,106 @@ function AssignmentHistory({
               </tr>
             );
           })
+        )}
+      </SimpleTable>
+    </DrawerSection>
+  );
+}
+
+function MaintenanceHistory({
+  assetId,
+  locale,
+}: {
+  assetId: string;
+  locale: string;
+}) {
+  const translate = useTranslate();
+  const openChild = useOpenContextualChild();
+  const { result } = useList<MaintenanceRecord>({
+    resource: "hub_as_maintenance",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "scheduled_date", order: "desc" }],
+    filters: [{ field: "assetId", operator: "eq", value: assetId }],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  return (
+    <DrawerSection
+      title={translate("assets.assets.maintenance.title", { ns: "starter" }, "Maintenance")}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          title={translate("assets.assets.maintenance.logThis", { ns: "starter" }, "Log maintenance for this device")}
+          onClick={() => openChild("maintenance/create")}
+        >
+          <Plus />
+          {translate("assets.assets.maintenance.log", { ns: "starter" }, "Log")}
+        </Button>
+      }
+    >
+      <SimpleTable
+        headers={[
+          translate("assets.maintenance.columns.title", { ns: "starter" }, "Title"),
+          translate("assets.maintenance.columns.type", { ns: "starter" }, "Type"),
+          translate("assets.maintenance.columns.status", { ns: "starter" }, "Status"),
+          translate("assets.maintenance.columns.scheduled", { ns: "starter" }, "Scheduled"),
+          translate("assets.common.actions", { ns: "starter" }, "Actions"),
+        ]}
+      >
+        {result.data.length === 0 ? (
+          <EmptyRow
+            colSpan={5}
+            text={translate(
+              "assets.assets.maintenance.empty",
+              { ns: "starter" },
+              "No maintenance logged. Use Log to record service work."
+            )}
+          />
+        ) : (
+          result.data.map((record) => (
+            <tr key={String(record.id)}>
+              <td className="px-3 py-2 font-medium">{record.title || "—"}</td>
+              <td className="px-3 py-2">
+                {record.type ? (
+                  <Pill
+                    label={labelFor(MAINTENANCE_TYPES, record.type, translate)}
+                    className={maintenanceTypeBadgeClass(record.type)}
+                  />
+                ) : (
+                  "—"
+                )}
+              </td>
+              <td className="px-3 py-2">
+                {record.status ? (
+                  <Pill
+                    label={labelFor(MAINTENANCE_STATUSES, record.status, translate)}
+                    className={maintenanceStatusBadgeClass(record.status)}
+                  />
+                ) : (
+                  "—"
+                )}
+              </td>
+              <td className="px-3 py-2 whitespace-nowrap">
+                {formatDate(record.scheduled_date, locale)}
+              </td>
+              <td className="px-3 py-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title={translate("assets.common.view", { ns: "starter" }, "View")}
+                  onClick={() =>
+                    openChild(
+                      `maintenance/show/${encodeURIComponent(String(record.id))}`
+                    )
+                  }
+                >
+                  <Eye />
+                </Button>
+              </td>
+            </tr>
+          ))
         )}
       </SimpleTable>
     </DrawerSection>

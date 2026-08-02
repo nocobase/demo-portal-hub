@@ -10,8 +10,9 @@ export const assetsLocale = {
     "assets.resources.assignments.description":
       "Who has what — active and returned device assignments across the company.",
     "assets.resources.maintenance": "Maintenance",
+    "assets.resources.maintenanceRecord": "Maintenance record",
     "assets.resources.maintenance.description":
-      "Devices in repair and aging assets that may need a warranty check.",
+      "Scheduled and completed service work — repairs, inspections and preventive maintenance across the fleet.",
 
     // Common
     "assets.common.close": "Close",
@@ -145,21 +146,73 @@ export const assetsLocale = {
     "assets.assignments.fields.notePlaceholder":
       "Anything worth recording about this assignment",
 
-    // Maintenance & warranty page
-    "assets.maintenance.loadError.title": "Unable to load maintenance data",
-    "assets.maintenance.loadError.description":
-      "Check your connection and try again.",
-    "assets.maintenance.chart.title": "Fleet by status",
-    "assets.maintenance.chart.description":
-      "Where every device sits — repair and aging assets need a closer look.",
-    "assets.maintenance.repair.title": "In repair",
-    "assets.maintenance.repair.empty": "Nothing is in repair right now.",
-    "assets.maintenance.aging.title": "Aging — warranty check recommended",
-    "assets.maintenance.aging.hint":
-      "Devices purchased more than 3 years ago, in stock or assigned — no explicit warranty field, so age is used as a proxy.",
-    "assets.maintenance.aging.empty": "No aging assets — the fleet is fresh.",
-    "assets.maintenance.aging.headers.age": "Age",
-    "assets.maintenance.aging.yearsValue": "{{count}}y",
+    // Maintenance — enums
+    "assets.maintenance.enums.type.preventive": "Preventive",
+    "assets.maintenance.enums.type.corrective": "Corrective",
+    "assets.maintenance.enums.type.inspection": "Inspection",
+    "assets.maintenance.enums.status.scheduled": "Scheduled",
+    "assets.maintenance.enums.status.in_progress": "In progress",
+    "assets.maintenance.enums.status.done": "Done",
+
+    // Maintenance — list columns
+    "assets.maintenance.columns.title": "Title",
+    "assets.maintenance.columns.asset": "Asset",
+    "assets.maintenance.columns.type": "Type",
+    "assets.maintenance.columns.status": "Status",
+    "assets.maintenance.columns.scheduled": "Scheduled",
+
+    // Maintenance — fields
+    "assets.maintenance.fields.title": "Title",
+    "assets.maintenance.fields.titlePlaceholder": "e.g. Battery replacement",
+    "assets.maintenance.fields.asset": "Asset",
+    "assets.maintenance.fields.assetPlaceholder": "Select an asset",
+    "assets.maintenance.fields.type": "Type",
+    "assets.maintenance.fields.typePlaceholder": "Select a type",
+    "assets.maintenance.fields.status": "Status",
+    "assets.maintenance.fields.statusPlaceholder": "Select a status",
+    "assets.maintenance.fields.scheduledDate": "Scheduled date",
+    "assets.maintenance.fields.completedDate": "Completed date",
+    "assets.maintenance.fields.cost": "Cost",
+    "assets.maintenance.fields.vendor": "Vendor",
+    "assets.maintenance.fields.vendorPlaceholder": "Who is doing the work",
+    "assets.maintenance.fields.notes": "Notes",
+    "assets.maintenance.fields.notesPlaceholder":
+      "Anything worth recording about this work",
+
+    // Maintenance — form
+    "assets.maintenance.form.titleRequired": "A title is required",
+    "assets.maintenance.form.assetRequired": "Pick the asset being serviced",
+    "assets.maintenance.form.typeRequired": "Pick a maintenance type",
+    "assets.maintenance.form.statusRequired": "Pick a status",
+    "assets.maintenance.form.creating": "Saving...",
+    "assets.maintenance.form.create": "Log maintenance",
+
+    // Maintenance — drawers
+    "assets.maintenance.drawer.create.title": "Log maintenance",
+    "assets.maintenance.drawer.create.description":
+      "Record scheduled or completed work on a device.",
+    "assets.maintenance.drawer.nestedCreate.title": "Log maintenance",
+    "assets.maintenance.drawer.nestedCreate.description":
+      "Record work on this device.",
+    "assets.maintenance.drawer.edit.title": "Edit maintenance",
+    "assets.maintenance.drawer.edit.description":
+      "Update this maintenance record.",
+
+    // Maintenance — detail (show)
+    "assets.maintenance.show.unnamed": "Maintenance",
+    "assets.maintenance.show.description":
+      "Details for this maintenance record.",
+    "assets.maintenance.show.overview": "Overview",
+    "assets.maintenance.show.error.title": "Unable to load maintenance record",
+    "assets.maintenance.show.error.description":
+      "The record may no longer exist, or you may not have permission to view it.",
+
+    // Maintenance sub-list (inside asset detail)
+    "assets.assets.maintenance.title": "Maintenance",
+    "assets.assets.maintenance.log": "Log",
+    "assets.assets.maintenance.logThis": "Log maintenance for this device",
+    "assets.assets.maintenance.empty":
+      "No maintenance logged. Use Log to record service work.",
   },
 
   "zh-CN": {
@@ -173,8 +226,9 @@ export const assetsLocale = {
     "assets.resources.assignments.description":
       "谁在用什么——全公司在用与已归还的设备领用情况。",
     "assets.resources.maintenance": "维保",
+    "assets.resources.maintenanceRecord": "维保记录",
     "assets.resources.maintenance.description":
-      "维修中的设备与可能需要检查保修状态的老旧资产。",
+      "计划中与已完成的维护工作——全公司设备的维修、检查与预防性保养。",
 
     // Common
     "assets.common.close": "关闭",
@@ -301,19 +355,67 @@ export const assetsLocale = {
     "assets.assignments.fields.note": "备注",
     "assets.assignments.fields.notePlaceholder": "关于这次领用值得记录的任何信息",
 
-    // Maintenance & warranty page
-    "assets.maintenance.loadError.title": "无法加载维保数据",
-    "assets.maintenance.loadError.description": "请检查网络连接后重试。",
-    "assets.maintenance.chart.title": "设备状态分布",
-    "assets.maintenance.chart.description":
-      "每台设备当前所在的状态——维修中与老旧资产需要重点关注。",
-    "assets.maintenance.repair.title": "维修中",
-    "assets.maintenance.repair.empty": "当前没有设备在维修中。",
-    "assets.maintenance.aging.title": "老旧资产——建议检查保修状态",
-    "assets.maintenance.aging.hint":
-      "采购超过 3 年、状态为在库或在用的设备——尚无独立的保修字段，暂以设备年龄作为参考依据。",
-    "assets.maintenance.aging.empty": "没有老旧资产——设备均较新。",
-    "assets.maintenance.aging.headers.age": "使用年限",
-    "assets.maintenance.aging.yearsValue": "{{count}} 年",
+    // Maintenance — enums
+    "assets.maintenance.enums.type.preventive": "预防性",
+    "assets.maintenance.enums.type.corrective": "维修性",
+    "assets.maintenance.enums.type.inspection": "检查",
+    "assets.maintenance.enums.status.scheduled": "已计划",
+    "assets.maintenance.enums.status.in_progress": "进行中",
+    "assets.maintenance.enums.status.done": "已完成",
+
+    // Maintenance — list columns
+    "assets.maintenance.columns.title": "标题",
+    "assets.maintenance.columns.asset": "资产",
+    "assets.maintenance.columns.type": "类型",
+    "assets.maintenance.columns.status": "状态",
+    "assets.maintenance.columns.scheduled": "计划日期",
+
+    // Maintenance — fields
+    "assets.maintenance.fields.title": "标题",
+    "assets.maintenance.fields.titlePlaceholder": "例如 更换电池",
+    "assets.maintenance.fields.asset": "资产",
+    "assets.maintenance.fields.assetPlaceholder": "选择一台资产",
+    "assets.maintenance.fields.type": "类型",
+    "assets.maintenance.fields.typePlaceholder": "选择类型",
+    "assets.maintenance.fields.status": "状态",
+    "assets.maintenance.fields.statusPlaceholder": "选择状态",
+    "assets.maintenance.fields.scheduledDate": "计划日期",
+    "assets.maintenance.fields.completedDate": "完成日期",
+    "assets.maintenance.fields.cost": "费用",
+    "assets.maintenance.fields.vendor": "服务商",
+    "assets.maintenance.fields.vendorPlaceholder": "由谁负责施工",
+    "assets.maintenance.fields.notes": "备注",
+    "assets.maintenance.fields.notesPlaceholder": "关于本次工作值得记录的任何信息",
+
+    // Maintenance — form
+    "assets.maintenance.form.titleRequired": "标题为必填项",
+    "assets.maintenance.form.assetRequired": "请选择要维护的资产",
+    "assets.maintenance.form.typeRequired": "请选择维护类型",
+    "assets.maintenance.form.statusRequired": "请选择状态",
+    "assets.maintenance.form.creating": "保存中...",
+    "assets.maintenance.form.create": "登记维保",
+
+    // Maintenance — drawers
+    "assets.maintenance.drawer.create.title": "登记维保",
+    "assets.maintenance.drawer.create.description":
+      "记录设备的计划中或已完成的工作。",
+    "assets.maintenance.drawer.nestedCreate.title": "登记维保",
+    "assets.maintenance.drawer.nestedCreate.description": "记录这台设备的工作。",
+    "assets.maintenance.drawer.edit.title": "编辑维保记录",
+    "assets.maintenance.drawer.edit.description": "更新这条维保记录。",
+
+    // Maintenance — detail (show)
+    "assets.maintenance.show.unnamed": "维保记录",
+    "assets.maintenance.show.description": "这条维保记录的详情。",
+    "assets.maintenance.show.overview": "概览",
+    "assets.maintenance.show.error.title": "无法加载维保记录",
+    "assets.maintenance.show.error.description":
+      "该记录可能已不存在，或你没有查看权限。",
+
+    // Maintenance sub-list (inside asset detail)
+    "assets.assets.maintenance.title": "维保",
+    "assets.assets.maintenance.log": "登记",
+    "assets.assets.maintenance.logThis": "为这台设备登记维保",
+    "assets.assets.maintenance.empty": "尚无维保记录。点击“登记”记录服务工作。",
   },
 };

@@ -97,6 +97,7 @@ const resourceGroupParent: Record<string, string> = {
   hub_po_suppliers: "group_operations",
   hub_as_assets: "group_operations",
   hub_as_assignments: "group_operations",
+  hub_as_maintenance: "group_operations",
   // Finance
   "finance-dashboard": "group_finance",
   hub_fin_invoices: "group_finance",
@@ -112,7 +113,6 @@ const resourceGroupParent: Record<string, string> = {
   "hr-leave-calendar": "group_people",
   "inv-reorder": "group_operations",
   "po-spend": "group_operations",
-  "as-maintenance": "group_operations",
   "finance-cashflow": "group_finance",
   "finance-budget": "group_finance",
   "hd-sla": "group_support",
@@ -136,6 +136,7 @@ const priorityOverride: Record<string, number> = {
   hub_po_suppliers: 21,
   hub_as_assets: 30,
   hub_as_assignments: 31,
+  hub_as_maintenance: 32,
 };
 
 const groupedRouteResources = buildRouteResources(

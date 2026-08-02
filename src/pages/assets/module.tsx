@@ -12,7 +12,13 @@ import {
 } from "./assignments/create-edit";
 import { AssignmentShow } from "./assignments/show";
 import { AssignmentsLayout } from "./assignments/layout";
-import { MaintenancePage } from "./maintenance/page";
+import {
+  AssetNestedMaintenance,
+  MaintenanceCreate,
+  MaintenanceEdit,
+} from "./maintenance/create-edit";
+import { MaintenanceShow } from "./maintenance/show";
+import { MaintenanceLayout } from "./maintenance/layout";
 import { assetsRoutes } from "./routes";
 
 const denied = <AccessDenied />;
@@ -28,6 +34,18 @@ function AssetScopedAssignmentShow() {
 
 function AssetScopedAssignmentEdit() {
   return <AssignmentEdit idParam="asgId" />;
+}
+
+// Maintenance records opened from the asset detail drawer at
+// `/asset-registry/show/:id/maintenance/show/:mId`. `mId` avoids colliding with
+// the parent asset `:id`.
+
+function AssetScopedMaintenanceShow() {
+  return <MaintenanceShow idParam="mId" />;
+}
+
+function AssetScopedMaintenanceEdit() {
+  return <MaintenanceEdit idParam="mId" />;
 }
 
 const assetShowChildren: AppRouteDefinition[] = [
@@ -69,6 +87,35 @@ const assetShowChildren: AppRouteDefinition[] = [
       },
     ],
   },
+  {
+    name: "hub_as_assets.show.maintenance.create",
+    path: "maintenance/create",
+    element: (
+      <CanAccess resource="hub_as_maintenance" action="create" fallback={denied}>
+        <AssetNestedMaintenance />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_as_assets.show.maintenance.show",
+    path: "maintenance/show/:mId",
+    element: (
+      <CanAccess resource="hub_as_maintenance" action="show" fallback={denied}>
+        <AssetScopedMaintenanceShow />
+      </CanAccess>
+    ),
+    children: [
+      {
+        name: "hub_as_assets.show.maintenance.show.edit",
+        path: "edit",
+        element: (
+          <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
+            <AssetScopedMaintenanceEdit />
+          </CanAccess>
+        ),
+      },
+    ],
+  },
 ];
 
 const assignmentShowChildren: AppRouteDefinition[] = [
@@ -78,6 +125,18 @@ const assignmentShowChildren: AppRouteDefinition[] = [
     element: (
       <CanAccess resource="hub_as_assignments" action="edit" fallback={denied}>
         <AssignmentEdit />
+      </CanAccess>
+    ),
+  },
+];
+
+const maintenanceShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_as_maintenance.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
+        <MaintenanceEdit />
       </CanAccess>
     ),
   },
@@ -207,29 +266,59 @@ const routes: AppRouteDefinition[] = [
     ],
   },
   {
-    name: "as-maintenance",
+    name: "hub_as_maintenance",
     path: assetsRoutes.maintenance,
-    element: (
-      <CanAccess resource="hub_as_assets" action="list" fallback={denied}>
-        <MaintenancePage />
-      </CanAccess>
-    ),
+    element: <MaintenanceLayout />,
     resource: {
       meta: {
         label: "Maintenance",
-        singularLabel: "Maintenance",
+        singularLabel: "Maintenance record",
         i18nKey: "assets.resources.maintenance",
-        i18nSingularKey: "assets.resources.maintenance",
+        i18nSingularKey: "assets.resources.maintenanceRecord",
         i18nOptions: { ns: "starter" },
         descriptionI18nKey: "assets.resources.maintenance.description",
         priority: 50,
         icon: <Wrench />,
         description:
-          "Devices in repair and aging assets that may need a warranty check.",
-        canCreate: false,
+          "Scheduled and completed service work — repairs, inspections and preventive maintenance across the fleet.",
+        canCreate: true,
+        canDelete: true,
         acl: { type: "collection" },
       },
     },
+    children: [
+      {
+        name: "hub_as_maintenance.create",
+        path: "create",
+        resourceAction: "create",
+        element: (
+          <CanAccess resource="hub_as_maintenance" action="create" fallback={denied}>
+            <MaintenanceCreate />
+          </CanAccess>
+        ),
+      },
+      {
+        name: "hub_as_maintenance.edit",
+        path: "edit/:id",
+        resourceAction: "edit",
+        element: (
+          <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
+            <MaintenanceEdit />
+          </CanAccess>
+        ),
+      },
+      {
+        name: "hub_as_maintenance.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_as_maintenance" action="show" fallback={denied}>
+            <MaintenanceShow />
+          </CanAccess>
+        ),
+        children: maintenanceShowChildren,
+      },
+    ],
   },
 ];
 

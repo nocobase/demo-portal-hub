@@ -8,8 +8,11 @@ export const assetsRoutes = {
   assignments: "/assignments",
   assignmentsCreate: "/assignments/create",
   assignmentsEdit: "/assignments/edit/:id",
-  // Maintenance & warranty (virtual, read-only view over the register)
+  // Maintenance records (collection-backed CRUD list)
   maintenance: "/asset-maintenance",
+  maintenanceCreate: "/asset-maintenance/create",
+  maintenanceEdit: "/asset-maintenance/edit/:id",
+  maintenanceShow: "/asset-maintenance/show/:id",
 } as const;
 
 export const getAssetShowPath = (id: string | number) =>
@@ -17,3 +20,6 @@ export const getAssetShowPath = (id: string | number) =>
 
 export const getAssetEditPath = (id: string | number) =>
   `/asset-registry/edit/${encodeURIComponent(String(id))}`;
+
+export const getMaintenanceShowPath = (id: string | number) =>
+  `/asset-maintenance/show/${encodeURIComponent(String(id))}`;
