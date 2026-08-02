@@ -1,6 +1,8 @@
 import { type HttpError, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
+import { useMemo } from "react";
 import { useParams } from "react-router";
+import { AiFillPanel, useAiFill, type AiFillField } from "@/components/ai-fill";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useRouteSurfaceClose } from "@nocobase/portal-sdk/routing";
@@ -9,6 +11,7 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
+import { LEAD_SOURCES, LEAD_STATUSES } from "../constants";
 import { useContextualCloseTo } from "../route-surfaces";
 import type { LeadFormValues, LeadRecord } from "../types";
 import { LeadFormFields } from "./fields";
@@ -68,6 +71,61 @@ function LeadCreateForm() {
     },
   });
 
+  // Allowed values are the same option lists the Select inputs render.
+  const aiFields = useMemo<AiFillField[]>(
+    () => [
+      {
+        name: "name",
+        title: translate("sales.leads.field.name", { ns: "starter" }, "Name"),
+        type: "string",
+        description: "Full name of the person who made contact.",
+      },
+      {
+        name: "company",
+        title: translate("sales.leads.field.company", { ns: "starter" }, "Company"),
+        type: "string",
+      },
+      {
+        name: "email",
+        title: translate("sales.leads.field.email", { ns: "starter" }, "Email"),
+        type: "string",
+        description: "Only when the text contains an email address.",
+      },
+      {
+        name: "source",
+        title: translate("sales.leads.field.source", { ns: "starter" }, "Source"),
+        type: "string",
+        enum: [...LEAD_SOURCES],
+      },
+      {
+        name: "status",
+        title: translate("sales.leads.field.status", { ns: "starter" }, "Status"),
+        type: "string",
+        enum: [...LEAD_STATUSES],
+      },
+    ],
+    [translate]
+  );
+
+  const ai = useAiFill({
+    formId: "hub-sales-lead-create",
+    title: translate("sales.leads.drawer.create.title", { ns: "starter" }, "Add lead"),
+    fields: aiFields,
+    getValues: () => form.getValues() as Record<string, unknown>,
+    setValues: (values) => {
+      for (const [name, value] of Object.entries(values)) {
+        form.setValue(name as keyof LeadFormValues, value as never, {
+          shouldDirty: true,
+          shouldTouch: true,
+          shouldValidate: true,
+        });
+      }
+    },
+    instructions:
+      "A lead that has only just made contact is new. Use qualified or unqualified " +
+      "only when the text says the lead has already been assessed.",
+  });
+
   return (
     <Form {...form}>
       <form
@@ -75,6 +133,20 @@ function LeadCreateForm() {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <AiFillPanel
+            ai={ai}
+            description={translate(
+              "sales.leads.aiFill.desc",
+              { ns: "starter" },
+              "Paste the enquiry, business card or call note. AI assist will structure the lead for you."
+            )}
+            inputLabel={translate("sales.leads.aiFill.label", { ns: "starter" }, "Describe the lead")}
+            placeholder={translate(
+              "sales.leads.aiFill.placeholder",
+              { ns: "starter" },
+              "Example: Tom Reyes from Halden Freight called after seeing our website; he asked for a quote for 12 depot scanners."
+            )}
+          />
           <LeadFormFields form={form} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
