@@ -21,10 +21,11 @@ import {
 import { UserAvatar } from "@/components/app-shell/user-avatar";
 import { UserInfo } from "@/components/app-shell/user-info";
 import { CanAccess } from "@/components/access-control/can-access";
-import { useSidebar, SidebarTrigger } from "@/components/ui/sidebar";
+import { useSidebar } from "@/components/ui/sidebar";
 import { LogOutIcon, SettingsIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Brand } from "@/components/app-shell/brand";
+import { TopNav } from "@/components/app-shell/top-nav";
 import { extensionUserMenuItems } from "@/app/extensions";
 
 const pluginSettingsResource = {
@@ -44,8 +45,6 @@ export const Header = () => {
 };
 
 function DesktopHeader() {
-  const translate = useTranslate();
-
   return (
     <header
       className={cn(
@@ -65,14 +64,14 @@ function DesktopHeader() {
         "z-40"
       )}
     >
-      <div className="flex items-center gap-3">
-        <SidebarTrigger className="size-9 rounded-xl text-muted-foreground hover:text-foreground" />
-        <div className="hidden h-5 w-px bg-border sm:block" />
-        <span className="hidden text-sm font-medium text-muted-foreground sm:block">
-          {translate("shell.workspace", "AI application workspace")}
-        </span>
+      <div className="flex min-w-0 items-center gap-4">
+        <Brand logoClassName="h-7" />
+        <div className="h-6 w-px shrink-0 bg-border" />
+        <div className="min-w-0 overflow-x-auto">
+          <TopNav />
+        </div>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2">
         <SettingsLink />
         <ThemeToggle />
         <UserDropdown />
@@ -82,38 +81,31 @@ function DesktopHeader() {
 }
 
 function MobileHeader() {
-  const { isMobile } = useSidebar();
-
   return (
     <header
       className={cn(
         "sticky",
         "top-0",
         "flex",
-        "h-16",
+        "flex-col",
         "shrink-0",
-        "items-center",
-        "gap-2",
         "border-b",
         "border-border/70",
         "bg-background/85",
-        "px-3",
-        "justify-between",
         "backdrop-blur-xl",
         "z-40"
       )}
     >
-      <SidebarTrigger
-        className={cn(
-          "size-9 rounded-xl text-muted-foreground",
-          !isMobile && "hidden"
-        )}
-      />
-      <Brand logoClassName="h-6" />
-      <div className="flex shrink-0 items-center gap-1">
-        <SettingsLink className="size-9" />
-        <ThemeToggle className="size-9" />
-        <UserDropdown />
+      <div className="flex h-16 items-center justify-between gap-2 px-3">
+        <Brand logoClassName="h-6" />
+        <div className="flex shrink-0 items-center gap-1">
+          <SettingsLink className="size-9" />
+          <ThemeToggle className="size-9" />
+          <UserDropdown />
+        </div>
+      </div>
+      <div className="overflow-x-auto border-t border-border/70 px-3 py-1.5">
+        <TopNav />
       </div>
     </header>
   );
