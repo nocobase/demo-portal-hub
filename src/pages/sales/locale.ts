@@ -6,6 +6,7 @@ export const salesLocale = {
     "sales.common.save": "Save changes",
     "sales.common.saving": "Saving...",
     "sales.common.actions": "Actions",
+    "sales.common.view": "View",
 
     // Nav resources
     "sales.resources.pipeline": "Pipeline",
@@ -284,6 +285,7 @@ export const salesLocale = {
     "sales.common.save": "保存更改",
     "sales.common.saving": "保存中...",
     "sales.common.actions": "操作",
+    "sales.common.view": "查看",
 
     // Nav resources
     "sales.resources.pipeline": "销售管道",

@@ -185,6 +185,44 @@ export const knowledgeLocale = {
     "knowledge.tags.results.empty.title": "No articles in this topic",
     "knowledge.tags.results.empty.description":
       "Pick a different topic, or view all articles.",
+
+    // Article detail drawer (nested show)
+    "knowledge.articles.drawer.show.description":
+      "Article details and reader feedback.",
+    "knowledge.articles.drawer.show.overview": "Overview",
+    "knowledge.articles.drawer.show.openFull": "Open full",
+
+    // Feedback detail drawer (nested)
+    "knowledge.feedback.show.title": "Feedback",
+    "knowledge.feedback.show.description":
+      "A reader's response to this article.",
+    "knowledge.feedback.show.overview": "Overview",
+    "knowledge.feedback.show.rating": "Rating",
+    "knowledge.feedback.show.author": "Reader",
+    "knowledge.feedback.show.submitted": "Submitted",
+    "knowledge.feedback.show.comment": "Comment",
+    "knowledge.feedback.show.noComment": "No comment left.",
+    "knowledge.feedback.show.error.title": "Unable to load feedback",
+    "knowledge.feedback.show.error.description":
+      "This feedback may no longer exist.",
+
+    // Category detail drawer (show)
+    "knowledge.categories.drawer.show.description":
+      "Category details and the articles filed under it.",
+    "knowledge.categories.show.overview": "Overview",
+    "knowledge.categories.show.noParent": "Top level",
+    "knowledge.categories.show.articles": "Articles ({{count}})",
+    "knowledge.categories.show.addArticle": "Add article",
+    "knowledge.categories.show.articles.empty":
+      "No articles in this category yet.",
+    "knowledge.categories.show.columns.title": "Title",
+    "knowledge.categories.show.columns.status": "Status",
+    "knowledge.categories.show.columns.views": "Views",
+    "knowledge.categories.show.columns.updated": "Updated",
+    "knowledge.categories.show.columns.actions": "Actions",
+    "knowledge.categories.show.error.title": "Unable to load category",
+    "knowledge.categories.show.error.description":
+      "The category may no longer exist, or you may not have permission to view it.",
   },
   "zh-CN": {
     // Nav / resources
@@ -351,5 +389,38 @@ export const knowledgeLocale = {
     "knowledge.tags.empty.description": "创建一个分类,开始按主题归类文章。",
     "knowledge.tags.results.empty.title": "该主题下暂无文章",
     "knowledge.tags.results.empty.description": "换一个主题试试,或查看全部文章。",
+
+    // Article detail drawer (nested show)
+    "knowledge.articles.drawer.show.description": "文章详情与读者反馈。",
+    "knowledge.articles.drawer.show.overview": "概览",
+    "knowledge.articles.drawer.show.openFull": "打开全文",
+
+    // Feedback detail drawer (nested)
+    "knowledge.feedback.show.title": "反馈",
+    "knowledge.feedback.show.description": "读者对这篇文章的回应。",
+    "knowledge.feedback.show.overview": "概览",
+    "knowledge.feedback.show.rating": "评价",
+    "knowledge.feedback.show.author": "读者",
+    "knowledge.feedback.show.submitted": "提交于",
+    "knowledge.feedback.show.comment": "评论",
+    "knowledge.feedback.show.noComment": "未留下评论。",
+    "knowledge.feedback.show.error.title": "无法加载反馈",
+    "knowledge.feedback.show.error.description": "该反馈可能已不存在。",
+
+    // Category detail drawer (show)
+    "knowledge.categories.drawer.show.description": "分类详情及其下的文章。",
+    "knowledge.categories.show.overview": "概览",
+    "knowledge.categories.show.noParent": "顶级分类",
+    "knowledge.categories.show.articles": "文章({{count}})",
+    "knowledge.categories.show.addArticle": "新增文章",
+    "knowledge.categories.show.articles.empty": "该分类下暂无文章。",
+    "knowledge.categories.show.columns.title": "标题",
+    "knowledge.categories.show.columns.status": "状态",
+    "knowledge.categories.show.columns.views": "浏览",
+    "knowledge.categories.show.columns.updated": "更新时间",
+    "knowledge.categories.show.columns.actions": "操作",
+    "knowledge.categories.show.error.title": "无法加载分类",
+    "knowledge.categories.show.error.description":
+      "该分类可能已不存在,或你没有查看权限。",
   },
 };

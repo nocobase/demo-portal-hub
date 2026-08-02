@@ -1,5 +1,5 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Mail, Pencil, Phone, Plus, Trash2, Users } from "lucide-react";
+import { Eye, Mail, Pencil, Phone, Plus, Trash2, Users } from "lucide-react";
 import { useMemo } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -258,12 +258,35 @@ function ContactsSection({
         ) : (
           result.data.map((contact) => (
             <tr key={String(contact.id)}>
-              <td className="px-3 py-2 font-medium">{contact.name || "—"}</td>
+              <td className="px-3 py-2 font-medium">
+                <button
+                  type="button"
+                  className="text-left text-primary underline-offset-2 hover:underline"
+                  onClick={() =>
+                    openChild(
+                      `contacts/show/${encodeURIComponent(String(contact.id))}`
+                    )
+                  }
+                >
+                  {contact.name || "—"}
+                </button>
+              </td>
               <td className="px-3 py-2">{contact.title || "—"}</td>
               <td className="px-3 py-2">{contact.email || "—"}</td>
               <td className="px-3 py-2">{contact.phone || "—"}</td>
               <td className="px-3 py-2">
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      openChild(
+                        `contacts/show/${encodeURIComponent(String(contact.id))}`
+                      )
+                    }
+                  >
+                    <Eye />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -352,7 +375,19 @@ function DealsSection({
         ) : (
           result.data.map((deal) => (
             <tr key={String(deal.id)}>
-              <td className="px-3 py-2 font-medium">{deal.title || "—"}</td>
+              <td className="px-3 py-2 font-medium">
+                <button
+                  type="button"
+                  className="text-left text-primary underline-offset-2 hover:underline"
+                  onClick={() =>
+                    openChild(
+                      `deals/show/${encodeURIComponent(String(deal.id))}`
+                    )
+                  }
+                >
+                  {deal.title || "—"}
+                </button>
+              </td>
               <td className="px-3 py-2">
                 <EnumBadge
                   value={deal.stage ?? "inquiry"}
@@ -367,6 +402,17 @@ function DealsSection({
               </td>
               <td className="px-3 py-2">
                 <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() =>
+                      openChild(
+                        `deals/show/${encodeURIComponent(String(deal.id))}`
+                      )
+                    }
+                  >
+                    <Eye />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"

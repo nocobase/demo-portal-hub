@@ -1,5 +1,5 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -26,12 +26,19 @@ import {
 import { DetailItems, DrawerSection, EnumBadge, useLocale } from "../shared";
 import type { ProductRecord, StockMoveRecord } from "../types";
 
-export function ProductShow() {
+export function ProductShow({
+  idParam = "id",
+  embedded = false,
+}: {
+  idParam?: string;
+  embedded?: boolean;
+} = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const nested = useOutlet();
   const { result: record, query } = useShow<ProductRecord>({
     resource: "hub_inv_products",
@@ -56,7 +63,7 @@ export function ProductShow() {
       closeTo={closeTo}
       nested={nested}
       actions={
-        record ? (
+        record && !embedded ? (
           <EditButton
             resource="hub_inv_products"
             recordItemId={record.id}
@@ -111,7 +118,7 @@ export function ProductShow() {
             {id ? (
               <>
                 <Separator />
-                <StockMovesSection productId={id} locale={locale} />
+                <StockMovesSection productId={id} locale={locale} embedded={embedded} />
               </>
             ) : null}
           </div>
@@ -124,9 +131,11 @@ export function ProductShow() {
 function StockMovesSection({
   productId,
   locale,
+  embedded = false,
 }: {
   productId: string;
   locale: string;
+  embedded?: boolean;
 }) {
   const translate = useTranslate();
   const openChild = useOpenContextualChild();
@@ -153,10 +162,12 @@ function StockMovesSection({
         `Stock moves · ${onHand} on hand`
       )}
       action={
-        <Button variant="outline" size="sm" onClick={() => openChild("moves/create")}>
-          <Plus />
-          {translate("inventory.products.detail.addMove", { ns: "starter" }, "Add move")}
-        </Button>
+        embedded ? undefined : (
+          <Button variant="outline" size="sm" onClick={() => openChild("moves/create")}>
+            <Plus />
+            {translate("inventory.products.detail.addMove", { ns: "starter" }, "Add move")}
+          </Button>
+        )
       }
     >
       <div className="overflow-x-auto rounded-lg border">
@@ -167,13 +178,15 @@ function StockMovesSection({
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.type", { ns: "starter" }, "Type")}</th>
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.qty", { ns: "starter" }, "Qty")}</th>
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.warehouse", { ns: "starter" }, "Warehouse")}</th>
-              <th className="px-3 py-2 font-medium">{translate("inventory.common.actions", { ns: "starter" }, "Actions")}</th>
+              {embedded ? null : (
+                <th className="px-3 py-2 font-medium">{translate("inventory.common.actions", { ns: "starter" }, "Actions")}</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y">
             {result.data.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                <td colSpan={embedded ? 4 : 5} className="px-3 py-6 text-center text-muted-foreground">
                   {translate(
                     "inventory.products.detail.noMoves",
                     { ns: "starter" },
@@ -198,29 +211,41 @@ function StockMovesSection({
                     {signedQty(move.type, move.qty)}
                   </td>
                   <td className="px-3 py-2">{move.warehouse?.name || "—"}</td>
-                  <td className="px-3 py-2">
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        aria-label={translate("inventory.stockMoves.actions.edit", { ns: "starter" }, "Edit move")}
-                        onClick={() =>
-                          openChild(`moves/edit/${encodeURIComponent(String(move.id))}`)
-                        }
-                      >
-                        <Pencil />
-                      </Button>
-                      <DeleteButton
-                        resource="hub_inv_stock_moves"
-                        recordItemId={move.id}
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 />
-                      </DeleteButton>
-                    </div>
-                  </td>
+                  {embedded ? null : (
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={translate("inventory.products.detail.viewMove", { ns: "starter" }, "View move")}
+                          onClick={() =>
+                            openChild(`moves/show/${encodeURIComponent(String(move.id))}`)
+                          }
+                        >
+                          <Eye />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label={translate("inventory.stockMoves.actions.edit", { ns: "starter" }, "Edit move")}
+                          onClick={() =>
+                            openChild(`moves/edit/${encodeURIComponent(String(move.id))}`)
+                          }
+                        >
+                          <Pencil />
+                        </Button>
+                        <DeleteButton
+                          resource="hub_inv_stock_moves"
+                          recordItemId={move.id}
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 />
+                        </DeleteButton>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))
             )}

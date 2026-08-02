@@ -91,6 +91,7 @@ const enUS = {
   "helpdesk.show.details": "Details",
   "helpdesk.show.opened": "Opened",
   "helpdesk.show.lastUpdated": "Last updated",
+  "helpdesk.show.matchedSla": "Matched SLA",
 
   // Quick status-change (nested drawer)
   "helpdesk.status.title": "Change status",
@@ -143,6 +144,15 @@ const enUS = {
   "helpdesk.thread.sending": "Sending...",
   "helpdesk.thread.send": "Send reply",
 
+  // Reply edit (nested deeper drawer)
+  "helpdesk.reply.edit": "Edit reply",
+  "helpdesk.reply.drawer.edit.title": "Edit reply",
+  "helpdesk.reply.drawer.edit.desc": "Update the text of this reply.",
+  "helpdesk.reply.fields.body": "Reply",
+  "helpdesk.reply.fields.body.required": "Reply text is required",
+  "helpdesk.reply.actions.save": "Save reply",
+  "helpdesk.reply.actions.saving": "Saving...",
+
   // Forms
   "helpdesk.form.create.title": "New ticket",
   "helpdesk.form.create.description":
@@ -184,6 +194,13 @@ const enUS = {
   "helpdesk.sla.form.save": "Save changes",
   "helpdesk.sla.form.saving": "Saving...",
   "helpdesk.sla.form.saved": "Saved",
+  "helpdesk.sla.new": "New policy",
+  "helpdesk.sla.columns.actions": "Actions",
+  "helpdesk.sla.create.title": "New SLA policy",
+  "helpdesk.sla.create.description":
+    "Define response and resolution targets for a priority level.",
+  "helpdesk.sla.create.submit": "Create policy",
+  "helpdesk.sla.create.submitting": "Creating...",
 
   // FAQ
   "helpdesk.faq.title": "Frequently asked questions",
@@ -193,6 +210,26 @@ const enUS = {
   "helpdesk.faq.empty": "No questions match your search.",
   "helpdesk.faq.resultCount": "{{count}} results",
   "helpdesk.faq.categoryOther": "Other",
+  "helpdesk.faq.new": "New question",
+  "helpdesk.faq.edit": "Edit",
+  "helpdesk.faq.delete": "Delete",
+  "helpdesk.faq.create.title": "New question",
+  "helpdesk.faq.create.description":
+    "Add a self-service answer to the knowledge base.",
+  "helpdesk.faq.create.submit": "Create question",
+  "helpdesk.faq.create.submitting": "Creating...",
+  "helpdesk.faq.edit.title": "Edit question",
+  "helpdesk.faq.edit.description": "Update the question, answer or category.",
+  "helpdesk.faq.edit.submit": "Save changes",
+  "helpdesk.faq.edit.submitting": "Saving...",
+  "helpdesk.faq.fields.question": "Question",
+  "helpdesk.faq.fields.question.required": "Question is required",
+  "helpdesk.faq.fields.question.placeholder": "e.g. How do I reset my password?",
+  "helpdesk.faq.fields.answer": "Answer",
+  "helpdesk.faq.fields.answer.required": "Answer is required",
+  "helpdesk.faq.fields.answer.placeholder": "Write a clear, self-service answer.",
+  "helpdesk.faq.fields.category": "Category",
+  "helpdesk.faq.fields.category.placeholder": "e.g. Accounts",
 };
 
 const zhCN: Record<keyof typeof enUS, string> = {
@@ -282,6 +319,7 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.show.details": "详细信息",
   "helpdesk.show.opened": "创建时间",
   "helpdesk.show.lastUpdated": "最后更新",
+  "helpdesk.show.matchedSla": "匹配的 SLA",
 
   // Quick status-change (nested drawer)
   "helpdesk.status.title": "变更状态",
@@ -329,6 +367,15 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.thread.sending": "发送中……",
   "helpdesk.thread.send": "发送回复",
 
+  // Reply edit (nested deeper drawer)
+  "helpdesk.reply.edit": "编辑回复",
+  "helpdesk.reply.drawer.edit.title": "编辑回复",
+  "helpdesk.reply.drawer.edit.desc": "修改这条回复的内容。",
+  "helpdesk.reply.fields.body": "回复",
+  "helpdesk.reply.fields.body.required": "回复内容为必填项",
+  "helpdesk.reply.actions.save": "保存回复",
+  "helpdesk.reply.actions.saving": "保存中……",
+
   // Forms
   "helpdesk.form.create.title": "新建工单",
   "helpdesk.form.create.description": "记录一条新的支持请求并分派给客服。",
@@ -364,6 +411,12 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.sla.form.save": "保存更改",
   "helpdesk.sla.form.saving": "保存中……",
   "helpdesk.sla.form.saved": "已保存",
+  "helpdesk.sla.new": "新建策略",
+  "helpdesk.sla.columns.actions": "操作",
+  "helpdesk.sla.create.title": "新建 SLA 策略",
+  "helpdesk.sla.create.description": "为某个优先级设定响应与解决时限目标。",
+  "helpdesk.sla.create.submit": "创建策略",
+  "helpdesk.sla.create.submitting": "创建中……",
 
   // FAQ
   "helpdesk.faq.title": "常见问题",
@@ -372,6 +425,25 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.faq.empty": "没有匹配的问题。",
   "helpdesk.faq.resultCount": "{{count}} 条结果",
   "helpdesk.faq.categoryOther": "其他",
+  "helpdesk.faq.new": "新建问题",
+  "helpdesk.faq.edit": "编辑",
+  "helpdesk.faq.delete": "删除",
+  "helpdesk.faq.create.title": "新建问题",
+  "helpdesk.faq.create.description": "向知识库添加一条自助解答。",
+  "helpdesk.faq.create.submit": "创建问题",
+  "helpdesk.faq.create.submitting": "创建中……",
+  "helpdesk.faq.edit.title": "编辑问题",
+  "helpdesk.faq.edit.description": "更新问题、答案或分类。",
+  "helpdesk.faq.edit.submit": "保存更改",
+  "helpdesk.faq.edit.submitting": "保存中……",
+  "helpdesk.faq.fields.question": "问题",
+  "helpdesk.faq.fields.question.required": "问题为必填项",
+  "helpdesk.faq.fields.question.placeholder": "例如：如何重置我的密码？",
+  "helpdesk.faq.fields.answer": "答案",
+  "helpdesk.faq.fields.answer.required": "答案为必填项",
+  "helpdesk.faq.fields.answer.placeholder": "撰写清晰的自助解答。",
+  "helpdesk.faq.fields.category": "分类",
+  "helpdesk.faq.fields.category.placeholder": "例如：账户",
 };
 
 export const helpdeskLocale = {

@@ -55,6 +55,13 @@ export type InvoiceLineItem = {
   amount: number;
 };
 
+export type InvoiceItemFormValues = {
+  description: string;
+  quantity: number | string;
+  unit_price: number | string;
+  invoice_id: number | string | null;
+};
+
 export type Budget = {
   id: number;
   category: string;

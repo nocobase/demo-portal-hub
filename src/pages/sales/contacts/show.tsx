@@ -15,12 +15,13 @@ import {
 import { DetailItems, useLocale } from "../shared";
 import type { ContactRecord } from "../types";
 
-export function ContactShow() {
+export function ContactShow({ idParam = "id" }: { idParam?: string } = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const nestedDrawer = useOutlet();
   const { result: record, query } = useShow<ContactRecord>({
     resource: "hub_sales_contacts",

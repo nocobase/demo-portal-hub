@@ -1,4 +1,5 @@
 import { BarChart3, CreditCard, PieChart, PiggyBank, Receipt, TrendingUp } from "lucide-react";
+import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
@@ -14,6 +15,7 @@ import { ExpenseCreate, ExpenseEdit } from "@/pages/finance/expenses/form";
 import { ExpenseListPage } from "@/pages/finance/expenses/list";
 import { ExpenseShow } from "@/pages/finance/expenses/show";
 import { InvoiceCreate, InvoiceEdit } from "@/pages/finance/invoices/form";
+import { ItemCreate, ItemEdit } from "@/pages/finance/invoices/items-form";
 import { InvoiceListPage } from "@/pages/finance/invoices/list";
 import { InvoiceShow } from "@/pages/finance/invoices/show";
 import { FinanceReports } from "@/pages/finance/reports";
@@ -21,8 +23,23 @@ import { financeRoutes } from "@/pages/finance/routes";
 
 const denied = <AccessDenied />;
 
+// --- Nested invoice-scoped surfaces (inside the invoice detail drawer) ------
+// The line item belongs to the invoice via its scalar invoice_id FK, so the
+// create/edit forms carry the parent invoice id from the URL.
+
+function InvoiceScopedItemCreate() {
+  const { id } = useParams<{ id: string }>();
+  return <ItemCreate presetInvoiceId={id} />;
+}
+
+function InvoiceScopedItemEdit() {
+  const { id } = useParams<{ id: string }>();
+  return <ItemEdit presetInvoiceId={id} idParam="itemId" />;
+}
+
 // Nested children rendered inside the invoice detail drawer (2nd URL level):
-// /invoices/show/:id/edit
+// /invoices/show/:id/edit, /invoices/show/:id/items/create and
+// /invoices/show/:id/items/edit/:itemId (one level deeper — route changes).
 const invoiceShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_fin_invoices.show.edit",
@@ -30,6 +47,24 @@ const invoiceShowChildren: AppRouteDefinition[] = [
     element: (
       <CanAccess resource="hub_fin_invoices" action="edit" fallback={denied}>
         <InvoiceEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_fin_invoices.show.items.create",
+    path: "items/create",
+    element: (
+      <CanAccess resource="hub_fin_invoice_items" action="create" fallback={denied}>
+        <InvoiceScopedItemCreate />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_fin_invoices.show.items.edit",
+    path: "items/edit/:itemId",
+    element: (
+      <CanAccess resource="hub_fin_invoice_items" action="edit" fallback={denied}>
+        <InvoiceScopedItemEdit />
       </CanAccess>
     ),
   },

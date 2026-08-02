@@ -160,9 +160,12 @@ function ItemFields({
   );
 }
 
-export const PoItemCreate = () => {
+export const PoItemCreate = ({
+  idParam = "id",
+}: { idParam?: string } = {}) => {
   const translate = useTranslate();
-  const { id: purchaseOrderId } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const purchaseOrderId = params[idParam];
   const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (

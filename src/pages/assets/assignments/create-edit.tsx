@@ -139,9 +139,12 @@ function AssignmentForm({
 
 // --- Edit (from the Assignments list) ---------------------------------------
 
-export const AssignmentEdit = () => {
+export const AssignmentEdit = ({
+  idParam = "id",
+}: { idParam?: string } = {}) => {
   const translate = useTranslate();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (

@@ -5,23 +5,33 @@ import {
   useTranslate,
 } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
-import { Check, Save } from "lucide-react";
+import { Check, Plus, Save, Trash2 } from "lucide-react";
 import { Link, Outlet, useParams } from "react-router";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { LoadingState } from "@/components/app-shell/loading-state";
+import { DeleteButton } from "@/components/resources/buttons/delete";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
+import { useRouteSurfaceClose } from "@nocobase/portal-sdk/routing";
+import {
+  RouteDrawer,
+  RouteDrawerFooter,
+  useRefineUnsavedChangesGuard,
+} from "@/extensions/nocobase-route-surfaces";
 import { TICKET_PRIORITIES, labelFor } from "./constants";
 import { getSlaPolicyShowPath, helpdeskRoutes } from "./routes";
 import { PriorityPill } from "./shared";
-import type { SlaPolicyRecord } from "./types";
+import type { SlaPolicyFormValues, SlaPolicyRecord } from "./types";
 
 const RESOURCE = "hub_hd_sla_policies";
 
@@ -72,17 +82,23 @@ function SlaPoliciesPage() {
         <div className="flex items-center text-muted-foreground">
           <Breadcrumb />
         </div>
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight">
-            {translate("helpdesk.sla.title", { ns: "starter" }, "SLA policies")}
-          </h2>
-          <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-            {translate(
-              "helpdesk.sla.subtitle",
-              { ns: "starter" },
-              "Response and resolution targets for each priority level."
-            )}
-          </p>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight">
+              {translate("helpdesk.sla.title", { ns: "starter" }, "SLA policies")}
+            </h2>
+            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
+              {translate(
+                "helpdesk.sla.subtitle",
+                { ns: "starter" },
+                "Response and resolution targets for each priority level."
+              )}
+            </p>
+          </div>
+          <Button render={<Link to={helpdeskRoutes.slaPoliciesCreate} />}>
+            <Plus className="size-4" />
+            {translate("helpdesk.sla.new", { ns: "starter" }, "New policy")}
+          </Button>
         </div>
       </div>
 
@@ -110,6 +126,9 @@ function SlaPoliciesPage() {
                   <th className="px-4 py-2.5 font-medium">
                     {translate("helpdesk.sla.columns.resolve", { ns: "starter" }, "Resolve target")}
                   </th>
+                  <th className="px-4 py-2.5 text-right font-medium">
+                    {translate("helpdesk.sla.columns.actions", { ns: "starter" }, "Actions")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -135,6 +154,17 @@ function SlaPoliciesPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {minutesLabel(policy.resolve_mins, translate)}
                     </td>
+                    <td className="px-4 py-3 text-right">
+                      <DeleteButton
+                        resource={RESOURCE}
+                        recordItemId={policy.id}
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 />
+                      </DeleteButton>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -157,6 +187,121 @@ type SlaFormValues = {
   response_mins: number;
   resolve_mins: number;
 };
+
+// ---------------------------------------------------------------------------
+// Create drawer — URL-addressable at /sla-policies/create. Adds a new policy
+// for a priority level (priority is picked here; on the edit surface it is a
+// read-only pill since it identifies the policy).
+// ---------------------------------------------------------------------------
+
+export function SlaPolicyCreate() {
+  const translate = useTranslate();
+  const close = useRouteSurfaceClose();
+  const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
+  const {
+    refineCore: { onFinish },
+    register,
+    handleSubmit,
+    formState: { isSubmitting },
+  } = useForm<SlaPolicyRecord, HttpError, SlaPolicyFormValues>({
+    refineCoreProps: {
+      resource: RESOURCE,
+      action: "create",
+      redirect: false,
+      onMutationSuccess: () => close({ skipBeforeClose: true }),
+    },
+    defaultValues: {
+      name: "",
+      priority: "med",
+      response_mins: 60,
+      resolve_mins: 480,
+    },
+  });
+
+  return (
+    <>
+      <RouteDrawer
+        title={translate("helpdesk.sla.create.title", { ns: "starter" }, "New SLA policy")}
+        description={translate(
+          "helpdesk.sla.create.description",
+          { ns: "starter" },
+          "Define response and resolution targets for a priority level."
+        )}
+        closeLabel={translate("buttons.close", "Close")}
+        closeTo={helpdeskRoutes.slaPolicies}
+        beforeClose={beforeClose}
+      >
+        <form
+          onSubmit={handleSubmit((values) =>
+            onFinish({
+              name: values.name,
+              priority: values.priority,
+              response_mins: Number(values.response_mins),
+              resolve_mins: Number(values.resolve_mins),
+            })
+          )}
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+            <div className="space-y-2">
+              <Label htmlFor="sla-new-name">
+                {translate("helpdesk.sla.fields.name", { ns: "starter" }, "Policy name")}
+              </Label>
+              <Input id="sla-new-name" {...register("name", { required: true })} autoFocus />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="sla-new-priority">
+                {translate("helpdesk.sla.fields.priority", { ns: "starter" }, "Priority")}
+              </Label>
+              <NativeSelect id="sla-new-priority" {...register("priority", { required: true })}>
+                {TICKET_PRIORITIES.map((option) => (
+                  <NativeSelectOption key={option.value} value={option.value}>
+                    {labelFor(TICKET_PRIORITIES, option.value, translate)}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="sla-new-response">
+                  {translate("helpdesk.sla.fields.responseMins", { ns: "starter" }, "Response target (minutes)")}
+                </Label>
+                <Input
+                  id="sla-new-response"
+                  type="number"
+                  min={1}
+                  {...register("response_mins", { required: true, valueAsNumber: true })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="sla-new-resolve">
+                  {translate("helpdesk.sla.fields.resolveMins", { ns: "starter" }, "Resolve target (minutes)")}
+                </Label>
+                <Input
+                  id="sla-new-resolve"
+                  type="number"
+                  min={1}
+                  {...register("resolve_mins", { required: true, valueAsNumber: true })}
+                />
+              </div>
+            </div>
+          </div>
+          <RouteDrawerFooter className="flex-row justify-end">
+            <Button type="button" variant="outline" onClick={() => close()}>
+              {translate("buttons.cancel", "Cancel")}
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting
+                ? translate("helpdesk.sla.create.submitting", { ns: "starter" }, "Creating...")
+                : translate("helpdesk.sla.create.submit", { ns: "starter" }, "Create policy")}
+            </Button>
+          </RouteDrawerFooter>
+        </form>
+      </RouteDrawer>
+      {confirmation}
+    </>
+  );
+}
 
 export function SlaPolicyShow() {
   const translate = useTranslate();

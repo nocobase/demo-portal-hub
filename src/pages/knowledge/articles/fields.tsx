@@ -22,8 +22,10 @@ import type { ArticleFormValues } from "../types";
 
 export function ArticleFormFields({
   form,
+  presetCategoryId,
 }: {
   form: UseFormReturn<ArticleFormValues>;
+  presetCategoryId?: string;
 }) {
   const translate = useTranslate();
   return (
@@ -75,6 +77,7 @@ export function ArticleFormFields({
                   <CategoryPicker
                     value={field.value}
                     onChange={field.onChange}
+                    disabled={Boolean(presetCategoryId)}
                   />
                 }
               />

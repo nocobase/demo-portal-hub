@@ -19,6 +19,7 @@ export const assetsLocale = {
     "assets.common.save": "Save changes",
     "assets.common.saving": "Saving...",
     "assets.common.actions": "Actions",
+    "assets.common.view": "View",
 
     // Enums — category
     "assets.enums.category.laptop": "Laptop",
@@ -107,6 +108,14 @@ export const assetsLocale = {
     "assets.assignments.returnedPrefix": "Returned",
     "assets.assignments.actions.return": "Return",
 
+    // Assignment detail (show)
+    "assets.assignments.show.unnamed": "Assignment",
+    "assets.assignments.show.description": "Details for this device assignment.",
+    "assets.assignments.show.overview": "Overview",
+    "assets.assignments.show.error.title": "Unable to load assignment",
+    "assets.assignments.show.error.description":
+      "The assignment may no longer exist, or you may not have permission to view it.",
+
     // Assignment drawers
     "assets.assignments.drawer.create.title": "Assign a device",
     "assets.assignments.drawer.create.description":
@@ -173,6 +182,7 @@ export const assetsLocale = {
     "assets.common.save": "保存修改",
     "assets.common.saving": "保存中...",
     "assets.common.actions": "操作",
+    "assets.common.view": "查看",
 
     // Enums — category
     "assets.enums.category.laptop": "笔记本电脑",
@@ -256,6 +266,14 @@ export const assetsLocale = {
     "assets.assignments.active": "在用",
     "assets.assignments.returnedPrefix": "已归还",
     "assets.assignments.actions.return": "归还",
+
+    // Assignment detail (show)
+    "assets.assignments.show.unnamed": "领用记录",
+    "assets.assignments.show.description": "这条设备领用记录的详情。",
+    "assets.assignments.show.overview": "概览",
+    "assets.assignments.show.error.title": "无法加载领用记录",
+    "assets.assignments.show.error.description":
+      "该领用记录可能已不存在，或你没有查看权限。",
 
     // Assignment drawers
     "assets.assignments.drawer.create.title": "分配设备",

@@ -87,9 +87,14 @@ function EmployeeCreateForm() {
   );
 }
 
-export const EmployeeEdit = () => {
+export const EmployeeEdit = ({
+  idParam = "id",
+}: {
+  idParam?: string;
+} = {}) => {
   const translate = useTranslate();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params[idParam];
   const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (

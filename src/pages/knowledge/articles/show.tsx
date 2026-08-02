@@ -16,6 +16,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
+import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import {
   ARTICLE_STATUSES,
   formatDate,
@@ -24,13 +26,26 @@ import {
   toParagraphs,
 } from "../constants";
 import { getArticleShowPath, knowledgeRoutes } from "../routes";
-import { StatusPill, useLocale } from "../shared";
+import {
+  useContextualCloseTo,
+  useOpenContextualChild,
+} from "../route-surfaces";
+import {
+  DetailItems,
+  DrawerSection,
+  EmptyRow,
+  SimpleTable,
+  StatusPill,
+  useLocale,
+} from "../shared";
 import type { ArticleRecord, FeedbackRecord } from "../types";
 
-export function ArticleShow() {
+export function ArticleShow({ idParam = "id" }: { idParam?: string }) {
   const translate = useTranslate();
   const locale = useLocale();
-  const { id } = useParams<{ id: string }>();
+  const openChild = useOpenContextualChild();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const nested = useOutlet();
   const { result: record, query } = useShow<ArticleRecord>({
     resource: "hub_kb_articles",
@@ -231,32 +246,40 @@ export function ArticleShow() {
               ) : (
                 <ul className="flex flex-col gap-3">
                   {feedbackRows.map((row) => (
-                    <li key={String(row.id)} className="flex gap-3 border-b border-border/50 pb-3 last:border-b-0 last:pb-0">
-                      <span
-                        className={
-                          row.rating === "helpful"
-                            ? "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300"
-                            : "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                    <li key={String(row.id)} className="border-b border-border/50 last:border-b-0">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openChild(`feedback/view/${encodeURIComponent(String(row.id))}`)
                         }
+                        className="flex w-full gap-3 rounded-md pb-3 text-left transition-colors hover:bg-accent/50 last:pb-0"
                       >
-                        {row.rating === "helpful" ? (
-                          <ThumbsUp className="size-3.5" />
-                        ) : (
-                          <ThumbsDown className="size-3.5" />
-                        )}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium">
-                          {row.author?.nickname ??
-                            translate("knowledge.reader.author.unknown", { ns: "starter" }, "Unknown author")}
-                          <span className="ml-2 text-xs font-normal text-muted-foreground">
-                            {formatDate(row.createdAt, locale)}
-                          </span>
-                        </p>
-                        {row.comment ? (
-                          <p className="mt-0.5 text-sm text-muted-foreground">{row.comment}</p>
-                        ) : null}
-                      </div>
+                        <span
+                          className={
+                            row.rating === "helpful"
+                              ? "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-300"
+                              : "mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+                          }
+                        >
+                          {row.rating === "helpful" ? (
+                            <ThumbsUp className="size-3.5" />
+                          ) : (
+                            <ThumbsDown className="size-3.5" />
+                          )}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium">
+                            {row.author?.nickname ??
+                              translate("knowledge.reader.author.unknown", { ns: "starter" }, "Unknown author")}
+                            <span className="ml-2 text-xs font-normal text-muted-foreground">
+                              {formatDate(row.createdAt, locale)}
+                            </span>
+                          </p>
+                          {row.comment ? (
+                            <p className="mt-0.5 text-sm text-muted-foreground">{row.comment}</p>
+                          ) : null}
+                        </div>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -296,6 +319,192 @@ export function ArticleShow() {
 
       {nested ? <Outlet /> : null}
     </div>
+  );
+}
+
+/**
+ * Compact drawer variant of the article reader, used when an article is opened
+ * one level deeper — e.g. from a category detail drawer.
+ * Route: /categories/show/:id/articles/show/:articleId
+ */
+export function ArticleShowDrawer({ idParam = "articleId" }: { idParam?: string }) {
+  const translate = useTranslate();
+  const locale = useLocale();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
+  const nested = useOutlet();
+  const closeTo = useContextualCloseTo();
+
+  const { result: record, query } = useShow<ArticleRecord>({
+    resource: "hub_kb_articles",
+    id,
+    meta: { appends: ["category", "author"] },
+    queryOptions: { enabled: Boolean(id), retry: false },
+  });
+
+  const paragraphs = useMemo(() => toParagraphs(record?.body), [record?.body]);
+
+  const feedback = useList<FeedbackRecord>({
+    resource: "hub_kb_article_feedback",
+    pagination: { mode: "server", currentPage: 1, pageSize: 20 },
+    sorters: [{ field: "createdAt", order: "desc" }],
+    filters: id ? [{ field: "article_id", operator: "eq", value: id }] : [],
+    meta: { appends: ["author"] },
+    errorNotification: false,
+    queryOptions: { enabled: Boolean(id), retry: false },
+  });
+  const feedbackRows = feedback.result.data ?? [];
+
+  const untitled = translate("knowledge.common.untitled", { ns: "starter" }, "Untitled");
+  const uncategorized = translate(
+    "knowledge.common.uncategorized",
+    { ns: "starter" },
+    "Uncategorized"
+  );
+
+  return (
+    <RouteDrawer
+      title={
+        query.isLoading && !record ? (
+          <Skeleton className="h-6 w-40" />
+        ) : (
+          record?.title || untitled
+        )
+      }
+      description={translate(
+        "knowledge.articles.drawer.show.description",
+        { ns: "starter" },
+        "Article details and reader feedback."
+      )}
+      closeLabel={translate("knowledge.common.close", { ns: "starter" }, "Close")}
+      closeTo={closeTo}
+      nested={nested}
+      actions={
+        record ? (
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<Link to={getArticleShowPath(record.id)} />}
+          >
+            <Eye />
+            {translate("knowledge.articles.drawer.show.openFull", { ns: "starter" }, "Open full")}
+          </Button>
+        ) : null
+      }
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        {query.isLoading ? (
+          <LoadingState className="min-h-64" />
+        ) : query.isError || !record ? (
+          <Alert variant="destructive">
+            <AlertTitle>
+              {translate("knowledge.reader.error.title", { ns: "starter" }, "Unable to load article")}
+            </AlertTitle>
+            <AlertDescription>
+              {translate(
+                "knowledge.reader.error.description",
+                { ns: "starter" },
+                "The article may no longer exist, or you may not have permission to view it."
+              )}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-6">
+            <DetailItems
+              title={translate("knowledge.articles.drawer.show.overview", { ns: "starter" }, "Overview")}
+              items={[
+                [
+                  translate("knowledge.articles.fields.category", { ns: "starter" }, "Category"),
+                  record.category?.name ?? uncategorized,
+                ],
+                [
+                  translate("knowledge.articles.fields.status", { ns: "starter" }, "Status"),
+                  <StatusPill
+                    key="status"
+                    value={record.status ?? "draft"}
+                    label={labelFor(ARTICLE_STATUSES, record.status ?? "draft", translate)}
+                  />,
+                ],
+                [
+                  translate("knowledge.articles.fields.author", { ns: "starter" }, "Author"),
+                  record.author?.nickname ??
+                    translate("knowledge.reader.author.unknown", { ns: "starter" }, "Unknown author"),
+                ],
+                [
+                  translate("knowledge.reader.views", { ns: "starter" }, "views"),
+                  formatNumber(record.views, locale),
+                ],
+              ]}
+            />
+            {record.summary ? (
+              <p className="text-sm leading-6 text-muted-foreground">{record.summary}</p>
+            ) : null}
+            <Separator />
+            <div className="flex flex-col gap-3 text-sm leading-6 text-foreground/90">
+              {paragraphs.length === 0 ? (
+                <p className="text-muted-foreground">
+                  {translate("knowledge.reader.empty", { ns: "starter" }, "This article has no content yet.")}
+                </p>
+              ) : (
+                paragraphs.map((paragraph, index) => (
+                  <p key={index} className="whitespace-pre-line">
+                    {paragraph}
+                  </p>
+                ))
+              )}
+            </div>
+            <Separator />
+            <DrawerSection
+              title={translate("knowledge.feedback.panel.title", { ns: "starter" }, "Feedback")}
+            >
+              <SimpleTable
+                headers={[
+                  translate("knowledge.feedback.show.rating", { ns: "starter" }, "Rating"),
+                  translate("knowledge.feedback.show.author", { ns: "starter" }, "Reader"),
+                  translate("knowledge.feedback.show.comment", { ns: "starter" }, "Comment"),
+                ]}
+              >
+                {feedbackRows.length === 0 ? (
+                  <EmptyRow
+                    colSpan={3}
+                    text={translate(
+                      "knowledge.feedback.panel.empty",
+                      { ns: "starter" },
+                      "No feedback yet. Be the first to weigh in."
+                    )}
+                  />
+                ) : (
+                  feedbackRows.map((row) => (
+                    <tr key={String(row.id)}>
+                      <td className="px-3 py-2">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium">
+                          {row.rating === "helpful" ? (
+                            <ThumbsUp className="size-3.5 text-blue-600 dark:text-blue-300" />
+                          ) : (
+                            <ThumbsDown className="size-3.5 text-muted-foreground" />
+                          )}
+                          {row.rating === "helpful"
+                            ? translate("knowledge.feedback.rating.helpful", { ns: "starter" }, "Helpful")
+                            : translate("knowledge.feedback.rating.notHelpful", { ns: "starter" }, "Not helpful")}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2">
+                        {row.author?.nickname ??
+                          translate("knowledge.reader.author.unknown", { ns: "starter" }, "Unknown author")}
+                      </td>
+                      <td className="px-3 py-2 text-muted-foreground">
+                        {row.comment || "—"}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </SimpleTable>
+            </DrawerSection>
+          </div>
+        )}
+      </div>
+    </RouteDrawer>
   );
 }
 

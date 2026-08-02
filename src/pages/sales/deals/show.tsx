@@ -30,12 +30,13 @@ import {
 } from "../shared";
 import type { ActivityRecord, DealRecord } from "../types";
 
-export function DealShow() {
+export function DealShow({ idParam = "id" }: { idParam?: string } = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const nestedDrawer = useOutlet();
   const { result: record, query } = useShow<DealRecord>({
     resource: "hub_sales_deals",

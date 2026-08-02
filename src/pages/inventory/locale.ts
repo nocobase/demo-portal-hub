@@ -42,6 +42,7 @@ export const inventoryLocale = {
 
     // Common
     "inventory.common.actions": "Actions",
+    "inventory.common.view": "View",
     "inventory.common.cancel": "Cancel",
     "inventory.common.close": "Close",
     "inventory.common.save": "Save changes",
@@ -130,6 +131,7 @@ export const inventoryLocale = {
       "The product may no longer exist, or you may not have permission to view it.",
     "inventory.products.detail.stockMoves": "Stock moves · {{qty}} on hand",
     "inventory.products.detail.addMove": "Add move",
+    "inventory.products.detail.viewMove": "View move",
     "inventory.products.detail.noMoves":
       "No stock moves yet. Record the first receipt or issue.",
 
@@ -149,6 +151,22 @@ export const inventoryLocale = {
     "inventory.warehouses.drawer.edit.title": "Edit warehouse",
     "inventory.warehouses.drawer.edit.description":
       "Update this stocking location.",
+    // Warehouses — actions / detail
+    "inventory.warehouses.actions.edit": "Edit warehouse",
+    "inventory.warehouses.actions.view": "View warehouse",
+    "inventory.warehouses.drawer.show.description":
+      "Stock held and recent movements for this location.",
+    "inventory.warehouses.detail.profile": "Profile",
+    "inventory.warehouses.detail.unnamed": "Unnamed warehouse",
+    "inventory.warehouses.detail.loadError.title": "Unable to load warehouse",
+    "inventory.warehouses.detail.loadError.description":
+      "The warehouse may no longer exist, or you may not have permission to view it.",
+    "inventory.warehouses.detail.products": "Products stored · {{count}}",
+    "inventory.warehouses.detail.noProducts": "No products stored here yet.",
+    "inventory.warehouses.detail.viewProduct": "View product",
+    "inventory.warehouses.detail.recentMoves": "Recent stock moves",
+    "inventory.warehouses.detail.noMoves":
+      "No stock moves recorded here yet.",
 
     // Stock moves
     "inventory.stockMoves.fields.date": "Date",
@@ -173,6 +191,15 @@ export const inventoryLocale = {
       "Record a receipt, issue or adjustment.",
     "inventory.stockMoves.drawer.edit.title": "Edit stock move",
     "inventory.stockMoves.drawer.edit.description": "Update this movement.",
+    // Stock moves — view / detail
+    "inventory.stockMoves.actions.view": "View move",
+    "inventory.stockMoves.drawer.show.title": "Stock move",
+    "inventory.stockMoves.drawer.show.description":
+      "Details of this stock movement.",
+    "inventory.stockMoves.detail.overview": "Overview",
+    "inventory.stockMoves.detail.loadError.title": "Unable to load stock move",
+    "inventory.stockMoves.detail.loadError.description":
+      "The stock move may no longer exist, or you may not have permission to view it.",
   },
   "zh-CN": {
     // Nav / resources
@@ -208,6 +235,7 @@ export const inventoryLocale = {
 
     // Common
     "inventory.common.actions": "操作",
+    "inventory.common.view": "查看",
     "inventory.common.cancel": "取消",
     "inventory.common.close": "关闭",
     "inventory.common.save": "保存修改",
@@ -291,6 +319,7 @@ export const inventoryLocale = {
       "该商品可能已不存在,或你没有查看权限。",
     "inventory.products.detail.stockMoves": "库存流水 · 在库 {{qty}}",
     "inventory.products.detail.addMove": "新增流水",
+    "inventory.products.detail.viewMove": "查看流水",
     "inventory.products.detail.noMoves": "暂无库存流水。记录第一笔入库或出库吧。",
 
     // Warehouses
@@ -307,6 +336,20 @@ export const inventoryLocale = {
     "inventory.warehouses.drawer.create.description": "添加一个仓储地点。",
     "inventory.warehouses.drawer.edit.title": "编辑仓库",
     "inventory.warehouses.drawer.edit.description": "更新该仓储地点。",
+    // Warehouses — actions / detail
+    "inventory.warehouses.actions.edit": "编辑仓库",
+    "inventory.warehouses.actions.view": "查看仓库",
+    "inventory.warehouses.drawer.show.description": "该仓储地点的在库商品与近期库存流水。",
+    "inventory.warehouses.detail.profile": "基本信息",
+    "inventory.warehouses.detail.unnamed": "未命名仓库",
+    "inventory.warehouses.detail.loadError.title": "无法加载仓库",
+    "inventory.warehouses.detail.loadError.description":
+      "该仓库可能已不存在,或你没有查看权限。",
+    "inventory.warehouses.detail.products": "在库商品 · {{count}}",
+    "inventory.warehouses.detail.noProducts": "该仓库暂无在库商品。",
+    "inventory.warehouses.detail.viewProduct": "查看商品",
+    "inventory.warehouses.detail.recentMoves": "近期库存流水",
+    "inventory.warehouses.detail.noMoves": "该仓库暂无库存流水。",
 
     // Stock moves
     "inventory.stockMoves.fields.date": "日期",
@@ -328,5 +371,13 @@ export const inventoryLocale = {
     "inventory.stockMoves.drawer.create.description": "记录一笔入库、出库或调整。",
     "inventory.stockMoves.drawer.edit.title": "编辑库存流水",
     "inventory.stockMoves.drawer.edit.description": "更新这笔流水。",
+    // Stock moves — view / detail
+    "inventory.stockMoves.actions.view": "查看流水",
+    "inventory.stockMoves.drawer.show.title": "库存流水",
+    "inventory.stockMoves.drawer.show.description": "该笔库存流水的详情。",
+    "inventory.stockMoves.detail.overview": "概览",
+    "inventory.stockMoves.detail.loadError.title": "无法加载库存流水",
+    "inventory.stockMoves.detail.loadError.description":
+      "该库存流水可能已不存在,或你没有查看权限。",
   },
 };

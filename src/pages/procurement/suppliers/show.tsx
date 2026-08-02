@@ -152,6 +152,7 @@ function SupplierOrdersSection({
   locale: string;
 }) {
   const translate = useTranslate();
+  const openChild = useOpenContextualChild();
   const { result } = useList<PurchaseOrderRecord>({
     resource: "hub_po_purchase_orders",
     pagination: { mode: "server", currentPage: 1, pageSize: 50 },
@@ -213,7 +214,13 @@ function SupplierOrdersSection({
               </tr>
             ) : (
               orders.map((po) => (
-                <tr key={String(po.id)}>
+                <tr
+                  key={String(po.id)}
+                  onClick={() =>
+                    openChild(`po/show/${encodeURIComponent(String(po.id))}`)
+                  }
+                  className="cursor-pointer hover:bg-muted/40"
+                >
                   <td className="px-3 py-2 font-medium">{po.po_number || "—"}</td>
                   <td className="px-3 py-2">
                     <EnumBadge

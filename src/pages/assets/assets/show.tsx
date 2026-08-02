@@ -1,5 +1,5 @@
 import { useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
-import { Pencil, Plus, Undo2 } from "lucide-react";
+import { Eye, Pencil, Plus, Undo2 } from "lucide-react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { EditButton } from "@/components/resources/buttons/edit";
@@ -277,18 +277,30 @@ function AssignmentHistory({
                   {assignment.note || "—"}
                 </td>
                 <td className="px-3 py-2">
-                  {active ? (
+                  <div className="flex items-center gap-1">
                     <Button
                       variant="ghost"
-                      size="sm"
-                      onClick={() => returnAssignment(assignment)}
+                      size="icon"
+                      title={translate("assets.common.view", { ns: "starter" }, "View")}
+                      onClick={() =>
+                        openChild(
+                          `assignments/show/${encodeURIComponent(String(assignment.id))}`
+                        )
+                      }
                     >
-                      <Undo2 />
-                      {translate("assets.assignments.actions.return", { ns: "starter" }, "Return")}
+                      <Eye />
                     </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                    {active ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => returnAssignment(assignment)}
+                      >
+                        <Undo2 />
+                        {translate("assets.assignments.actions.return", { ns: "starter" }, "Return")}
+                      </Button>
+                    ) : null}
+                  </div>
                 </td>
               </tr>
             );

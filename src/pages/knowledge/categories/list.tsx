@@ -1,5 +1,5 @@
 import { useTranslate } from "@refinedev/core";
-import { Folder, FolderOpen, Pencil, Plus, Trash2 } from "lucide-react";
+import { Eye, Folder, FolderOpen, Pencil, Plus, Trash2 } from "lucide-react";
 import { Link, Outlet } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -10,7 +10,11 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useCategoryTree } from "../category-tree";
-import { getCategoryEditPath, knowledgeRoutes } from "../routes";
+import {
+  getCategoryEditPath,
+  getCategoryShowPath,
+  knowledgeRoutes,
+} from "../routes";
 import type { CategoryNode } from "../types";
 
 export function CategoriesLayout() {
@@ -164,6 +168,14 @@ function TopCategoryCard({ node }: { node: CategoryNode }) {
 function CategoryRowActions({ id }: { id: string | number }) {
   return (
     <div className="flex shrink-0 items-center gap-1">
+      <Button
+        variant="ghost"
+        size="icon"
+        nativeButton={false}
+        render={<Link to={getCategoryShowPath(id)} />}
+      >
+        <Eye />
+      </Button>
       <Button
         variant="ghost"
         size="icon"

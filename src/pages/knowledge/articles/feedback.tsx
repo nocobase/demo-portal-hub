@@ -1,6 +1,9 @@
-import { type HttpError, useTranslate } from "@refinedev/core";
+import { type HttpError, useShow, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { useParams } from "react-router";
+import { LoadingState } from "@/components/app-shell/loading-state";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +14,10 @@ import {
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
 import { cn } from "@/lib/utils";
+import { formatDate } from "../constants";
 import { getArticleShowPath, knowledgeRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
+import { DetailItems, useLocale } from "../shared";
 import type { FeedbackFormValues, FeedbackRecord } from "../types";
 
 /** Nested (2nd-level) drawer: leave feedback on an article, reached from the reader. */
@@ -150,3 +156,105 @@ function ArticleFeedbackForm({ articleId }: { articleId?: string }) {
     </Form>
   );
 }
+
+/**
+ * Nested (deeper) read-only drawer: view a single feedback entry, reached by
+ * clicking a row in the reader's feedback panel.
+ * Route: /articles/show/:id/feedback/view/:feedbackId
+ */
+export const FeedbackShow = ({ idParam = "feedbackId" }: { idParam?: string }) => {
+  const translate = useTranslate();
+  const locale = useLocale();
+  const params = useParams<Record<string, string>>();
+  const recordId = params[idParam];
+  const closeTo = useContextualCloseTo();
+  const { result: record, query } = useShow<FeedbackRecord>({
+    resource: "hub_kb_article_feedback",
+    id: recordId,
+    meta: { appends: ["author"] },
+    queryOptions: { enabled: Boolean(recordId), retry: false },
+  });
+
+  const isHelpful = record?.rating === "helpful";
+  const ratingLabel = isHelpful
+    ? translate("knowledge.feedback.rating.helpful", { ns: "starter" }, "Helpful")
+    : translate("knowledge.feedback.rating.notHelpful", { ns: "starter" }, "Not helpful");
+
+  return (
+    <RouteDrawer
+      title={translate("knowledge.feedback.show.title", { ns: "starter" }, "Feedback")}
+      description={translate(
+        "knowledge.feedback.show.description",
+        { ns: "starter" },
+        "A reader's response to this article."
+      )}
+      closeTo={closeTo}
+      closeLabel={translate("knowledge.common.close", { ns: "starter" }, "Close")}
+    >
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        {query.isLoading ? (
+          <LoadingState className="min-h-48" />
+        ) : query.isError || !record ? (
+          <Alert variant="destructive">
+            <AlertTitle>
+              {translate("knowledge.feedback.show.error.title", { ns: "starter" }, "Unable to load feedback")}
+            </AlertTitle>
+            <AlertDescription>
+              {translate(
+                "knowledge.feedback.show.error.description",
+                { ns: "starter" },
+                "This feedback may no longer exist."
+              )}
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <div className="space-y-6">
+            <DetailItems
+              title={translate("knowledge.feedback.show.overview", { ns: "starter" }, "Overview")}
+              items={[
+                [
+                  translate("knowledge.feedback.show.rating", { ns: "starter" }, "Rating"),
+                  <span
+                    key="rating"
+                    className={cn(
+                      "inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-0.5 text-xs font-medium",
+                      isHelpful
+                        ? "bg-blue-500/15 text-blue-700 dark:text-blue-300"
+                        : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {isHelpful ? (
+                      <ThumbsUp className="size-3.5" />
+                    ) : (
+                      <ThumbsDown className="size-3.5" />
+                    )}
+                    {ratingLabel}
+                  </span>,
+                ],
+                [
+                  translate("knowledge.feedback.show.author", { ns: "starter" }, "Reader"),
+                  record.author?.nickname ??
+                    translate("knowledge.reader.author.unknown", { ns: "starter" }, "Unknown author"),
+                ],
+                [
+                  translate("knowledge.feedback.show.submitted", { ns: "starter" }, "Submitted"),
+                  formatDate(record.createdAt, locale),
+                ],
+              ]}
+            />
+            <div className="space-y-1.5">
+              <h3 className="text-sm font-medium">
+                {translate("knowledge.feedback.show.comment", { ns: "starter" }, "Comment")}
+              </h3>
+              <p className="text-sm leading-6 text-muted-foreground whitespace-pre-line">
+                {record.comment
+                  ? record.comment
+                  : translate("knowledge.feedback.show.noComment", { ns: "starter" }, "No comment left.")}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </RouteDrawer>
+  );
+};

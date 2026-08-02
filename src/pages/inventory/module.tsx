@@ -18,8 +18,10 @@ import { ProductsLayout } from "./products/list";
 import { ProductShow } from "./products/show";
 import { WarehouseCreate, WarehouseEdit } from "./warehouses/form";
 import { WarehousesLayout } from "./warehouses/list";
+import { WarehouseShow } from "./warehouses/show";
 import { StockMoveCreate, StockMoveEdit } from "./stock-moves/form";
 import { StockMovesLayout } from "./stock-moves/list";
+import { StockMoveShow } from "./stock-moves/show";
 
 const denied = <AccessDenied />;
 
@@ -33,6 +35,23 @@ function ProductNestedMoveCreate() {
 function ProductNestedMoveEdit() {
   const { id } = useParams<{ id: string }>();
   return <StockMoveEdit presetProductId={id} idParam="moveId" />;
+}
+
+// Nested SHOW of a stock move opened from inside a product drawer (one level
+// deeper — the URL becomes products/show/:id/moves/show/:moveId).
+function ProductNestedMoveShow() {
+  return <StockMoveShow idParam="moveId" embedded />;
+}
+
+// A product opened from inside a warehouse drawer reads its id from :productId
+// and renders read-only (its own sub-actions are not routable at this depth).
+function WarehouseNestedProductShow() {
+  return <ProductShow idParam="productId" embedded />;
+}
+
+// A stock move opened from inside a warehouse drawer.
+function WarehouseNestedMoveShow() {
+  return <StockMoveShow idParam="moveId" embedded />;
 }
 
 const productContextChildren: AppRouteDefinition[] = [
@@ -60,6 +79,57 @@ const productContextChildren: AppRouteDefinition[] = [
     element: (
       <CanAccess resource="hub_inv_stock_moves" action="edit" fallback={denied}>
         <ProductNestedMoveEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_inv_products.show.moves.show",
+    path: "moves/show/:moveId",
+    element: (
+      <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
+        <ProductNestedMoveShow />
+      </CanAccess>
+    ),
+  },
+];
+
+const warehouseContextChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_inv_warehouses.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_inv_warehouses" action="edit" fallback={denied}>
+        <WarehouseEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_inv_warehouses.show.products.show",
+    path: "products/show/:productId",
+    element: (
+      <CanAccess resource="hub_inv_products" action="show" fallback={denied}>
+        <WarehouseNestedProductShow />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_inv_warehouses.show.moves.show",
+    path: "moves/show/:moveId",
+    element: (
+      <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
+        <WarehouseNestedMoveShow />
+      </CanAccess>
+    ),
+  },
+];
+
+const stockMoveContextChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_inv_stock_moves.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_inv_stock_moves" action="edit" fallback={denied}>
+        <StockMoveEdit />
       </CanAccess>
     ),
   },
@@ -182,6 +252,17 @@ export const inventoryModule = {
             </CanAccess>
           ),
         },
+        {
+          name: "hub_inv_warehouses.show",
+          path: "show/:id",
+          resourceAction: "show",
+          element: (
+            <CanAccess resource="hub_inv_warehouses" action="show" fallback={denied}>
+              <WarehouseShow />
+            </CanAccess>
+          ),
+          children: warehouseContextChildren,
+        },
       ],
     },
     {
@@ -224,6 +305,17 @@ export const inventoryModule = {
               <StockMoveEdit />
             </CanAccess>
           ),
+        },
+        {
+          name: "hub_inv_stock_moves.show",
+          path: "show/:id",
+          resourceAction: "show",
+          element: (
+            <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
+              <StockMoveShow />
+            </CanAccess>
+          ),
+          children: stockMoveContextChildren,
         },
       ],
     },

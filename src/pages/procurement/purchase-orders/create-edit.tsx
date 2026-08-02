@@ -98,9 +98,12 @@ function PurchaseOrderCreateForm() {
   );
 }
 
-export const PurchaseOrderEdit = () => {
+export const PurchaseOrderEdit = ({
+  idParam = "id",
+}: { idParam?: string } = {}) => {
   const translate = useTranslate();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (

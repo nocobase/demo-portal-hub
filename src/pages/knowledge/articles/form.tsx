@@ -9,7 +9,7 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
-import { getArticleShowPath, knowledgeRoutes } from "../routes";
+import { useContextualCloseTo } from "../route-surfaces";
 import type { ArticleFormValues, ArticleRecord } from "../types";
 import { ArticleFormFields } from "./fields";
 
@@ -22,8 +22,11 @@ const toServerValues = (values: ArticleFormValues) => {
   } as unknown as ArticleFormValues;
 };
 
-export const ArticleCreate = () => {
+type ArticleSurfaceProps = { presetCategoryId?: string };
+
+export const ArticleCreate = ({ presetCategoryId }: ArticleSurfaceProps) => {
   const translate = useTranslate();
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
   return (
     <>
@@ -34,18 +37,18 @@ export const ArticleCreate = () => {
           { ns: "starter" },
           "Draft a knowledge base article."
         )}
-        closeTo={knowledgeRoutes.articles}
+        closeTo={closeTo}
         closeLabel={translate("knowledge.common.close", { ns: "starter" }, "Close")}
         beforeClose={beforeClose}
       >
-        <ArticleCreateForm />
+        <ArticleCreateForm presetCategoryId={presetCategoryId} />
       </RouteDrawer>
       {confirmation}
     </>
   );
 };
 
-function ArticleCreateForm() {
+function ArticleCreateForm({ presetCategoryId }: ArticleSurfaceProps) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
   const {
@@ -63,7 +66,7 @@ function ArticleCreateForm() {
       summary: "",
       body: "",
       status: "draft",
-      category_id: null,
+      category_id: presetCategoryId ? String(presetCategoryId) : null,
       author_id: null,
     },
   });
@@ -75,7 +78,7 @@ function ArticleCreateForm() {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <ArticleFormFields form={form} />
+          <ArticleFormFields form={form} presetCategoryId={presetCategoryId} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>
@@ -93,15 +96,14 @@ function ArticleCreateForm() {
 }
 
 export const ArticleEdit = ({
-  returnTo = "list",
-}: {
-  returnTo?: "list" | "show";
-}) => {
+  presetCategoryId,
+  idParam = "id",
+}: ArticleSurfaceProps & { idParam?: string }) => {
   const translate = useTranslate();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const recordId = params[idParam];
+  const closeTo = useContextualCloseTo();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
-  const closeTo =
-    returnTo === "show" && id ? getArticleShowPath(id) : knowledgeRoutes.articles;
   return (
     <>
       <RouteDrawer
@@ -115,14 +117,17 @@ export const ArticleEdit = ({
         closeLabel={translate("knowledge.common.close", { ns: "starter" }, "Close")}
         beforeClose={beforeClose}
       >
-        <ArticleEditForm id={id} />
+        <ArticleEditForm id={recordId} presetCategoryId={presetCategoryId} />
       </RouteDrawer>
       {confirmation}
     </>
   );
 };
 
-function ArticleEditForm({ id }: { id?: string }) {
+function ArticleEditForm({
+  id,
+  presetCategoryId,
+}: ArticleSurfaceProps & { id?: string }) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
   const {
@@ -146,7 +151,7 @@ function ArticleEditForm({ id }: { id?: string }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <ArticleFormFields form={form} />
+          <ArticleFormFields form={form} presetCategoryId={presetCategoryId} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>

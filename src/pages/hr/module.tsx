@@ -26,10 +26,66 @@ import { hrRoutes } from "@/pages/hr/routes";
 const denied = <AccessDenied />;
 
 // Leave entries opened from inside an employee drawer: preset the employee
-// and return to that employee's detail drawer on close (contextual nav state).
-function EmployeeNestedLeaveCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <LeaveCreate presetEmployeeId={id} />;
+// (read from whichever route param carries the employee id) and return to
+// that employee's detail drawer on close (contextual nav state).
+function ScopedLeaveCreate({ empParam }: { empParam: string }) {
+  const params = useParams();
+  return <LeaveCreate presetEmployeeId={params[empParam]} />;
+}
+
+// A nested leave *show* drawer (opened from a leave row inside an employee
+// drawer) can itself open an edit drawer one level deeper.
+function makeLeaveShowChildren(prefix: string): AppRouteDefinition[] {
+  return [
+    {
+      name: `${prefix}.edit`,
+      path: "edit",
+      element: (
+        <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
+          <LeaveEdit idParam="leaveId" />
+        </CanAccess>
+      ),
+    },
+  ];
+}
+
+// Leave sub-surfaces that live inside an employee detail drawer. `empParam` is
+// the route param carrying the employee id at this depth (`id` at top level,
+// `empId` when the employee drawer is itself nested under a department).
+function makeEmployeeLeaveChildren(
+  prefix: string,
+  empParam: string
+): AppRouteDefinition[] {
+  return [
+    {
+      name: `${prefix}.leave.create`,
+      path: "leave/create",
+      element: (
+        <CanAccess resource="hub_hr_leave_requests" action="create" fallback={denied}>
+          <ScopedLeaveCreate empParam={empParam} />
+        </CanAccess>
+      ),
+    },
+    {
+      name: `${prefix}.leave.show`,
+      path: "leave/show/:leaveId",
+      element: (
+        <CanAccess resource="hub_hr_leave_requests" action="show" fallback={denied}>
+          <LeaveShow idParam="leaveId" />
+        </CanAccess>
+      ),
+      children: makeLeaveShowChildren(`${prefix}.leave.show`),
+    },
+    {
+      name: `${prefix}.leave.edit`,
+      path: "leave/edit/:leaveId",
+      element: (
+        <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
+          <LeaveEdit idParam="leaveId" />
+        </CanAccess>
+      ),
+    },
+  ];
 }
 
 const employeeShowChildren: AppRouteDefinition[] = [
@@ -42,24 +98,22 @@ const employeeShowChildren: AppRouteDefinition[] = [
       </CanAccess>
     ),
   },
+  ...makeEmployeeLeaveChildren("hub_hr_employees.show", "id"),
+];
+
+// One level deeper: from a department drawer, an employee row opens a nested
+// employee *show* drawer, which carries its own edit + leave sub-surfaces.
+const departmentEmployeeShowChildren: AppRouteDefinition[] = [
   {
-    name: "hub_hr_employees.show.leave.create",
-    path: "leave/create",
+    name: "hub_hr_departments.show.employee.edit",
+    path: "edit",
     element: (
-      <CanAccess resource="hub_hr_leave_requests" action="create" fallback={denied}>
-        <EmployeeNestedLeaveCreate />
+      <CanAccess resource="hub_hr_employees" action="edit" fallback={denied}>
+        <EmployeeEdit idParam="empId" />
       </CanAccess>
     ),
   },
-  {
-    name: "hub_hr_employees.show.leave.edit",
-    path: "leave/edit/:leaveId",
-    element: (
-      <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
-        <LeaveEdit idParam="leaveId" />
-      </CanAccess>
-    ),
-  },
+  ...makeEmployeeLeaveChildren("hub_hr_departments.show.employee", "empId"),
 ];
 
 const departmentShowChildren: AppRouteDefinition[] = [
@@ -71,6 +125,16 @@ const departmentShowChildren: AppRouteDefinition[] = [
         <DepartmentEdit />
       </CanAccess>
     ),
+  },
+  {
+    name: "hub_hr_departments.show.employee.show",
+    path: "employees/show/:empId",
+    element: (
+      <CanAccess resource="hub_hr_employees" action="show" fallback={denied}>
+        <EmployeeShow idParam="empId" />
+      </CanAccess>
+    ),
+    children: departmentEmployeeShowChildren,
   },
 ];
 

@@ -1,6 +1,6 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
 import { Pencil, Users } from "lucide-react";
-import { useNavigate, useOutlet, useParams } from "react-router";
+import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -101,7 +101,9 @@ export function DepartmentShow() {
                 ],
               ]}
             />
-            {id ? <DepartmentMembersSection departmentId={id} /> : null}
+            {id ? (
+              <DepartmentMembersSection departmentId={id} openChild={openChild} />
+            ) : null}
           </div>
         )}
       </div>
@@ -109,9 +111,14 @@ export function DepartmentShow() {
   );
 }
 
-function DepartmentMembersSection({ departmentId }: { departmentId: string }) {
+function DepartmentMembersSection({
+  departmentId,
+  openChild,
+}: {
+  departmentId: string;
+  openChild: (to: string) => void;
+}) {
   const translate = useTranslate();
-  const navigate = useNavigate();
   const { result } = useList<EmployeeRecord>({
     resource: "hub_hr_employees",
     pagination: { mode: "server", currentPage: 1, pageSize: 200 },
@@ -146,7 +153,9 @@ function DepartmentMembersSection({ departmentId }: { departmentId: string }) {
             <tr
               key={String(emp.id)}
               className="cursor-pointer hover:bg-accent/40"
-              onClick={() => navigate(`/employees/show/${emp.id}`)}
+              onClick={() =>
+                openChild(`employees/show/${encodeURIComponent(String(emp.id))}`)
+              }
             >
               <td className="px-3 py-2 font-medium">
                 <span className="inline-flex items-center gap-1.5 text-primary underline-offset-2 hover:underline">

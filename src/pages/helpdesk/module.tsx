@@ -1,4 +1,5 @@
 import { Gauge, HelpCircle, LifeBuoy, ShieldCheck } from "lucide-react";
+import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
@@ -7,16 +8,25 @@ import {
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { HelpdeskDashboard } from "./dashboard";
-import { FaqPage } from "./faq";
+import { FaqCreate, FaqEdit, FaqPage } from "./faq";
 import { helpdeskRoutes } from "./routes";
-import { SlaPoliciesLayout, SlaPolicyShow } from "./sla-policies";
+import { SlaPolicyCreate, SlaPoliciesLayout, SlaPolicyShow } from "./sla-policies";
 import { TicketCreate, TicketEdit } from "./tickets/create-edit";
 import { TicketsLayout } from "./tickets/list";
+import { ReplyEdit } from "./tickets/replies";
 import { TicketShow } from "./tickets/show";
 import { TicketStatusChange } from "./tickets/status-change";
 
 const RESOURCE = "hub_hd_tickets";
+const REPLIES = "hub_hd_replies";
 const denied = <AccessDenied />;
+
+// --- Nested ticket-scoped surfaces (inside the ticket detail drawer) -------
+
+function TicketScopedReplyEdit() {
+  const { id } = useParams<{ id: string }>();
+  return <ReplyEdit presetTicketId={id} />;
+}
 
 const routes: AppRouteDefinition[] = defineAppRoutes([
   {
@@ -105,6 +115,15 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
               </CanAccess>
             ),
           },
+          {
+            name: `${RESOURCE}.show.replies.edit`,
+            path: "replies/edit/:replyId",
+            element: (
+              <CanAccess resource={REPLIES} action="edit" fallback={denied}>
+                <TicketScopedReplyEdit />
+              </CanAccess>
+            ),
+          },
         ],
       },
     ],
@@ -126,6 +145,11 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
       },
     },
     children: [
+      {
+        name: "hd-sla.create",
+        path: "create",
+        element: <SlaPolicyCreate />,
+      },
       {
         name: "hd-sla.show",
         path: "show/:id",
@@ -149,6 +173,18 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         acl: false,
       },
     },
+    children: [
+      {
+        name: "hd-faq.create",
+        path: "create",
+        element: <FaqCreate />,
+      },
+      {
+        name: "hd-faq.edit",
+        path: "edit/:id",
+        element: <FaqEdit />,
+      },
+    ],
   },
 ]);
 

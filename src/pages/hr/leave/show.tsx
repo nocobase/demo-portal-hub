@@ -20,12 +20,13 @@ import {
 import { DetailItems, EnumBadge, useLocale } from "../shared";
 import type { LeaveRequestRecord } from "../types";
 
-export function LeaveShow() {
+export function LeaveShow({ idParam = "id" }: { idParam?: string } = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params[idParam];
   const nestedDrawer = useOutlet();
   const { result: record, query } = useShow<LeaveRequestRecord>({
     resource: "hub_hr_leave_requests",

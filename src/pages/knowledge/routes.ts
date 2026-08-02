@@ -10,6 +10,7 @@ export const knowledgeRoutes = {
   categories: "/categories",
   categoriesCreate: "/categories/create",
   categoriesEdit: "/categories/edit/:id",
+  categoriesShow: "/categories/show/:id",
   search: "/kb-search",
   tags: "/kb-tags",
 } as const;
@@ -20,3 +21,5 @@ export const getArticleEditPath = (id: string | number) =>
   `/articles/edit/${enc(id)}`;
 export const getCategoryEditPath = (id: string | number) =>
   `/categories/edit/${enc(id)}`;
+export const getCategoryShowPath = (id: string | number) =>
+  `/categories/show/${enc(id)}`;

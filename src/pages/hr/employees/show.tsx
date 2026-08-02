@@ -30,12 +30,13 @@ import {
 } from "../shared";
 import type { EmployeeRecord, LeaveRequestRecord } from "../types";
 
-export function EmployeeShow() {
+export function EmployeeShow({ idParam = "id" }: { idParam?: string } = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams();
+  const id = params[idParam];
   const nestedDrawer = useOutlet();
   const { result: record, query } = useShow<EmployeeRecord>({
     resource: "hub_hr_employees",
@@ -273,7 +274,7 @@ function LeaveHistorySection({
             <tr
               key={String(leave.id)}
               className="cursor-pointer hover:bg-accent/40"
-              onClick={() => openChild(`leave/edit/${encodeURIComponent(String(leave.id))}`)}
+              onClick={() => openChild(`leave/show/${encodeURIComponent(String(leave.id))}`)}
             >
               <td className="px-3 py-2">
                 <EnumBadge

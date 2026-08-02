@@ -1,22 +1,111 @@
 import { BookOpen, FolderTree, LibraryBig, Search, Tags } from "lucide-react";
+import { useParams } from "react-router";
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
-import { ArticleFeedback } from "@/pages/knowledge/articles/feedback";
+import { ArticleFeedback, FeedbackShow } from "@/pages/knowledge/articles/feedback";
 import { ArticleCreate, ArticleEdit } from "@/pages/knowledge/articles/form";
 import { ArticlesLayout } from "@/pages/knowledge/articles/list";
-import { ArticleShow } from "@/pages/knowledge/articles/show";
+import { ArticleShow, ArticleShowDrawer } from "@/pages/knowledge/articles/show";
 import { CategoryCreate, CategoryEdit } from "@/pages/knowledge/categories/form";
 import { CategoriesLayout } from "@/pages/knowledge/categories/list";
+import { CategoryShow } from "@/pages/knowledge/categories/show";
 import { KnowledgeOverview } from "@/pages/knowledge/dashboard";
 import { knowledgeRoutes } from "@/pages/knowledge/routes";
 import { KnowledgeSearch } from "@/pages/knowledge/search";
 import { KnowledgeTags } from "@/pages/knowledge/tags";
 
 const denied = <AccessDenied />;
+
+// --- Category-scoped article surfaces (inside the category detail drawer) ---
+
+function CategoryScopedArticleCreate() {
+  const { id } = useParams<{ id: string }>();
+  return <ArticleCreate presetCategoryId={id} />;
+}
+
+function CategoryScopedArticleEdit() {
+  const { id } = useParams<{ id: string }>();
+  return <ArticleEdit presetCategoryId={id} idParam="articleId" />;
+}
+
+// --- Nested children of the article reader (show) route ---------------------
+
+const articleShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_kb_articles.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
+        <ArticleEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_kb_articles.show.feedback",
+    path: "feedback",
+    element: (
+      <CanAccess resource="hub_kb_article_feedback" action="create" fallback={denied}>
+        <ArticleFeedback />
+      </CanAccess>
+    ),
+  },
+  {
+    // One level deeper: view a single feedback entry from the reader.
+    name: "hub_kb_articles.show.feedback.view",
+    path: "feedback/view/:feedbackId",
+    element: (
+      <CanAccess resource="hub_kb_article_feedback" action="show" fallback={denied}>
+        <FeedbackShow />
+      </CanAccess>
+    ),
+  },
+];
+
+// --- Nested children of the category detail (show) drawer ------------------
+
+const categoryShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_kb_categories.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_kb_categories" action="edit" fallback={denied}>
+        <CategoryEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_kb_categories.show.articles.create",
+    path: "articles/create",
+    element: (
+      <CanAccess resource="hub_kb_articles" action="create" fallback={denied}>
+        <CategoryScopedArticleCreate />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_kb_categories.show.articles.edit",
+    path: "articles/edit/:articleId",
+    element: (
+      <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
+        <CategoryScopedArticleEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    // One level deeper: open an article's SHOW drawer from the category.
+    name: "hub_kb_categories.show.articles.show",
+    path: "articles/show/:articleId",
+    element: (
+      <CanAccess resource="hub_kb_articles" action="show" fallback={denied}>
+        <ArticleShowDrawer idParam="articleId" />
+      </CanAccess>
+    ),
+  },
+];
 
 const routes: AppRouteDefinition[] = defineAppRoutes([
   {
@@ -86,26 +175,7 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         <ArticleShow />
       </CanAccess>
     ),
-    children: [
-      {
-        name: "hub_kb_articles.show.edit",
-        path: "edit",
-        element: (
-          <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
-            <ArticleEdit returnTo="show" />
-          </CanAccess>
-        ),
-      },
-      {
-        name: "hub_kb_articles.show.feedback",
-        path: "feedback",
-        element: (
-          <CanAccess resource="hub_kb_article_feedback" action="create" fallback={denied}>
-            <ArticleFeedback />
-          </CanAccess>
-        ),
-      },
-    ],
+    children: articleShowChildren,
   },
   {
     name: "kb-search",
@@ -181,6 +251,17 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
             <CategoryEdit />
           </CanAccess>
         ),
+      },
+      {
+        name: "hub_kb_categories.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_kb_categories" action="show" fallback={denied}>
+            <CategoryShow />
+          </CanAccess>
+        ),
+        children: categoryShowChildren,
       },
     ],
   },

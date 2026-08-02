@@ -1,7 +1,7 @@
 import { useList, useTranslate, useUpdate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Trash2, Undo2 } from "lucide-react";
+import { Eye, Pencil, Trash2, Undo2 } from "lucide-react";
 import { useMemo } from "react";
 import { DataTable } from "@/components/data-table/data-table";
 import { DataTableSorter } from "@/components/data-table/data-table-sorter";
@@ -115,6 +115,14 @@ export function AssignmentList() {
                   {translate("assets.assignments.actions.return", { ns: "starter" }, "Return")}
                 </Button>
               ) : null}
+              <Button
+                variant="ghost"
+                size="icon"
+                title={translate("assets.common.view", { ns: "starter" }, "View")}
+                onClick={() => openChild(`show/${row.original.id}`)}
+              >
+                <Eye />
+              </Button>
               <EditButton
                 resource="hub_as_assignments"
                 recordItemId={row.original.id}

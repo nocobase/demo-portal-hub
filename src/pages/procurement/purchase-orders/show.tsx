@@ -23,12 +23,15 @@ import {
 import { DetailItems, DrawerSection, EnumBadge, useLocale } from "../shared";
 import type { PoItemRecord, PurchaseOrderRecord } from "../types";
 
-export function PurchaseOrderShow() {
+export function PurchaseOrderShow({
+  idParam = "id",
+}: { idParam?: string } = {}) {
   const translate = useTranslate();
   const locale = useLocale();
   const openChild = useOpenContextualChild();
   const closeTo = useContextualCloseTo();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<Record<string, string>>();
+  const id = params[idParam];
   const nested = useOutlet();
   const { result: record, query } = useShow<PurchaseOrderRecord>({
     resource: "hub_po_purchase_orders",

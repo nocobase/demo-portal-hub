@@ -10,11 +10,78 @@ import {
   AssignmentCreate,
   AssignmentEdit,
 } from "./assignments/create-edit";
+import { AssignmentShow } from "./assignments/show";
 import { AssignmentsLayout } from "./assignments/layout";
 import { MaintenancePage } from "./maintenance/page";
 import { assetsRoutes } from "./routes";
 
 const denied = <AccessDenied />;
+
+// --- Nested asset-scoped assignment surfaces --------------------------------
+// Opened from inside the asset detail drawer at
+// `/asset-registry/show/:id/assignments/show/:asgId`. The record id comes from
+// the `asgId` param so it does not collide with the parent asset `:id`.
+
+function AssetScopedAssignmentShow() {
+  return <AssignmentShow idParam="asgId" />;
+}
+
+function AssetScopedAssignmentEdit() {
+  return <AssignmentEdit idParam="asgId" />;
+}
+
+const assetShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_as_assets.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_as_assets" action="edit" fallback={denied}>
+        <AssetEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_as_assets.show.assign",
+    path: "assign",
+    element: (
+      <CanAccess resource="hub_as_assignments" action="create" fallback={denied}>
+        <AssetNestedAssign />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_as_assets.show.assignments.show",
+    path: "assignments/show/:asgId",
+    element: (
+      <CanAccess resource="hub_as_assignments" action="show" fallback={denied}>
+        <AssetScopedAssignmentShow />
+      </CanAccess>
+    ),
+    children: [
+      {
+        name: "hub_as_assets.show.assignments.show.edit",
+        path: "edit",
+        element: (
+          <CanAccess resource="hub_as_assignments" action="edit" fallback={denied}>
+            <AssetScopedAssignmentEdit />
+          </CanAccess>
+        ),
+      },
+    ],
+  },
+];
+
+const assignmentShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_as_assignments.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_as_assignments" action="edit" fallback={denied}>
+        <AssignmentEdit />
+      </CanAccess>
+    ),
+  },
+];
 
 const routes: AppRouteDefinition[] = [
   {
@@ -68,30 +135,7 @@ const routes: AppRouteDefinition[] = [
             <AssetShow />
           </CanAccess>
         ),
-        children: [
-          {
-            name: "hub_as_assets.show.edit",
-            path: "edit",
-            element: (
-              <CanAccess resource="hub_as_assets" action="edit" fallback={denied}>
-                <AssetEdit />
-              </CanAccess>
-            ),
-          },
-          {
-            name: "hub_as_assets.show.assign",
-            path: "assign",
-            element: (
-              <CanAccess
-                resource="hub_as_assignments"
-                action="create"
-                fallback={denied}
-              >
-                <AssetNestedAssign />
-              </CanAccess>
-            ),
-          },
-        ],
+        children: assetShowChildren,
       },
     ],
   },
@@ -144,6 +188,21 @@ const routes: AppRouteDefinition[] = [
             <AssignmentEdit />
           </CanAccess>
         ),
+      },
+      {
+        name: "hub_as_assignments.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess
+            resource="hub_as_assignments"
+            action="show"
+            fallback={denied}
+          >
+            <AssignmentShow />
+          </CanAccess>
+        ),
+        children: assignmentShowChildren,
       },
     ],
   },

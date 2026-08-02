@@ -16,6 +16,11 @@ export type ReplyRecord = BaseRecord & {
   createdAt?: string | null;
 };
 
+export type ReplyFormValues = {
+  body: string;
+  ticketId: number | string | null;
+};
+
 export type TicketRecord = BaseRecord & {
   id: number | string;
   subject?: string | null;
@@ -57,4 +62,17 @@ export type FaqRecord = BaseRecord & {
   question?: string | null;
   answer?: string | null;
   category?: string | null;
+};
+
+export type FaqFormValues = {
+  question: string;
+  answer: string;
+  category: string | null;
+};
+
+export type SlaPolicyFormValues = {
+  name: string;
+  priority: string;
+  response_mins: number;
+  resolve_mins: number;
 };

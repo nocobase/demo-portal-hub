@@ -65,6 +65,24 @@ function DealNestedActivityCreate() {
   return <ActivityCreate presetDealId={id} />;
 }
 
+// One-level-deeper nested SHOW drawers opened from inside an account drawer.
+// Route: /accounts/show/:id/deals/show/:dealId and .../contacts/show/:contactId.
+// Each reuses the existing show component via a scoped id param so the deeper
+// popup is url-addressable in its own right.
+function AccountNestedDealShow() {
+  return <DealShow idParam="dealId" />;
+}
+
+function AccountNestedContactShow() {
+  return <ContactShow idParam="contactId" />;
+}
+
+// Sub-actions inside the deeper deal-show drawer, scoped to :dealId.
+function AccountNestedDealShowActivityCreate() {
+  const { dealId } = useParams<{ dealId: string }>();
+  return <ActivityCreate presetDealId={dealId} />;
+}
+
 const accountContextChildren = (prefix: string): AppRouteDefinition[] => [
   {
     name: `${prefix}.edit`,
@@ -110,6 +128,61 @@ const accountContextChildren = (prefix: string): AppRouteDefinition[] => [
         <AccountNestedDealEdit />
       </CanAccess>
     ),
+  },
+  // Deeper nested SHOW: the related deal opens its own url-addressable drawer.
+  {
+    name: `${prefix}.deals.show`,
+    path: "deals/show/:dealId",
+    element: (
+      <CanAccess resource="hub_sales_deals" action="show" fallback={denied}>
+        <AccountNestedDealShow />
+      </CanAccess>
+    ),
+    children: [
+      {
+        name: `${prefix}.deals.show.edit`,
+        path: "edit",
+        element: (
+          <CanAccess resource="hub_sales_deals" action="edit" fallback={denied}>
+            <DealEdit idParam="dealId" />
+          </CanAccess>
+        ),
+      },
+      {
+        name: `${prefix}.deals.show.activities.create`,
+        path: "activities/create",
+        element: (
+          <CanAccess
+            resource="hub_sales_activities"
+            action="create"
+            fallback={denied}
+          >
+            <AccountNestedDealShowActivityCreate />
+          </CanAccess>
+        ),
+      },
+    ],
+  },
+  // Deeper nested SHOW: the related contact opens its own url-addressable drawer.
+  {
+    name: `${prefix}.contacts.show`,
+    path: "contacts/show/:contactId",
+    element: (
+      <CanAccess resource="hub_sales_contacts" action="show" fallback={denied}>
+        <AccountNestedContactShow />
+      </CanAccess>
+    ),
+    children: [
+      {
+        name: `${prefix}.contacts.show.edit`,
+        path: "edit",
+        element: (
+          <CanAccess resource="hub_sales_contacts" action="edit" fallback={denied}>
+            <ContactEdit idParam="contactId" />
+          </CanAccess>
+        ),
+      },
+    ],
   },
 ];
 

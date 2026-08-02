@@ -1,7 +1,7 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
 import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
@@ -10,6 +10,7 @@ import { DataTableFilterDropdownText } from "@/components/data-table/data-table-
 import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
+import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
 import { signedQty } from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
@@ -99,9 +100,18 @@ function WarehouseList() {
         id: "actions",
         header: translate("inventory.common.actions", { ns: "starter" }, "Actions"),
         enableSorting: false,
-        size: 112,
+        size: 144,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
+            <ShowButton
+              resource="hub_inv_warehouses"
+              recordItemId={row.original.id}
+              variant="ghost"
+              size="icon"
+              onClick={() => openChild(`show/${row.original.id}`)}
+            >
+              <Eye />
+            </ShowButton>
             <EditButton
               resource="hub_inv_warehouses"
               recordItemId={row.original.id}

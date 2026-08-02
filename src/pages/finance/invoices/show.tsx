@@ -1,10 +1,12 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Pencil } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useOutlet, useParams } from "react-router";
 
+import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
@@ -156,6 +158,7 @@ function LineItemsSection({
   total: number | undefined;
 }) {
   const t = useTranslate();
+  const openChild = useOpenContextualChild();
   const { result } = useList<InvoiceLineItem>({
     resource: "hub_fin_invoice_items",
     pagination: { mode: "server", currentPage: 1, pageSize: 100 },
@@ -168,21 +171,46 @@ function LineItemsSection({
   const subtotal = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
   return (
-    <DrawerSection title={t("finance.invoices.items.title", "Line items")}>
+    <DrawerSection
+      title={t("finance.invoices.items.title", "Line items")}
+      action={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => openChild("items/create")}
+        >
+          <Plus />
+          {t("finance.invoices.items.add", "Add line item")}
+        </Button>
+      }
+    >
       <SimpleTable
         headers={[
           t("finance.invoices.items.description", "Description"),
           t("finance.invoices.items.qty", "Qty"),
           t("finance.invoices.items.unitPrice", "Unit price"),
           t("finance.invoices.items.lineTotal", "Line total"),
+          t("finance.common.actions", "Actions"),
         ]}
-        align={["left", "right", "right", "right"]}
+        align={["left", "right", "right", "right", "right"]}
       >
         {items.length === 0 ? (
-          <EmptyRow colSpan={4} text={t("finance.invoices.items.empty", "No line items recorded.")} />
+          <EmptyRow colSpan={5} text={t("finance.invoices.items.empty", "No line items recorded.")} />
         ) : (
           items.map((item) => (
-            <tr key={String(item.id)}>
+            <tr
+              key={String(item.id)}
+              role="button"
+              tabIndex={0}
+              onClick={() => openChild(`items/edit/${encodeURIComponent(String(item.id))}`)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  openChild(`items/edit/${encodeURIComponent(String(item.id))}`);
+                }
+              }}
+              className="cursor-pointer"
+            >
               <td className="px-3 py-2 font-medium">{item.description || "—"}</td>
               <td className="px-3 py-2 text-right tabular-nums">{item.quantity ?? 0}</td>
               <td className="px-3 py-2 text-right tabular-nums">
@@ -190,6 +218,32 @@ function LineItemsSection({
               </td>
               <td className="px-3 py-2 text-right font-medium tabular-nums">
                 {money(item.amount, true)}
+              </td>
+              <td className="px-3 py-2" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-center justify-end gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("finance.invoices.items.edit", "Edit line item")}
+                    title={t("finance.invoices.items.edit", "Edit line item")}
+                    onClick={() =>
+                      openChild(`items/edit/${encodeURIComponent(String(item.id))}`)
+                    }
+                  >
+                    <Pencil />
+                  </Button>
+                  <DeleteButton
+                    resource="hub_fin_invoice_items"
+                    recordItemId={item.id}
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    aria-label={t("finance.invoices.items.delete", "Delete line item")}
+                    title={t("finance.invoices.items.delete", "Delete line item")}
+                  >
+                    <Trash2 />
+                  </DeleteButton>
+                </div>
               </td>
             </tr>
           ))

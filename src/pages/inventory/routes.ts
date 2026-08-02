@@ -8,7 +8,9 @@ export const inventoryRoutes = {
   warehouses: "/warehouses",
   warehousesCreate: "/warehouses/create",
   warehousesEdit: "/warehouses/edit/:id",
+  warehousesShow: "/warehouses/show/:id",
   stockMoves: "/stock-moves",
   stockMovesCreate: "/stock-moves/create",
   stockMovesEdit: "/stock-moves/edit/:id",
+  stockMovesShow: "/stock-moves/show/:id",
 } as const;

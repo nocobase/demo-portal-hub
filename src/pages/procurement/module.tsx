@@ -17,6 +17,55 @@ import { SupplierShow } from "./suppliers/show";
 
 const denied = <AccessDenied />;
 
+// --- Supplier-scoped surfaces (nested inside the supplier detail drawer) ----
+// From a supplier's PO sub-list, a PO opens one level deeper as a nested SHOW
+// drawer under suppliers/show/:id/po/show/:poId. Its own edit / line-item
+// actions resolve against the :poId param so they keep working at this depth.
+
+function SupplierScopedPoShow() {
+  return <PurchaseOrderShow idParam="poId" />;
+}
+
+function SupplierScopedPoEdit() {
+  return <PurchaseOrderEdit idParam="poId" />;
+}
+
+function SupplierScopedPoItemCreate() {
+  return <PoItemCreate idParam="poId" />;
+}
+
+// Children rendered under a nested PO show drawer (edit + line-item CRUD),
+// keyed off the :poId param so the deeper PO surface is fully functional.
+const nestedPoShowChildren: AppRouteDefinition[] = [
+  {
+    name: "hub_po_suppliers.show.po.show.edit",
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
+        <SupplierScopedPoEdit />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_po_suppliers.show.po.show.items.create",
+    path: "items/create",
+    element: (
+      <CanAccess resource="hub_po_items" action="create" fallback={denied}>
+        <SupplierScopedPoItemCreate />
+      </CanAccess>
+    ),
+  },
+  {
+    name: "hub_po_suppliers.show.po.show.items.edit",
+    path: "items/edit/:itemId",
+    element: (
+      <CanAccess resource="hub_po_items" action="edit" fallback={denied}>
+        <PoItemEdit />
+      </CanAccess>
+    ),
+  },
+];
+
 const spendAnalysisRoutes: AppRouteDefinition = {
   name: "po-spend",
   path: procurementRoutes.spendAnalysis,
@@ -179,6 +228,16 @@ const supplierRoutes: AppRouteDefinition = {
               <SupplierEdit />
             </CanAccess>
           ),
+        },
+        {
+          name: "hub_po_suppliers.show.po.show",
+          path: "po/show/:poId",
+          element: (
+            <CanAccess resource="hub_po_purchase_orders" action="show" fallback={denied}>
+              <SupplierScopedPoShow />
+            </CanAccess>
+          ),
+          children: nestedPoShowChildren,
         },
       ],
     },
