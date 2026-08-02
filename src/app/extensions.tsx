@@ -40,12 +40,12 @@ const extensionContributions = collectAppExtensionContributions({
 export const appExtensions = extensionContributions.extensions;
 
 // --- Sidebar grouping -----------------------------------------------------
-// The template renders a nav item as a group header when meta.group is truthy,
-// nesting resources whose meta.parent matches the group's name. Group headers
-// are route-less resources contributed here; the parent + priority maps below
-// attach each module's existing nav resources to a group without touching the
-// module files. Group priorities sit above Overview (0) and below every child
-// (>=10) so headers order correctly at the sidebar root.
+// Each group is a route-less parent nav item; the template renders a
+// parent-with-children (no meta.group) as a collapsible row when the sidebar is
+// open and a hover dropdown when collapsed. Children attach via meta.parent (see
+// the map below) without touching the module files. Group priorities sit above
+// Overview (0) and below every child (>=10) so the parent rows order correctly
+// at the sidebar root.
 const makeGroup = (
   name: string,
   label: string,
@@ -55,7 +55,6 @@ const makeGroup = (
 ): ResourceProps => ({
   name,
   meta: {
-    group: true,
     label,
     i18nKey,
     i18nOptions: { ns: "starter" },
