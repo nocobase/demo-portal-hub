@@ -132,7 +132,7 @@ function ExpenseForm({ mode }: { mode: "create" | "edit" }) {
             name="title"
             label={t("finance.expenses.field.description", "Description")}
             required
-            placeholder="Flight to client kickoff"
+            placeholder={t("finance.expenses.placeholder.description", "Flight to client kickoff")}
           />
           <div className="grid grid-cols-2 gap-4">
             <OptionSelect

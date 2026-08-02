@@ -197,7 +197,7 @@ function ItemFormBody({
             name="description"
             label={t("finance.invoices.items.field.description", "Description")}
             required
-            placeholder="Consulting services"
+            placeholder={t("finance.invoices.items.placeholder.description", "Consulting services")}
           />
           <div className="grid grid-cols-2 gap-4">
             <TextField
