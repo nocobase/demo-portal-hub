@@ -367,4 +367,8 @@ export const starter = {
   "sales.leads.aiFill.label": "Describe the lead",
   "sales.leads.aiFill.placeholder":
     "Example: Tom Reyes from Halden Freight called after seeing our website; he asked for a quote for 12 depot scanners.",
+  "buildStory.copyBuildPrompt": "Copy build prompt",
+  "buildStory.copyBuildPromptHint": "Copy a prompt that rebuilds this app from scratch with your own coding agent",
+  "buildStory.copyConnectPrompt": "Copy connect prompt",
+  "buildStory.copyConnectPromptHint": "Copy a prompt that connects your coding agent to this instance so it can modify the app",
 } as const;

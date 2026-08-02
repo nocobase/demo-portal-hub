@@ -342,4 +342,8 @@ export const starter = {
   "sales.leads.aiFill.label": "描述这条线索",
   "sales.leads.aiFill.placeholder":
     "例如：Halden Freight 的 Tom Reyes 看到官网后来电，想要 12 台仓库扫描枪的报价。",
+  "buildStory.copyBuildPrompt": "复制复刻提示词",
+  "buildStory.copyBuildPromptHint": "复制一段提示词，用你自己的编码 agent 从零复刻这个应用",
+  "buildStory.copyConnectPrompt": "复制接入提示词",
+  "buildStory.copyConnectPromptHint": "复制一段提示词，把你的编码 agent 接入本实例来修改这个应用",
 } as const;
