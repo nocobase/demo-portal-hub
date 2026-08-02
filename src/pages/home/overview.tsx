@@ -26,7 +26,32 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import {
+  BuildStoryBanner,
+  type BuildStory,
+} from "@/components/build-story/build-story-banner";
 import { useChartTheme } from "./theme";
+
+// How this portal was built — estimates, calibrated to a from-scratch agent
+// build. Shown in the pinned banner at the top of the overview.
+const BUILD_STORY: BuildStory = {
+  models: ["Opus 4.8", "Sonnet 5"],
+  moduleCount: 9,
+  moduleLabelKey: "buildStory.modules",
+  // Tracks sharing a time band ran in parallel (concurrent agents). The three
+  // module tracks at 20–65 are the 9 modules built simultaneously; enrichment
+  // at 100–140 likewise ran two agents in parallel.
+  tracks: [
+    { labelKey: "buildStory.track.design", models: ["Opus 4.8"], start: 0, minutes: 20 },
+    { labelKey: "buildStory.track.modA", models: ["Sonnet 5"], start: 20, minutes: 45 },
+    { labelKey: "buildStory.track.modB", models: ["Sonnet 5"], start: 20, minutes: 45 },
+    { labelKey: "buildStory.track.modC", models: ["Opus 4.8"], start: 20, minutes: 45 },
+    { labelKey: "buildStory.track.migration", models: ["Opus 4.8"], start: 65, minutes: 35 },
+    { labelKey: "buildStory.track.enrich", models: ["Sonnet 5"], start: 100, minutes: 40 },
+    { labelKey: "buildStory.track.pages", models: ["Sonnet 5"], start: 100, minutes: 40 },
+    { labelKey: "buildStory.track.finalize", models: ["Opus 4.8"], start: 140, minutes: 10 },
+  ],
+};
 
 // ---------------------------------------------------------------------------
 // Demo data — representative, in-file. Real cross-module aggregation is wired
@@ -339,6 +364,8 @@ export function OverviewPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <BuildStoryBanner story={BUILD_STORY} />
+
       <div className="flex flex-col gap-1">
         <h2 className="text-3xl font-semibold tracking-[-0.035em]">
           {translate("home.overview.title", "Overview")}

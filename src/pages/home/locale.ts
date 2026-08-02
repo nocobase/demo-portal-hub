@@ -90,6 +90,29 @@ export const homeLocale = {
     "home.modules.finance.desc": "Expenses & invoices",
     "home.modules.knowledge.label": "Knowledge",
     "home.modules.knowledge.desc": "Docs & articles",
+
+    // Build story banner
+    "buildStory.title": "Built by AI agents",
+    "buildStory.badge": "100% agent-built",
+    "buildStory.description":
+      "This portal was designed and coded end-to-end by AI agents — no hand-written boilerplate. It's an open demo: download it and keep customizing it with your own coding agent.",
+    "buildStory.stat.time": "Effective build",
+    "buildStory.unit.hour": "h",
+    "buildStory.unit.min": " min",
+    "buildStory.modules": "modules",
+    "buildStory.downloadable": "Downloadable · agent-editable",
+    "buildStory.showTimeline": "See how it was built",
+    "buildStory.hideTimeline": "Hide build timeline",
+    "buildStory.parallelHint":
+      "Bars sharing a time band ran in parallel — concurrent agents compress the wall-clock.",
+    "buildStory.track.design": "Design system + home prototype",
+    "buildStory.track.modA": "Sales · Projects · HR",
+    "buildStory.track.modB": "Inventory · Procurement · Assets",
+    "buildStory.track.modC": "Finance · Support · Knowledge",
+    "buildStory.track.migration": "Migrate to portal-sdk + bilingual",
+    "buildStory.track.enrich": "Top nav + richer interactions",
+    "buildStory.track.pages": "Extra pages across modules",
+    "buildStory.track.finalize": "Integrate, build, deploy",
   },
   "zh-CN": {
     // Nav
@@ -181,5 +204,28 @@ export const homeLocale = {
     "home.modules.finance.desc": "费用与发票",
     "home.modules.knowledge.label": "知识库",
     "home.modules.knowledge.desc": "文档与文章",
+
+    // Build story banner
+    "buildStory.title": "由 AI Agent 搭建",
+    "buildStory.badge": "100% Agent 构建",
+    "buildStory.description":
+      "这个门户从设计到编码全部由 AI agent 完成,没有手写样板代码。它是一个开放 demo:下载后,用你自己的编码 agent 继续定制。",
+    "buildStory.stat.time": "有效搭建",
+    "buildStory.unit.hour": " 小时",
+    "buildStory.unit.min": " 分钟",
+    "buildStory.modules": "个模块",
+    "buildStory.downloadable": "可下载 · Agent 可改",
+    "buildStory.showTimeline": "查看构建过程",
+    "buildStory.hideTimeline": "收起构建过程",
+    "buildStory.parallelHint":
+      "同一时间段内并排的条 = 多个 agent 并行,并发把总墙钟时间压短。",
+    "buildStory.track.design": "设计系统 + 首页原型",
+    "buildStory.track.modA": "销售 · 项目 · 人事",
+    "buildStory.track.modB": "库存 · 采购 · 资产",
+    "buildStory.track.modC": "财务 · 客服 · 知识库",
+    "buildStory.track.migration": "迁移 portal-sdk + 双语",
+    "buildStory.track.enrich": "顶部导航 + 交互丰富化",
+    "buildStory.track.pages": "各模块追加页面",
+    "buildStory.track.finalize": "集成、构建、部署",
   },
 };
