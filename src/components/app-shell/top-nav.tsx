@@ -67,38 +67,66 @@ function TopNavGroup({ item, selectedKey }: ItemProps) {
   const { children } = item;
   const isSelected = isTreeItemSelected(item, selectedKey);
   const label = useMenuItemLabel(item);
+  // Open on hover; keep open while the pointer is over the trigger or the menu,
+  // with a short close delay so moving from trigger into the flyout doesn't dismiss it.
+  const [open, setOpen] = React.useState(false);
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cancelClose = React.useCallback(() => {
+    if (closeTimer.current) {
+      clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  }, []);
+  const scheduleClose = React.useCallback(() => {
+    cancelClose();
+    closeTimer.current = setTimeout(() => setOpen(false), 150);
+  }, [cancelClose]);
+  React.useEffect(() => cancelClose, [cancelClose]);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="default"
-            className={cn(
-              "flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-normal transition-colors",
-              {
-                "bg-primary/10 text-primary hover:!bg-primary/15": isSelected,
-                "text-foreground hover:bg-accent/70": !isSelected,
-              }
-            )}
-          >
-            <ItemIcon icon={item.meta?.icon ?? item.icon} isSelected={isSelected} />
-            <span className="line-clamp-1">{label}</span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          </Button>
-        }
-      />
-      <DropdownMenuContent align="start" className="min-w-52">
-        {children?.map((child: TreeMenuItem) => (
-          <TopNavDropdownItem
-            key={child.key || child.name}
-            item={child}
-            selectedKey={selectedKey}
-          />
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div
+      onMouseEnter={() => {
+        cancelClose();
+        setOpen(true);
+      }}
+      onMouseLeave={scheduleClose}
+    >
+      <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="default"
+              className={cn(
+                "flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-normal transition-colors",
+                {
+                  "bg-primary/10 text-primary hover:!bg-primary/15": isSelected,
+                  "text-foreground hover:bg-accent/70": !isSelected,
+                }
+              )}
+            >
+              <ItemIcon icon={item.meta?.icon ?? item.icon} isSelected={isSelected} />
+              <span className="line-clamp-1">{label}</span>
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </Button>
+          }
+        />
+        <DropdownMenuContent
+          align="start"
+          className="min-w-52"
+          onMouseEnter={cancelClose}
+          onMouseLeave={scheduleClose}
+        >
+          {children?.map((child: TreeMenuItem) => (
+            <TopNavDropdownItem
+              key={child.key || child.name}
+              item={child}
+              selectedKey={selectedKey}
+            />
+          ))}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
