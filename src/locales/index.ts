@@ -11,6 +11,7 @@ import { helpdeskLocale } from "@/pages/helpdesk/locale";
 import { assetsLocale } from "@/pages/assets/locale";
 import { financeLocale } from "@/pages/finance/locale";
 import { knowledgeLocale } from "@/pages/knowledge/locale";
+import { additionalTranslations } from "./generated";
 
 const mods = [homeLocale, salesLocale, projectsLocale, hrLocale, inventoryLocale, procurementLocale, helpdeskLocale, assetsLocale, financeLocale, knowledgeLocale];
 
@@ -20,4 +21,5 @@ const zhCN = Object.assign({}, zhCNStarter, ...mods.map((m) => m["zh-CN"]));
 registerTranslationResources("starter", {
   "en-US": enUS,
   "zh-CN": zhCN,
+  ...(additionalTranslations["starter"] ?? {}),
 });
