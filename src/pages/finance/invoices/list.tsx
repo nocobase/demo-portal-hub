@@ -9,7 +9,6 @@ import {
   Wallet,
 } from "lucide-react";
 import { useMemo } from "react";
-import { Outlet } from "react-router";
 
 import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
@@ -52,7 +51,6 @@ export function InvoiceListPage() {
       <CanAccess resource={RESOURCE} action="list" fallback={<AccessDenied />}>
         <InvoiceList />
       </CanAccess>
-      <Outlet />
     </>
   );
 }

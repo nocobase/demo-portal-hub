@@ -1,7 +1,6 @@
 import { useList, useTranslate, useUpdate } from "@refinedev/core";
 import { Check, Clock, Eye, Pencil, Trash2, Wallet, X } from "lucide-react";
 import { useMemo } from "react";
-import { Outlet } from "react-router";
 
 import { CanAccess } from "@/components/access-control/can-access";
 import { AccessDenied } from "@/components/access-control/access-denied";
@@ -37,7 +36,6 @@ export function ExpenseListPage() {
       <CanAccess resource={RESOURCE} action="list" fallback={<AccessDenied />}>
         <ExpenseList />
       </CanAccess>
-      <Outlet />
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { useTranslate } from "@refinedev/core";
 import { Eye, Folder, FolderOpen, Pencil, Plus, Trash2 } from "lucide-react";
-import { Link, Outlet } from "react-router";
+import { Link } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
@@ -27,7 +27,6 @@ export function CategoriesLayout() {
       >
         <CategoriesTree />
       </CanAccess>
-      <Outlet />
     </>
   );
 }

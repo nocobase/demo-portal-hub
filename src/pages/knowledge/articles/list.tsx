@@ -1,7 +1,7 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { Eye, FileText, Pencil, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, Outlet } from "react-router";
+import { Link } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
@@ -34,7 +34,6 @@ export function ArticlesLayout() {
       >
         <ArticlesBrowser />
       </CanAccess>
-      <Outlet />
     </>
   );
 }

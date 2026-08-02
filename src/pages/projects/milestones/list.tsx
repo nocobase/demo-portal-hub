@@ -3,7 +3,6 @@ import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { CheckCircle2, Circle, Eye, Flag, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
-import { Outlet } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { DataTable } from "@/components/data-table/data-table";
@@ -208,7 +207,6 @@ function MilestoneList() {
   return (
     <ListView resource="hub_pj_milestones">
       <DataTable table={table} />
-      <Outlet />
     </ListView>
   );
 }

@@ -1,7 +1,6 @@
 import { useList, useTranslate, useUpdate } from "@refinedev/core";
 import { CalendarClock, Plus, User } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Outlet } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -162,7 +161,6 @@ export function TaskBoardPage() {
         </div>
       )}
 
-      <Outlet />
     </div>
   );
 }
