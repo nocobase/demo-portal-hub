@@ -9,6 +9,9 @@ export const assetsLocale = {
     "assets.resources.assignment": "Assignment",
     "assets.resources.assignments.description":
       "Who has what — active and returned device assignments across the company.",
+    "assets.resources.maintenance": "Maintenance",
+    "assets.resources.maintenance.description":
+      "Devices in repair and aging assets that may need a warranty check.",
 
     // Common
     "assets.common.close": "Close",
@@ -132,6 +135,22 @@ export const assetsLocale = {
     "assets.assignments.fields.note": "Note",
     "assets.assignments.fields.notePlaceholder":
       "Anything worth recording about this assignment",
+
+    // Maintenance & warranty page
+    "assets.maintenance.loadError.title": "Unable to load maintenance data",
+    "assets.maintenance.loadError.description":
+      "Check your connection and try again.",
+    "assets.maintenance.chart.title": "Fleet by status",
+    "assets.maintenance.chart.description":
+      "Where every device sits — repair and aging assets need a closer look.",
+    "assets.maintenance.repair.title": "In repair",
+    "assets.maintenance.repair.empty": "Nothing is in repair right now.",
+    "assets.maintenance.aging.title": "Aging — warranty check recommended",
+    "assets.maintenance.aging.hint":
+      "Devices purchased more than 3 years ago, in stock or assigned — no explicit warranty field, so age is used as a proxy.",
+    "assets.maintenance.aging.empty": "No aging assets — the fleet is fresh.",
+    "assets.maintenance.aging.headers.age": "Age",
+    "assets.maintenance.aging.yearsValue": "{{count}}y",
   },
 
   "zh-CN": {
@@ -144,6 +163,9 @@ export const assetsLocale = {
     "assets.resources.assignment": "领用记录",
     "assets.resources.assignments.description":
       "谁在用什么——全公司在用与已归还的设备领用情况。",
+    "assets.resources.maintenance": "维保",
+    "assets.resources.maintenance.description":
+      "维修中的设备与可能需要检查保修状态的老旧资产。",
 
     // Common
     "assets.common.close": "关闭",
@@ -260,5 +282,20 @@ export const assetsLocale = {
     "assets.assignments.fields.returnedDate": "归还日期",
     "assets.assignments.fields.note": "备注",
     "assets.assignments.fields.notePlaceholder": "关于这次领用值得记录的任何信息",
+
+    // Maintenance & warranty page
+    "assets.maintenance.loadError.title": "无法加载维保数据",
+    "assets.maintenance.loadError.description": "请检查网络连接后重试。",
+    "assets.maintenance.chart.title": "设备状态分布",
+    "assets.maintenance.chart.description":
+      "每台设备当前所在的状态——维修中与老旧资产需要重点关注。",
+    "assets.maintenance.repair.title": "维修中",
+    "assets.maintenance.repair.empty": "当前没有设备在维修中。",
+    "assets.maintenance.aging.title": "老旧资产——建议检查保修状态",
+    "assets.maintenance.aging.hint":
+      "采购超过 3 年、状态为在库或在用的设备——尚无独立的保修字段，暂以设备年龄作为参考依据。",
+    "assets.maintenance.aging.empty": "没有老旧资产——设备均较新。",
+    "assets.maintenance.aging.headers.age": "使用年限",
+    "assets.maintenance.aging.yearsValue": "{{count}} 年",
   },
 };

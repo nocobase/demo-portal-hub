@@ -9,6 +9,8 @@ export const financeLocale = {
     "finance.resources.expenses": "Expenses",
     "finance.resources.expense": "Expense",
     "finance.resources.reports": "Reports",
+    "finance.resources.cashflow": "Cash flow",
+    "finance.resources.budget": "Budget",
 
     // Common
     "finance.common.actions": "Actions",
@@ -221,6 +223,39 @@ export const financeLocale = {
     "finance.reports.client.col.client": "Client",
     "finance.reports.client.col.invoiced": "Invoiced",
     "finance.reports.client.col.rate": "Collected",
+
+    // Cash flow
+    "finance.cashflow.title": "Cash flow",
+    "finance.cashflow.subtitle":
+      "Monthly cash in versus cash out over the last six months.",
+    "finance.cashflow.kpi.inflow": "Inflow",
+    "finance.cashflow.kpi.inflow.hint": "Paid invoices, last 6 months",
+    "finance.cashflow.kpi.outflow": "Outflow",
+    "finance.cashflow.kpi.outflow.hint":
+      "Approved & reimbursed expenses, last 6 months",
+    "finance.cashflow.kpi.net": "Net",
+    "finance.cashflow.kpi.net.hint": "Inflow minus outflow",
+    "finance.cashflow.chart.title": "Inflow vs outflow",
+    "finance.cashflow.chart.desc":
+      "Paid invoices by issue date against approved/reimbursed expense spend by spend date, with net cash flow.",
+    "finance.cashflow.series.inflow": "Inflow",
+    "finance.cashflow.series.outflow": "Outflow",
+    "finance.cashflow.series.net": "Net",
+
+    // Budget vs actual
+    "finance.budget.title": "Budget vs actual",
+    "finance.budget.subtitle":
+      "Approved and reimbursed spend against the monthly budget, by expense category.",
+    "finance.budget.progress.title": "By category",
+    "finance.budget.progress.desc":
+      "Progress toward each category's budget. Bars past 100% are highlighted.",
+    "finance.budget.loading": "Loading budgets…",
+    "finance.budget.total": "Total",
+    "finance.budget.chart.title": "Budget vs actual",
+    "finance.budget.chart.desc":
+      "Budgeted amount against approved & reimbursed spend, per category.",
+    "finance.budget.series.budget": "Budget",
+    "finance.budget.series.actual": "Actual",
   },
 
   "zh-CN": {
@@ -231,6 +266,8 @@ export const financeLocale = {
     "finance.resources.expenses": "报销",
     "finance.resources.expense": "报销单",
     "finance.resources.reports": "报表",
+    "finance.resources.cashflow": "现金流",
+    "finance.resources.budget": "预算",
 
     // Common
     "finance.common.actions": "操作",
@@ -431,5 +468,33 @@ export const financeLocale = {
     "finance.reports.client.col.client": "客户",
     "finance.reports.client.col.invoiced": "开票金额",
     "finance.reports.client.col.rate": "已收款",
+
+    // Cash flow
+    "finance.cashflow.title": "现金流",
+    "finance.cashflow.subtitle": "近六个月的现金流入与流出。",
+    "finance.cashflow.kpi.inflow": "流入",
+    "finance.cashflow.kpi.inflow.hint": "近6个月已付款发票",
+    "finance.cashflow.kpi.outflow": "流出",
+    "finance.cashflow.kpi.outflow.hint": "近6个月已批准与已报销费用",
+    "finance.cashflow.kpi.net": "净额",
+    "finance.cashflow.kpi.net.hint": "流入减流出",
+    "finance.cashflow.chart.title": "流入与流出",
+    "finance.cashflow.chart.desc":
+      "按开具日期统计的已付款发票，对比按支出日期统计的已批准/已报销费用支出，附净现金流。",
+    "finance.cashflow.series.inflow": "流入",
+    "finance.cashflow.series.outflow": "流出",
+    "finance.cashflow.series.net": "净额",
+
+    // Budget vs actual
+    "finance.budget.title": "预算与实际",
+    "finance.budget.subtitle": "按费用类别统计的已批准与已报销支出对比月度预算。",
+    "finance.budget.progress.title": "按类别",
+    "finance.budget.progress.desc": "各类别预算完成进度。超过100%的进度条会高亮显示。",
+    "finance.budget.loading": "正在加载预算…",
+    "finance.budget.total": "合计",
+    "finance.budget.chart.title": "预算与实际",
+    "finance.budget.chart.desc": "各类别的预算金额与已批准/已报销支出对比。",
+    "finance.budget.series.budget": "预算",
+    "finance.budget.series.actual": "实际",
   },
 };

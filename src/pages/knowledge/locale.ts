@@ -10,6 +10,12 @@ export const knowledgeLocale = {
     "knowledge.resources.category": "Category",
     "knowledge.resources.categories.description":
       "The topic tree that organizes every article.",
+    "knowledge.resources.search": "Search",
+    "knowledge.resources.search.description":
+      "Search the knowledge base by title, summary, or body.",
+    "knowledge.resources.tags": "Topics",
+    "knowledge.resources.tags.description":
+      "Browse articles grouped by topic.",
 
     // Common
     "knowledge.common.close": "Close",
@@ -153,6 +159,32 @@ export const knowledgeLocale = {
     "knowledge.overview.mostViewed.description":
       "The articles your team reads most.",
     "knowledge.overview.mostViewed.empty": "No articles yet.",
+
+    // Search
+    "knowledge.search.title": "Search",
+    "knowledge.search.subtitle":
+      "Search across every article's title, summary, and body.",
+    "knowledge.search.placeholder": "Search articles by title, summary, or body...",
+    "knowledge.search.resultsCount_one": "{{count}} result",
+    "knowledge.search.resultsCount_other": "{{count}} results",
+    "knowledge.search.empty.prompt.title": "Start typing to search",
+    "knowledge.search.empty.prompt.description":
+      "Search matches article titles, summaries, and body text.",
+    "knowledge.search.empty.noResults.title": "No matches found",
+    "knowledge.search.empty.noResults.description":
+      "Try a shorter or different search term.",
+
+    // Tags / topics browse
+    "knowledge.tags.title": "Topics",
+    "knowledge.tags.subtitle":
+      "Browse articles by topic. Click a topic to filter the list below.",
+    "knowledge.tags.all": "All topics",
+    "knowledge.tags.empty.title": "No categories yet",
+    "knowledge.tags.empty.description":
+      "Create a category to start grouping articles by topic.",
+    "knowledge.tags.results.empty.title": "No articles in this topic",
+    "knowledge.tags.results.empty.description":
+      "Pick a different topic, or view all articles.",
   },
   "zh-CN": {
     // Nav / resources
@@ -163,6 +195,10 @@ export const knowledgeLocale = {
     "knowledge.resources.categories": "分类",
     "knowledge.resources.category": "分类",
     "knowledge.resources.categories.description": "组织所有文章的主题树。",
+    "knowledge.resources.search": "搜索",
+    "knowledge.resources.search.description": "按标题、摘要或正文搜索知识库。",
+    "knowledge.resources.tags": "标签浏览",
+    "knowledge.resources.tags.description": "按主题浏览文章。",
 
     // Common
     "knowledge.common.close": "关闭",
@@ -296,5 +332,24 @@ export const knowledgeLocale = {
     "knowledge.overview.mostViewed.title": "浏览最多",
     "knowledge.overview.mostViewed.description": "团队阅读最多的文章。",
     "knowledge.overview.mostViewed.empty": "暂无文章。",
+
+    // Search
+    "knowledge.search.title": "搜索",
+    "knowledge.search.subtitle": "在全部文章的标题、摘要和正文中搜索。",
+    "knowledge.search.placeholder": "按标题、摘要或正文搜索文章...",
+    "knowledge.search.resultsCount_other": "{{count}} 条结果",
+    "knowledge.search.empty.prompt.title": "输入关键词开始搜索",
+    "knowledge.search.empty.prompt.description": "搜索会匹配文章标题、摘要和正文。",
+    "knowledge.search.empty.noResults.title": "未找到匹配结果",
+    "knowledge.search.empty.noResults.description": "尝试更短或不同的搜索词。",
+
+    // Tags / topics browse
+    "knowledge.tags.title": "标签浏览",
+    "knowledge.tags.subtitle": "按主题浏览文章。点击主题可筛选下方列表。",
+    "knowledge.tags.all": "全部主题",
+    "knowledge.tags.empty.title": "暂无分类",
+    "knowledge.tags.empty.description": "创建一个分类,开始按主题归类文章。",
+    "knowledge.tags.results.empty.title": "该主题下暂无文章",
+    "knowledge.tags.results.empty.description": "换一个主题试试,或查看全部文章。",
   },
 };

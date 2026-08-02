@@ -1,5 +1,6 @@
 export const inventoryRoutes = {
   dashboard: "/inventory",
+  reorder: "/reorder",
   products: "/products",
   productsCreate: "/products/create",
   productsEdit: "/products/edit/:id",

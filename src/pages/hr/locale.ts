@@ -12,6 +12,12 @@ export const hrLocale = {
     "hr.resources.leaveRequest": "Leave request",
     "hr.resources.leave.description":
       "Review time-off requests and approve or reject them.",
+    "hr.resources.orgChart": "Org chart",
+    "hr.resources.orgChart.description":
+      "Reporting lines by department, as a visual tree.",
+    "hr.resources.leaveCalendar": "Leave calendar",
+    "hr.resources.leaveCalendar.description":
+      "A month view of who's off and when.",
 
     // common
     "hr.common.actions": "Actions",
@@ -166,6 +172,22 @@ export const hrLocale = {
     "hr.leave.detail.loadError.description":
       "The request may no longer exist, or you may not have permission to view it.",
     "hr.leave.detail.info": "Request",
+
+    // org chart
+    "hr.orgChart.title": "Org chart",
+    "hr.orgChart.subtitle":
+      "Who reports to whom, grouped by department. Click a person to open their profile.",
+    "hr.orgChart.empty": "No employees on file yet.",
+
+    // leave calendar
+    "hr.leaveCalendar.title": "Leave calendar",
+    "hr.leaveCalendar.subtitle":
+      "Who's off this month. Click a name to open the request.",
+    "hr.leaveCalendar.today": "Today",
+    "hr.leaveCalendar.prevMonth": "Previous month",
+    "hr.leaveCalendar.nextMonth": "Next month",
+    "hr.leaveCalendar.legend": "Status:",
+    "hr.leaveCalendar.more": "+{{count}} more",
   },
   "zh-CN": {
     // resources / nav
@@ -178,6 +200,10 @@ export const hrLocale = {
     "hr.resources.leave": "休假审批",
     "hr.resources.leaveRequest": "休假申请",
     "hr.resources.leave.description": "查看休假申请并进行批准或驳回。",
+    "hr.resources.orgChart": "组织架构",
+    "hr.resources.orgChart.description": "按部门呈现的汇报关系可视化树。",
+    "hr.resources.leaveCalendar": "请假日历",
+    "hr.resources.leaveCalendar.description": "按月查看谁在休假。",
 
     // common
     "hr.common.actions": "操作",
@@ -328,5 +354,19 @@ export const hrLocale = {
     "hr.leave.detail.loadError.description":
       "该记录可能已不存在,或你没有查看权限。",
     "hr.leave.detail.info": "申请详情",
+
+    // org chart
+    "hr.orgChart.title": "组织架构",
+    "hr.orgChart.subtitle": "按部门查看汇报关系。点击某人可查看其档案。",
+    "hr.orgChart.empty": "暂无员工档案。",
+
+    // leave calendar
+    "hr.leaveCalendar.title": "请假日历",
+    "hr.leaveCalendar.subtitle": "查看本月谁在休假。点击姓名可查看该申请。",
+    "hr.leaveCalendar.today": "今天",
+    "hr.leaveCalendar.prevMonth": "上个月",
+    "hr.leaveCalendar.nextMonth": "下个月",
+    "hr.leaveCalendar.legend": "状态:",
+    "hr.leaveCalendar.more": "还有 {{count}} 项",
   },
 };

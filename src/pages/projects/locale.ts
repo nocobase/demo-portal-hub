@@ -12,6 +12,11 @@ export const projectsLocale = {
     "projects.resources.milestones": "Milestones",
     "projects.resources.milestone": "Milestone",
     "projects.resources.milestones.description": "Key dates across all projects.",
+    "projects.resources.myTasks": "My tasks",
+    "projects.resources.myTasks.description": "Tasks assigned to you, grouped by status.",
+    "projects.resources.calendar": "Calendar",
+    "projects.resources.calendar.description":
+      "Month view of task due dates and project milestones.",
 
     // Common
     "projects.common.close": "Close",
@@ -200,6 +205,24 @@ export const projectsLocale = {
       "The milestone may no longer exist, or you may not have permission to view it.",
     "projects.milestones.show.overview": "Overview",
     "projects.milestones.markPending": "Mark pending",
+
+    // My tasks
+    "projects.myTasks.title": "My tasks",
+    "projects.myTasks.subtitle": "Everything currently assigned to you, grouped by status.",
+    "projects.myTasks.totalCount": "{{count}} assigned",
+    "projects.myTasks.error.title": "Unable to load your tasks",
+    "projects.myTasks.error.desc": "Check your connection and try again.",
+    "projects.myTasks.empty.title": "Nothing assigned to you",
+    "projects.myTasks.empty.desc":
+      "Tasks assigned to you across every project will show up here.",
+    "projects.myTasks.columnEmpty": "Nothing here",
+
+    // Project calendar
+    "projects.calendar.title": "Project calendar",
+    "projects.calendar.subtitle": "Task due dates and milestones across every project.",
+    "projects.calendar.today": "Today",
+    "projects.calendar.error.title": "Unable to load the calendar",
+    "projects.calendar.error.desc": "Check your connection and try again.",
   },
   "zh-CN": {
     // Nav / resources
@@ -212,6 +235,10 @@ export const projectsLocale = {
     "projects.resources.milestones": "里程碑",
     "projects.resources.milestone": "里程碑",
     "projects.resources.milestones.description": "所有项目的关键日期。",
+    "projects.resources.myTasks": "我的任务",
+    "projects.resources.myTasks.description": "分配给你的任务，按状态分组。",
+    "projects.resources.calendar": "项目日历",
+    "projects.resources.calendar.description": "按月查看任务截止日期与项目里程碑。",
 
     // Common
     "projects.common.close": "关闭",
@@ -389,5 +416,22 @@ export const projectsLocale = {
     "projects.milestones.show.error.desc": "该里程碑可能已不存在，或你没有查看权限。",
     "projects.milestones.show.overview": "概览",
     "projects.milestones.markPending": "标记为待完成",
+
+    // My tasks
+    "projects.myTasks.title": "我的任务",
+    "projects.myTasks.subtitle": "当前分配给你的所有任务，按状态分组。",
+    "projects.myTasks.totalCount": "共 {{count}} 项",
+    "projects.myTasks.error.title": "无法加载你的任务",
+    "projects.myTasks.error.desc": "请检查网络连接后重试。",
+    "projects.myTasks.empty.title": "暂无分配给你的任务",
+    "projects.myTasks.empty.desc": "分配给你的所有项目任务都会显示在这里。",
+    "projects.myTasks.columnEmpty": "暂无任务",
+
+    // Project calendar
+    "projects.calendar.title": "项目日历",
+    "projects.calendar.subtitle": "所有项目的任务截止日期与里程碑。",
+    "projects.calendar.today": "今天",
+    "projects.calendar.error.title": "无法加载日历",
+    "projects.calendar.error.desc": "请检查网络连接后重试。",
   },
 };

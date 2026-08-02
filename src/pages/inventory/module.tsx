@@ -2,6 +2,7 @@ import {
   ArrowLeftRight,
   LayoutDashboard,
   Package,
+  PackageX,
   Warehouse,
 } from "lucide-react";
 import { useParams } from "react-router";
@@ -10,6 +11,7 @@ import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { InventoryDashboard } from "./dashboard";
+import { InventoryReorder } from "./reorder";
 import { inventoryRoutes } from "./routes";
 import { ProductCreate, ProductEdit } from "./products/form";
 import { ProductsLayout } from "./products/list";
@@ -224,6 +226,23 @@ export const inventoryModule = {
           ),
         },
       ],
+    },
+    {
+      name: "inv-reorder",
+      path: inventoryRoutes.reorder,
+      element: <InventoryReorder />,
+      resource: {
+        meta: {
+          label: "Reorder",
+          i18nKey: "inventory.resources.reorder",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "inventory.resources.reorder.description",
+          priority: 50,
+          icon: <PackageX />,
+          description: "Products at or below their reorder level with a suggested reorder quantity.",
+          acl: false,
+        },
+      },
     },
   ] satisfies AppRouteDefinition[],
 };

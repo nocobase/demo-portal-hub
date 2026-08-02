@@ -4,6 +4,8 @@
 export const financeRoutes = {
   dashboard: "/finance",
   reports: "/finance/reports",
+  cashFlow: "/cash-flow",
+  budget: "/budget",
   invoices: "/invoices",
   invoiceCreate: "/invoices/create",
   invoiceEdit: "/invoices/edit/:id",

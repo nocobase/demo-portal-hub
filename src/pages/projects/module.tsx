@@ -1,4 +1,4 @@
-import { Flag, FolderKanban, SquareKanban } from "lucide-react";
+import { CalendarDays, Flag, FolderKanban, ListChecks, SquareKanban } from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -7,9 +7,11 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { ProjectCalendarPage } from "@/pages/projects/calendar";
 import { MilestonesLayout } from "@/pages/projects/milestones/list";
 import { MilestoneCreate, MilestoneEdit } from "@/pages/projects/milestones/form";
 import { MilestoneShow } from "@/pages/projects/milestones/show";
+import { MyTasksPage } from "@/pages/projects/my-tasks";
 import { ProjectsLayout } from "@/pages/projects/projects/list";
 import { ProjectCreate, ProjectEdit } from "@/pages/projects/projects/form";
 import { ProjectShow } from "@/pages/projects/projects/show";
@@ -311,6 +313,40 @@ export const projectsModule = {
           children: milestoneShowChildren,
         },
       ],
+    },
+    {
+      name: "projects-my-tasks",
+      path: projectRoutes.myTasks,
+      element: <MyTasksPage />,
+      resource: {
+        meta: {
+          label: "My tasks",
+          i18nKey: "projects.resources.myTasks",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "projects.resources.myTasks.description",
+          priority: 50,
+          icon: <ListChecks />,
+          description: "Tasks assigned to you, grouped by status.",
+          acl: false,
+        },
+      },
+    },
+    {
+      name: "projects-calendar",
+      path: projectRoutes.projectCalendar,
+      element: <ProjectCalendarPage />,
+      resource: {
+        meta: {
+          label: "Calendar",
+          i18nKey: "projects.resources.calendar",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "projects.resources.calendar.description",
+          priority: 51,
+          icon: <CalendarDays />,
+          description: "Month view of task due dates and project milestones.",
+          acl: false,
+        },
+      },
     },
   ]),
 };

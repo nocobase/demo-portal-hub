@@ -1,6 +1,8 @@
 import {
   Activity,
   Building2,
+  CalendarDays,
+  Contact,
   TrendingUp,
   UserPlus,
   Workflow,
@@ -20,9 +22,12 @@ import { AccountCreate, AccountEdit } from "@/pages/sales/accounts/form";
 import { AccountsLayout } from "@/pages/sales/accounts/list";
 import { AccountShow } from "@/pages/sales/accounts/show";
 import { ContactCreate, ContactEdit } from "@/pages/sales/contacts/form";
+import { ContactsLayout } from "@/pages/sales/contacts/list";
+import { ContactShow } from "@/pages/sales/contacts/show";
 import { DealCreate, DealEdit } from "@/pages/sales/deals/form";
 import { PipelinePage } from "@/pages/sales/deals/pipeline";
 import { DealShow } from "@/pages/sales/deals/show";
+import { SalesCalendarPage } from "@/pages/sales/insights/calendar";
 import { ForecastPage } from "@/pages/sales/insights/forecast";
 import { LeadCreate, LeadEdit } from "@/pages/sales/leads/form";
 import { LeadsLayout } from "@/pages/sales/leads/list";
@@ -33,8 +38,10 @@ import { ConvertLead, LeadShow } from "@/pages/sales/leads/show";
 export const salesRoutes = {
   pipeline: "/deals",
   accounts: "/accounts",
+  contacts: "/contacts",
   leads: "/leads",
   activities: "/activities",
+  salesCalendar: "/sales-calendar",
   forecast: "/forecast",
 } as const;
 
@@ -163,6 +170,18 @@ const activityContextChildren = (prefix: string): AppRouteDefinition[] => [
         fallback={denied}
       >
         <ActivityEdit />
+      </CanAccess>
+    ),
+  },
+];
+
+const contactContextChildren = (prefix: string): AppRouteDefinition[] => [
+  {
+    name: `${prefix}.edit`,
+    path: "edit",
+    element: (
+      <CanAccess resource="hub_sales_contacts" action="edit" fallback={denied}>
+        <ContactEdit idParam="id" />
       </CanAccess>
     ),
   },
@@ -426,6 +445,88 @@ const routes = defineAppRoutes([
         children: activityContextChildren("hub_sales_activities.show"),
       },
     ],
+  },
+  {
+    name: "hub_sales_contacts",
+    path: salesRoutes.contacts,
+    element: <ContactsLayout />,
+    resource: {
+      meta: {
+        label: "Contacts",
+        singularLabel: "Contact",
+        i18nKey: "sales.resources.contacts",
+        i18nSingularKey: "sales.resources.contact",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "sales.resources.contacts.description",
+        priority: 50,
+        icon: <Contact />,
+        description: "People you deal with at each account.",
+        canCreate: true,
+        canDelete: true,
+        acl: { type: "collection" },
+      },
+    },
+    children: [
+      {
+        name: "hub_sales_contacts.create",
+        path: "create",
+        resourceAction: "create",
+        element: (
+          <CanAccess
+            resource="hub_sales_contacts"
+            action="create"
+            fallback={denied}
+          >
+            <ContactCreate />
+          </CanAccess>
+        ),
+      },
+      {
+        name: "hub_sales_contacts.edit",
+        path: "edit/:id",
+        resourceAction: "edit",
+        element: (
+          <CanAccess resource="hub_sales_contacts" action="edit" fallback={denied}>
+            <ContactEdit idParam="id" />
+          </CanAccess>
+        ),
+      },
+      {
+        name: "hub_sales_contacts.show",
+        path: "show/:id",
+        resourceAction: "show",
+        element: (
+          <CanAccess resource="hub_sales_contacts" action="show" fallback={denied}>
+            <ContactShow />
+          </CanAccess>
+        ),
+        children: contactContextChildren("hub_sales_contacts.show"),
+      },
+    ],
+  },
+  {
+    // Name-only virtual resource — no collection, mirrors the forecast page.
+    name: "sales-calendar",
+    path: salesRoutes.salesCalendar,
+    element: (
+      <CanAccess resource="hub_sales_activities" action="list" fallback={denied}>
+        <SalesCalendarPage />
+      </CanAccess>
+    ),
+    resource: {
+      meta: {
+        label: "Activity calendar",
+        singularLabel: "Activity calendar",
+        i18nKey: "sales.resources.salesCalendar",
+        i18nSingularKey: "sales.resources.salesCalendar",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "sales.resources.salesCalendar.description",
+        priority: 51,
+        icon: <CalendarDays />,
+        description: "Calls, emails and meetings by day.",
+        acl: false,
+      },
+    },
   },
 ]);
 

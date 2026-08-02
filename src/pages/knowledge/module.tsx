@@ -1,4 +1,4 @@
-import { BookOpen, FolderTree, LibraryBig } from "lucide-react";
+import { BookOpen, FolderTree, LibraryBig, Search, Tags } from "lucide-react";
 import {
   defineAppRoutes,
   type AppRouteDefinition,
@@ -13,6 +13,8 @@ import { CategoryCreate, CategoryEdit } from "@/pages/knowledge/categories/form"
 import { CategoriesLayout } from "@/pages/knowledge/categories/list";
 import { KnowledgeOverview } from "@/pages/knowledge/dashboard";
 import { knowledgeRoutes } from "@/pages/knowledge/routes";
+import { KnowledgeSearch } from "@/pages/knowledge/search";
+import { KnowledgeTags } from "@/pages/knowledge/tags";
 
 const denied = <AccessDenied />;
 
@@ -104,6 +106,40 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         ),
       },
     ],
+  },
+  {
+    name: "kb-search",
+    path: knowledgeRoutes.search,
+    element: <KnowledgeSearch />,
+    resource: {
+      meta: {
+        label: "Search",
+        i18nKey: "knowledge.resources.search",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "knowledge.resources.search.description",
+        priority: 50,
+        icon: <Search />,
+        description: "Search the knowledge base by title, summary, or body.",
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "kb-tags",
+    path: knowledgeRoutes.tags,
+    element: <KnowledgeTags />,
+    resource: {
+      meta: {
+        label: "Topics",
+        i18nKey: "knowledge.resources.tags",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "knowledge.resources.tags.description",
+        priority: 51,
+        icon: <Tags />,
+        description: "Browse articles grouped by topic.",
+        acl: false,
+      },
+    },
   },
   {
     name: "hub_kb_categories",

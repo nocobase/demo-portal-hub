@@ -5,6 +5,9 @@ export const helpdeskRoutes = {
   ticketsShow: "/tickets/show/:id",
   ticketsShowStatus: "/tickets/show/:id/status",
   dashboard: "/helpdesk/dashboard",
+  slaPolicies: "/sla-policies",
+  slaPoliciesShow: "/sla-policies/show/:id",
+  faq: "/faq",
 } as const;
 
 export const getTicketShowPath = (id: string | number) =>
@@ -15,3 +18,6 @@ export const getTicketEditPath = (id: string | number) =>
 
 export const getTicketStatusPath = (id: string | number) =>
   `/tickets/show/${encodeURIComponent(id)}/status`;
+
+export const getSlaPolicyShowPath = (id: string | number) =>
+  `/sla-policies/show/${encodeURIComponent(id)}`;

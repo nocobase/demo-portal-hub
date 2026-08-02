@@ -26,6 +26,13 @@ export const salesLocale = {
     "sales.resources.forecast": "Forecast",
     "sales.resources.forecast.description":
       "Win-rate funnel and owner leaderboard.",
+    "sales.resources.contacts": "Contacts",
+    "sales.resources.contact": "Contact",
+    "sales.resources.contacts.description":
+      "People you deal with at each account.",
+    "sales.resources.salesCalendar": "Activity calendar",
+    "sales.resources.salesCalendar.description":
+      "Calls, emails and meetings by day.",
 
     // Enums — deal stage
     "sales.enums.dealStage.inquiry": "Inquiry",
@@ -179,6 +186,19 @@ export const salesLocale = {
     "sales.contacts.validation.name": "Contact name is required",
     "sales.contacts.actions.add": "Add contact",
     "sales.contacts.empty": "No contacts yet.",
+    "sales.contacts.fields.account": "Account",
+    "sales.contacts.validation.account": "Pick the account this contact belongs to",
+    "sales.contacts.drawer.show.description":
+      "Contact details and the account they belong to.",
+    "sales.contacts.detail.unnamed": "Unnamed contact",
+    "sales.contacts.detail.profile": "Contact info",
+    "sales.contacts.detail.contactSince": "Contact since",
+    "sales.contacts.detail.account": "Account",
+    "sales.contacts.detail.noAccount":
+      "This contact is not linked to an account.",
+    "sales.contacts.detail.loadError.title": "Unable to load contact",
+    "sales.contacts.detail.loadError.description":
+      "The contact may no longer exist, or you may not have permission to view it.",
 
     // Leads
     "sales.leads.drawer.create.title": "New lead",
@@ -249,6 +269,13 @@ export const salesLocale = {
     "sales.activities.detail.loadError.title": "Unable to load activity",
     "sales.activities.detail.loadError.description":
       "The activity may no longer exist, or you may not have permission to view it.",
+
+    // Activity calendar
+    "sales.calendar.today": "Today",
+    "sales.calendar.more": "more",
+    "sales.calendar.loadError.title": "Unable to load activities",
+    "sales.calendar.loadError.description":
+      "Check your connection and try again.",
   },
   "zh-CN": {
     // Common
@@ -273,6 +300,11 @@ export const salesLocale = {
     "sales.resources.activities.description": "记录与商机相关的电话、邮件和会议。",
     "sales.resources.forecast": "销售预测",
     "sales.resources.forecast.description": "赢单率漏斗与负责人排行榜。",
+    "sales.resources.contacts": "通讯录",
+    "sales.resources.contact": "联系人",
+    "sales.resources.contacts.description": "你在各客户处对接的人员。",
+    "sales.resources.salesCalendar": "活动日历",
+    "sales.resources.salesCalendar.description": "按天查看电话、邮件和会议。",
 
     // Enums — deal stage
     "sales.enums.dealStage.inquiry": "询价",
@@ -419,6 +451,17 @@ export const salesLocale = {
     "sales.contacts.validation.name": "请填写联系人姓名",
     "sales.contacts.actions.add": "添加联系人",
     "sales.contacts.empty": "暂无联系人。",
+    "sales.contacts.fields.account": "所属客户",
+    "sales.contacts.validation.account": "请选择该联系人所属的客户",
+    "sales.contacts.drawer.show.description": "联系人信息及其所属客户。",
+    "sales.contacts.detail.unnamed": "未命名联系人",
+    "sales.contacts.detail.profile": "联系信息",
+    "sales.contacts.detail.contactSince": "建档时间",
+    "sales.contacts.detail.account": "所属客户",
+    "sales.contacts.detail.noAccount": "该联系人未关联客户。",
+    "sales.contacts.detail.loadError.title": "无法加载联系人",
+    "sales.contacts.detail.loadError.description":
+      "该联系人可能已不存在，或你没有查看权限。",
 
     // Leads
     "sales.leads.drawer.create.title": "新建线索",
@@ -483,5 +526,11 @@ export const salesLocale = {
     "sales.activities.detail.loadError.title": "无法加载活动",
     "sales.activities.detail.loadError.description":
       "该活动可能已不存在，或你没有查看权限。",
+
+    // Activity calendar
+    "sales.calendar.today": "今天",
+    "sales.calendar.more": "更多",
+    "sales.calendar.loadError.title": "无法加载活动记录",
+    "sales.calendar.loadError.description": "请检查网络连接后重试。",
   },
 };

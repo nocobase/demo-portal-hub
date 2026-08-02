@@ -9,6 +9,9 @@ export const procurementLocale = {
     "procurement.resources.supplier": "Supplier",
     "procurement.resources.suppliers.description":
       "Vendors you buy from, with ratings and order history.",
+    "procurement.resources.spendAnalysis": "Spend analysis",
+    "procurement.resources.spendAnalysis.description":
+      "Spend by supplier, PO status mix and monthly spend trend.",
 
     // Common
     "procurement.common.actions": "Actions",
@@ -110,6 +113,36 @@ export const procurementLocale = {
     "procurement.spend.chart.empty": "No spend to chart yet.",
     "procurement.spend.unassigned": "Unassigned",
 
+    // Spend analysis dashboard
+    "procurement.spendAnalysis.title": "Spend analysis",
+    "procurement.spendAnalysis.description":
+      "Where procurement spend is going: by supplier, by order status, and over time.",
+    "procurement.spendAnalysis.kpi.committed.label": "Total committed",
+    "procurement.spendAnalysis.kpi.committed.hint": "{{count}} active orders",
+    "procurement.spendAnalysis.kpi.received.label": "Received value",
+    "procurement.spendAnalysis.kpi.received.hint": "{{count}} orders received",
+    "procurement.spendAnalysis.kpi.avg.label": "Avg. PO value",
+    "procurement.spendAnalysis.kpi.avg.hint": "excl. cancelled",
+    "procurement.spendAnalysis.kpi.topSupplier.label": "Top supplier",
+    "procurement.spendAnalysis.kpi.topSupplier.hint": "by committed spend",
+    "procurement.spendAnalysis.chart.supplier.title": "Spend by supplier",
+    "procurement.spendAnalysis.chart.supplier.description":
+      "Committed spend across active purchase orders.",
+    "procurement.spendAnalysis.chart.supplier.empty": "No spend to chart yet.",
+    "procurement.spendAnalysis.chart.status.title": "PO status mix",
+    "procurement.spendAnalysis.chart.status.description":
+      "Every purchase order, by current status.",
+    "procurement.spendAnalysis.chart.status.empty": "No orders yet.",
+    "procurement.spendAnalysis.chart.status.tooltip": "{{count}} orders",
+    "procurement.spendAnalysis.chart.trend.title": "Monthly spend trend",
+    "procurement.spendAnalysis.chart.trend.description":
+      "Committed spend by order date over the last {{months}} months.",
+    "procurement.spendAnalysis.table.title": "Top suppliers",
+    "procurement.spendAnalysis.table.description":
+      "Click a supplier to open its detail.",
+    "procurement.spendAnalysis.table.empty": "No suppliers with spend yet.",
+    "procurement.spendAnalysis.table.orderCount": "{{count}} orders",
+
     // Suppliers list / fields
     "procurement.suppliers.fields.name": "Supplier",
     "procurement.suppliers.fields.contact": "Contact",
@@ -173,6 +206,9 @@ export const procurementLocale = {
     "procurement.resources.supplier": "供应商",
     "procurement.resources.suppliers.description":
       "你的采购来源,含评分与历史订单。",
+    "procurement.resources.spendAnalysis": "支出分析",
+    "procurement.resources.spendAnalysis.description":
+      "按供应商的支出分布、订单状态占比与月度支出趋势。",
 
     // Common
     "procurement.common.actions": "操作",
@@ -267,6 +303,36 @@ export const procurementLocale = {
     "procurement.spend.chart.description": "所有进行中采购订单的已承诺支出。",
     "procurement.spend.chart.empty": "暂无支出可供展示。",
     "procurement.spend.unassigned": "未指定",
+
+    // Spend analysis dashboard
+    "procurement.spendAnalysis.title": "支出分析",
+    "procurement.spendAnalysis.description":
+      "采购支出去向:按供应商、按订单状态、按时间趋势。",
+    "procurement.spendAnalysis.kpi.committed.label": "已承诺总支出",
+    "procurement.spendAnalysis.kpi.committed.hint": "{{count}} 个进行中订单",
+    "procurement.spendAnalysis.kpi.received.label": "已收货金额",
+    "procurement.spendAnalysis.kpi.received.hint": "{{count}} 个订单已收货",
+    "procurement.spendAnalysis.kpi.avg.label": "平均订单金额",
+    "procurement.spendAnalysis.kpi.avg.hint": "不含已取消",
+    "procurement.spendAnalysis.kpi.topSupplier.label": "首要供应商",
+    "procurement.spendAnalysis.kpi.topSupplier.hint": "按已承诺支出排名",
+    "procurement.spendAnalysis.chart.supplier.title": "各供应商支出",
+    "procurement.spendAnalysis.chart.supplier.description":
+      "所有进行中采购订单的已承诺支出。",
+    "procurement.spendAnalysis.chart.supplier.empty": "暂无支出可供展示。",
+    "procurement.spendAnalysis.chart.status.title": "订单状态占比",
+    "procurement.spendAnalysis.chart.status.description":
+      "所有采购订单按当前状态分布。",
+    "procurement.spendAnalysis.chart.status.empty": "暂无订单。",
+    "procurement.spendAnalysis.chart.status.tooltip": "{{count}} 个订单",
+    "procurement.spendAnalysis.chart.trend.title": "月度支出趋势",
+    "procurement.spendAnalysis.chart.trend.description":
+      "按下单日期统计的近 {{months}} 个月已承诺支出。",
+    "procurement.spendAnalysis.table.title": "支出最高的供应商",
+    "procurement.spendAnalysis.table.description":
+      "点击供应商可打开详情。",
+    "procurement.spendAnalysis.table.empty": "暂无有支出记录的供应商。",
+    "procurement.spendAnalysis.table.orderCount": "{{count}} 个订单",
 
     // Suppliers list / fields
     "procurement.suppliers.fields.name": "供应商",

@@ -41,3 +41,20 @@ export type TicketFormValues = {
   requesterId: number | string | null;
   assigneeId: number | string | null;
 };
+
+export type SlaPolicyRecord = BaseRecord & {
+  id: number | string;
+  name?: string | null;
+  priority?: string | null;
+  response_mins?: number | null;
+  resolve_mins?: number | null;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+};
+
+export type FaqRecord = BaseRecord & {
+  id: number | string;
+  question?: string | null;
+  answer?: string | null;
+  category?: string | null;
+};

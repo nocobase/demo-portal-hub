@@ -7,6 +7,12 @@ const enUS = {
   "helpdesk.resources.dashboard": "Workload",
   "helpdesk.resources.dashboard.description":
     "SLA health, queue workload and the priority mix.",
+  "helpdesk.resources.slaPolicies": "SLA policies",
+  "helpdesk.resources.slaPolicies.description":
+    "Response and resolution targets by priority.",
+  "helpdesk.resources.faq": "FAQ",
+  "helpdesk.resources.faq.description":
+    "Self-service answers to common IT and support questions.",
 
   // Common
   "helpdesk.common.unassigned": "Unassigned",
@@ -155,6 +161,38 @@ const enUS = {
   "helpdesk.form.fields.category.unspecified": "Unspecified",
   "helpdesk.form.fields.requester.placeholder": "Who raised this ticket?",
   "helpdesk.form.fields.assignee.placeholder": "Assign an agent",
+
+  // SLA policies
+  "helpdesk.sla.title": "SLA policies",
+  "helpdesk.sla.subtitle":
+    "Response and resolution targets for each priority level.",
+  "helpdesk.sla.columns.name": "Policy",
+  "helpdesk.sla.columns.priority": "Priority",
+  "helpdesk.sla.columns.response": "Response target",
+  "helpdesk.sla.columns.resolve": "Resolve target",
+  "helpdesk.sla.minutes": "{{count}}m",
+  "helpdesk.sla.hours": "{{count}}h",
+  "helpdesk.sla.show.description":
+    "Edit the response and resolution targets for this priority.",
+  "helpdesk.sla.show.errorTitle": "Unable to load SLA policy",
+  "helpdesk.sla.show.errorDescription":
+    "The policy may no longer exist, or you may not have permission to view it.",
+  "helpdesk.sla.fields.name": "Policy name",
+  "helpdesk.sla.fields.priority": "Priority",
+  "helpdesk.sla.fields.responseMins": "Response target (minutes)",
+  "helpdesk.sla.fields.resolveMins": "Resolve target (minutes)",
+  "helpdesk.sla.form.save": "Save changes",
+  "helpdesk.sla.form.saving": "Saving...",
+  "helpdesk.sla.form.saved": "Saved",
+
+  // FAQ
+  "helpdesk.faq.title": "Frequently asked questions",
+  "helpdesk.faq.subtitle":
+    "Quick answers to the questions the helpdesk sees most often.",
+  "helpdesk.faq.search.placeholder": "Search questions and answers...",
+  "helpdesk.faq.empty": "No questions match your search.",
+  "helpdesk.faq.resultCount": "{{count}} results",
+  "helpdesk.faq.categoryOther": "Other",
 };
 
 const zhCN: Record<keyof typeof enUS, string> = {
@@ -164,6 +202,10 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.resources.tickets.description": "支持工单、优先级与回复记录。",
   "helpdesk.resources.dashboard": "工作负载",
   "helpdesk.resources.dashboard.description": "SLA 健康度、队列负载与优先级分布。",
+  "helpdesk.resources.slaPolicies": "SLA 策略",
+  "helpdesk.resources.slaPolicies.description": "各优先级的响应与解决时限目标。",
+  "helpdesk.resources.faq": "自助 FAQ",
+  "helpdesk.resources.faq.description": "常见 IT 与支持问题的自助解答。",
 
   // Common
   "helpdesk.common.unassigned": "未分配",
@@ -302,6 +344,34 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.form.fields.category.unspecified": "未指定",
   "helpdesk.form.fields.requester.placeholder": "谁提交了这条工单？",
   "helpdesk.form.fields.assignee.placeholder": "指派一位客服",
+
+  // SLA policies
+  "helpdesk.sla.title": "SLA 策略",
+  "helpdesk.sla.subtitle": "每个优先级对应的响应与解决时限目标。",
+  "helpdesk.sla.columns.name": "策略",
+  "helpdesk.sla.columns.priority": "优先级",
+  "helpdesk.sla.columns.response": "响应目标",
+  "helpdesk.sla.columns.resolve": "解决目标",
+  "helpdesk.sla.minutes": "{{count}} 分钟",
+  "helpdesk.sla.hours": "{{count}} 小时",
+  "helpdesk.sla.show.description": "编辑该优先级的响应与解决时限目标。",
+  "helpdesk.sla.show.errorTitle": "无法加载 SLA 策略",
+  "helpdesk.sla.show.errorDescription": "该策略可能已不存在，或你没有查看权限。",
+  "helpdesk.sla.fields.name": "策略名称",
+  "helpdesk.sla.fields.priority": "优先级",
+  "helpdesk.sla.fields.responseMins": "响应目标（分钟）",
+  "helpdesk.sla.fields.resolveMins": "解决目标（分钟）",
+  "helpdesk.sla.form.save": "保存更改",
+  "helpdesk.sla.form.saving": "保存中……",
+  "helpdesk.sla.form.saved": "已保存",
+
+  // FAQ
+  "helpdesk.faq.title": "常见问题",
+  "helpdesk.faq.subtitle": "帮助台最常被问到的问题与快速解答。",
+  "helpdesk.faq.search.placeholder": "搜索问题或答案……",
+  "helpdesk.faq.empty": "没有匹配的问题。",
+  "helpdesk.faq.resultCount": "{{count}} 条结果",
+  "helpdesk.faq.categoryOther": "其他",
 };
 
 export const helpdeskLocale = {

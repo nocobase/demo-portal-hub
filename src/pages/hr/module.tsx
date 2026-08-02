@@ -1,4 +1,4 @@
-import { CalendarCheck, Network, Users } from "lucide-react";
+import { CalendarCheck, CalendarDays, Network, Users } from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -19,6 +19,8 @@ import { EmployeeShow } from "@/pages/hr/employees/show";
 import { LeaveCreate, LeaveEdit } from "@/pages/hr/leave/create-edit";
 import { LeaveLayout } from "@/pages/hr/leave/list";
 import { LeaveShow } from "@/pages/hr/leave/show";
+import { LeaveCalendarPage } from "@/pages/hr/leave-calendar";
+import { OrgChartPage } from "@/pages/hr/org-chart";
 import { hrRoutes } from "@/pages/hr/routes";
 
 const denied = <AccessDenied />;
@@ -247,6 +249,40 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         children: leaveShowChildren,
       },
     ],
+  },
+  {
+    name: "hr-org-chart",
+    path: hrRoutes.orgChart,
+    element: <OrgChartPage />,
+    resource: {
+      meta: {
+        label: "Org chart",
+        i18nKey: "hr.resources.orgChart",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "hr.resources.orgChart.description",
+        priority: 50,
+        icon: <Network />,
+        description: "Reporting lines by department, as a visual tree.",
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "hr-leave-calendar",
+    path: hrRoutes.leaveCalendar,
+    element: <LeaveCalendarPage />,
+    resource: {
+      meta: {
+        label: "Leave calendar",
+        i18nKey: "hr.resources.leaveCalendar",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "hr.resources.leaveCalendar.description",
+        priority: 51,
+        icon: <CalendarDays />,
+        description: "A month view of who's off and when.",
+        acl: false,
+      },
+    },
   },
 ]);
 

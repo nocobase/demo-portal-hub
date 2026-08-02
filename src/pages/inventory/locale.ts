@@ -16,6 +16,29 @@ export const inventoryLocale = {
     "inventory.resources.stockMove": "Stock move",
     "inventory.resources.stockMoves.description":
       "Every receipt, issue and adjustment across warehouses.",
+    "inventory.resources.reorder": "Reorder",
+    "inventory.resources.reorder.description":
+      "Products at or below their reorder level with a suggested reorder quantity.",
+
+    // Reorder page
+    "inventory.reorder.title": "Reorder",
+    "inventory.reorder.description":
+      "Products at or below their reorder level, with a suggested quantity to bring stock back up.",
+    "inventory.reorder.kpi.lowStockCount": "Low-stock count",
+    "inventory.reorder.kpi.lowStockCount.sub":
+      "Active products at or below reorder level",
+    "inventory.reorder.gapChart.title": "Biggest reorder gaps",
+    "inventory.reorder.gapChart.description":
+      "How far each product's on-hand quantity is below its reorder level.",
+    "inventory.reorder.list.title": "Products to reorder",
+    "inventory.reorder.list.description": "Click a row to open the product details.",
+    "inventory.reorder.list.product": "Product",
+    "inventory.reorder.list.category": "Category",
+    "inventory.reorder.list.onHand": "On hand",
+    "inventory.reorder.list.reorderLevel": "Reorder level",
+    "inventory.reorder.list.suggestedQty": "Suggested qty",
+    "inventory.reorder.empty":
+      "Nothing to reorder — every active product is above its reorder level.",
 
     // Common
     "inventory.common.actions": "Actions",
@@ -164,6 +187,24 @@ export const inventoryLocale = {
     "inventory.resources.stockMoves": "库存流水",
     "inventory.resources.stockMove": "库存流水",
     "inventory.resources.stockMoves.description": "各仓库的入库、出库与调整记录。",
+    "inventory.resources.reorder": "补货预警",
+    "inventory.resources.reorder.description": "在库量已到或低于补货点的商品,附建议补货数量。",
+
+    // 补货预警页
+    "inventory.reorder.title": "补货预警",
+    "inventory.reorder.description": "在库量已到或低于补货点的商品,附把库存补回去的建议数量。",
+    "inventory.reorder.kpi.lowStockCount": "低库存商品数",
+    "inventory.reorder.kpi.lowStockCount.sub": "在售商品中已到或低于补货点的数量",
+    "inventory.reorder.gapChart.title": "补货缺口最大的商品",
+    "inventory.reorder.gapChart.description": "各商品在库量低于补货点的差值。",
+    "inventory.reorder.list.title": "待补货商品",
+    "inventory.reorder.list.description": "点击一行可查看商品详情。",
+    "inventory.reorder.list.product": "商品",
+    "inventory.reorder.list.category": "分类",
+    "inventory.reorder.list.onHand": "在库量",
+    "inventory.reorder.list.reorderLevel": "补货点",
+    "inventory.reorder.list.suggestedQty": "建议补货量",
+    "inventory.reorder.empty": "暂无需要补货的商品,所有在售商品都高于补货点。",
 
     // Common
     "inventory.common.actions": "操作",

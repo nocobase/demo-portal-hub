@@ -1,8 +1,9 @@
-import { PackageOpen, Truck } from "lucide-react";
+import { BarChart3, PackageOpen, Truck } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { procurementRoutes } from "./routes";
+import { SpendAnalysisDashboard } from "./spend-analysis";
 import { PurchaseOrdersLayout } from "./purchase-orders/list";
 import {
   PurchaseOrderCreate,
@@ -15,6 +16,25 @@ import { SupplierCreate, SupplierEdit } from "./suppliers/create-edit";
 import { SupplierShow } from "./suppliers/show";
 
 const denied = <AccessDenied />;
+
+const spendAnalysisRoutes: AppRouteDefinition = {
+  name: "po-spend",
+  path: procurementRoutes.spendAnalysis,
+  element: <SpendAnalysisDashboard />,
+  resource: {
+    meta: {
+      label: "Spend analysis",
+      i18nKey: "procurement.resources.spendAnalysis",
+      i18nOptions: { ns: "starter" },
+      descriptionI18nKey: "procurement.resources.spendAnalysis.description",
+      priority: 50,
+      icon: <BarChart3 />,
+      description:
+        "Spend by supplier, PO status mix and monthly spend trend.",
+      acl: false,
+    },
+  },
+};
 
 const purchaseOrderRoutes: AppRouteDefinition = {
   name: "hub_po_purchase_orders",
@@ -166,7 +186,7 @@ const supplierRoutes: AppRouteDefinition = {
 };
 
 export const procurementModule: { routes: AppRouteDefinition[] } = {
-  routes: [purchaseOrderRoutes, supplierRoutes],
+  routes: [purchaseOrderRoutes, supplierRoutes, spendAnalysisRoutes],
 };
 
 export default procurementModule;

@@ -11,4 +11,6 @@ export const hrRoutes = {
   leaveCreate: "/leave/create",
   leaveEdit: "/leave/edit/:id",
   leaveShow: "/leave/show/:id",
+  orgChart: "/org-chart",
+  leaveCalendar: "/leave-calendar",
 } as const;

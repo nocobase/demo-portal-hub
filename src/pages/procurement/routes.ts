@@ -1,4 +1,5 @@
 export const procurementRoutes = {
+  spendAnalysis: "/procurement-spend",
   purchaseOrders: "/purchase-orders",
   purchaseOrdersCreate: "/purchase-orders/create",
   purchaseOrdersEdit: "/purchase-orders/edit/:id",

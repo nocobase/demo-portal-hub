@@ -1,5 +1,6 @@
 import { type HttpError, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
+import { useMemo } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -19,6 +20,7 @@ import {
 } from "@/extensions/nocobase-route-surfaces";
 import type { UseFormReturn } from "react-hook-form";
 import { useContextualCloseTo } from "../route-surfaces";
+import { AccountPicker } from "../pickers";
 import type { ContactFormValues, ContactRecord } from "../types";
 
 type ContactSurfaceProps = {
@@ -36,12 +38,56 @@ const toServerValues = (values: ContactFormValues) => {
 
 function ContactFormFields({
   form,
+  presetAccountId,
+  record,
 }: {
   form: UseFormReturn<ContactFormValues>;
+  presetAccountId?: string;
+  record?: ContactRecord | null;
 }) {
   const translate = useTranslate();
+  const accountInitial = useMemo(
+    () =>
+      record?.account?.name
+        ? { value: String(record.account.id), label: record.account.name }
+        : null,
+    [record]
+  );
   return (
     <>
+      <FormField
+        control={form.control}
+        name="account_id"
+        rules={{
+          required: translate(
+            "sales.contacts.validation.account",
+            { ns: "starter" },
+            "Pick the account this contact belongs to"
+          ),
+        }}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>
+              {translate(
+                "sales.contacts.fields.account",
+                { ns: "starter" },
+                "Account"
+              )}
+            </FormLabel>
+            <FormControl
+              render={
+                <AccountPicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={Boolean(presetAccountId)}
+                  initialOption={accountInitial}
+                />
+              }
+            />
+            <FormMessage />
+          </FormItem>
+        )}
+      />
       <FormField
         control={form.control}
         name="name"
@@ -219,7 +265,7 @@ function ContactCreateForm({ accountId }: { accountId?: string }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <ContactFormFields form={form} />
+          <ContactFormFields form={form} presetAccountId={accountId} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>
@@ -288,7 +334,7 @@ function ContactEditForm({
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
   const {
-    refineCore: { onFinish },
+    refineCore: { onFinish, query },
     ...form
   } = useForm<ContactRecord, HttpError, ContactFormValues>({
     refineCoreProps: {
@@ -296,9 +342,13 @@ function ContactEditForm({
       action: "edit",
       id: recordId,
       redirect: false,
+      meta: { appends: ["account"] },
       onMutationSuccess: () => close({ skipBeforeClose: true }),
     },
   });
+  // accountId (derived from a possible parent :id segment) is not used to
+  // lock the account field here — editing lets the contact be reassigned to
+  // a different account regardless of where the drawer was opened from.
   void accountId;
 
   return (
@@ -308,7 +358,7 @@ function ContactEditForm({
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <ContactFormFields form={form} />
+          <ContactFormFields form={form} record={query?.data?.data} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>

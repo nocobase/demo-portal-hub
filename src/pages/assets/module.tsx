@@ -1,4 +1,4 @@
-import { ClipboardList, Package } from "lucide-react";
+import { ClipboardList, Package, Wrench } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -11,6 +11,7 @@ import {
   AssignmentEdit,
 } from "./assignments/create-edit";
 import { AssignmentsLayout } from "./assignments/layout";
+import { MaintenancePage } from "./maintenance/page";
 import { assetsRoutes } from "./routes";
 
 const denied = <AccessDenied />;
@@ -145,6 +146,31 @@ const routes: AppRouteDefinition[] = [
         ),
       },
     ],
+  },
+  {
+    name: "as-maintenance",
+    path: assetsRoutes.maintenance,
+    element: (
+      <CanAccess resource="hub_as_assets" action="list" fallback={denied}>
+        <MaintenancePage />
+      </CanAccess>
+    ),
+    resource: {
+      meta: {
+        label: "Maintenance",
+        singularLabel: "Maintenance",
+        i18nKey: "assets.resources.maintenance",
+        i18nSingularKey: "assets.resources.maintenance",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "assets.resources.maintenance.description",
+        priority: 50,
+        icon: <Wrench />,
+        description:
+          "Devices in repair and aging assets that may need a warranty check.",
+        canCreate: false,
+        acl: { type: "collection" },
+      },
+    },
   },
 ];
 

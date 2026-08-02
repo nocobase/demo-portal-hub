@@ -8,6 +8,8 @@ export const assetsRoutes = {
   assignments: "/assignments",
   assignmentsCreate: "/assignments/create",
   assignmentsEdit: "/assignments/edit/:id",
+  // Maintenance & warranty (virtual, read-only view over the register)
+  maintenance: "/asset-maintenance",
 } as const;
 
 export const getAssetShowPath = (id: string | number) =>

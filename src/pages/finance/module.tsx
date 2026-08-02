@@ -1,4 +1,4 @@
-import { BarChart3, CreditCard, PieChart, Receipt } from "lucide-react";
+import { BarChart3, CreditCard, PieChart, PiggyBank, Receipt, TrendingUp } from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -6,6 +6,8 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { BudgetVsActual } from "@/pages/finance/budget";
+import { CashFlow } from "@/pages/finance/cash-flow";
 import { FinanceDashboard } from "@/pages/finance/dashboard";
 import { ExpenseDecision } from "@/pages/finance/expenses/decision";
 import { ExpenseCreate, ExpenseEdit } from "@/pages/finance/expenses/form";
@@ -190,6 +192,36 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         i18nOptions: { ns: "starter" },
         priority: 13,
         icon: <BarChart3 />,
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "finance-cashflow",
+    path: financeRoutes.cashFlow,
+    element: <CashFlow />,
+    resource: {
+      meta: {
+        label: "Cash flow",
+        i18nKey: "finance.resources.cashflow",
+        i18nOptions: { ns: "starter" },
+        priority: 50,
+        icon: <TrendingUp />,
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "finance-budget",
+    path: financeRoutes.budget,
+    element: <BudgetVsActual />,
+    resource: {
+      meta: {
+        label: "Budget",
+        i18nKey: "finance.resources.budget",
+        i18nOptions: { ns: "starter" },
+        priority: 51,
+        icon: <PiggyBank />,
         acl: false,
       },
     },

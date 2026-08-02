@@ -54,3 +54,10 @@ export type InvoiceLineItem = {
   unit_price: number;
   amount: number;
 };
+
+export type Budget = {
+  id: number;
+  category: string;
+  period: string | null;
+  amount: number;
+};

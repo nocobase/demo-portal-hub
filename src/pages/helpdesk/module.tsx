@@ -1,4 +1,4 @@
-import { Gauge, LifeBuoy } from "lucide-react";
+import { Gauge, HelpCircle, LifeBuoy, ShieldCheck } from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -7,7 +7,9 @@ import {
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { HelpdeskDashboard } from "./dashboard";
+import { FaqPage } from "./faq";
 import { helpdeskRoutes } from "./routes";
+import { SlaPoliciesLayout, SlaPolicyShow } from "./sla-policies";
 import { TicketCreate, TicketEdit } from "./tickets/create-edit";
 import { TicketsLayout } from "./tickets/list";
 import { TicketShow } from "./tickets/show";
@@ -106,6 +108,47 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         ],
       },
     ],
+  },
+  {
+    name: "hd-sla",
+    path: helpdeskRoutes.slaPolicies,
+    element: <SlaPoliciesLayout />,
+    resource: {
+      meta: {
+        label: "SLA policies",
+        i18nKey: "helpdesk.resources.slaPolicies",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "helpdesk.resources.slaPolicies.description",
+        priority: 52,
+        icon: <ShieldCheck />,
+        description: "Response and resolution targets by priority.",
+        acl: false,
+      },
+    },
+    children: [
+      {
+        name: "hd-sla.show",
+        path: "show/:id",
+        element: <SlaPolicyShow />,
+      },
+    ],
+  },
+  {
+    name: "hd-faq",
+    path: helpdeskRoutes.faq,
+    element: <FaqPage />,
+    resource: {
+      meta: {
+        label: "FAQ",
+        i18nKey: "helpdesk.resources.faq",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "helpdesk.resources.faq.description",
+        priority: 51,
+        icon: <HelpCircle />,
+        description: "Self-service answers to common IT and support questions.",
+        acl: false,
+      },
+    },
   },
 ]);
 
