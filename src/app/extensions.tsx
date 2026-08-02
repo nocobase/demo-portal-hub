@@ -3,6 +3,16 @@ import {
   type PropsWithChildren,
   type ReactNode,
 } from "react";
+import type { ResourceProps } from "@refinedev/core";
+import {
+  Boxes,
+  BookOpen,
+  LifeBuoy,
+  TrendingUp,
+  Truck,
+  Users,
+  Wallet,
+} from "lucide-react";
 import {
   collectAppExtensionContributions,
   type AppExtension,
@@ -29,8 +39,106 @@ const extensionContributions = collectAppExtensionContributions({
 
 export const appExtensions = extensionContributions.extensions;
 
+// --- Sidebar grouping -----------------------------------------------------
+// The template renders a nav item as a group header when meta.group is truthy,
+// nesting resources whose meta.parent matches the group's name. Group headers
+// are route-less resources contributed here; the parent + priority maps below
+// attach each module's existing nav resources to a group without touching the
+// module files. Group priorities sit above Overview (0) and below every child
+// (>=10) so headers order correctly at the sidebar root.
+const makeGroup = (
+  name: string,
+  label: string,
+  i18nKey: string,
+  icon: ReactNode,
+  priority: number
+): ResourceProps => ({
+  name,
+  meta: {
+    group: true,
+    label,
+    i18nKey,
+    i18nOptions: { ns: "starter" },
+    icon,
+    priority,
+  },
+});
+
+const sidebarGroups: ResourceProps[] = [
+  makeGroup("group_revenue", "Revenue", "groups.revenue", <TrendingUp />, 1),
+  makeGroup("group_delivery", "Delivery", "groups.delivery", <Truck />, 2),
+  makeGroup("group_people", "People", "groups.people", <Users />, 3),
+  makeGroup("group_operations", "Operations", "groups.operations", <Boxes />, 4),
+  makeGroup("group_finance", "Finance", "groups.finance", <Wallet />, 5),
+  makeGroup("group_support", "Support", "groups.support", <LifeBuoy />, 6),
+  makeGroup("group_knowledge", "Knowledge", "groups.knowledge", <BookOpen />, 7),
+];
+
+// Which group each module nav resource belongs to.
+const resourceGroupParent: Record<string, string> = {
+  // Revenue — Sales
+  hub_sales_deals: "group_revenue",
+  hub_sales_accounts: "group_revenue",
+  hub_sales_leads: "group_revenue",
+  hub_sales_activities: "group_revenue",
+  // Delivery — Projects
+  hub_pj_projects: "group_delivery",
+  hub_pj_tasks: "group_delivery",
+  hub_pj_milestones: "group_delivery",
+  // People — HR
+  hub_hr_employees: "group_people",
+  hub_hr_departments: "group_people",
+  hub_hr_leave_requests: "group_people",
+  // Operations — Inventory, Procurement, Assets
+  "inventory-dashboard": "group_operations",
+  hub_inv_products: "group_operations",
+  hub_inv_warehouses: "group_operations",
+  hub_inv_stock_moves: "group_operations",
+  hub_po_purchase_orders: "group_operations",
+  hub_po_suppliers: "group_operations",
+  hub_as_assets: "group_operations",
+  hub_as_assignments: "group_operations",
+  // Finance
+  "finance-dashboard": "group_finance",
+  hub_fin_invoices: "group_finance",
+  hub_fin_expenses: "group_finance",
+  // Support — Helpdesk
+  hub_hd_tickets: "group_support",
+  // Knowledge
+  knowledge_overview: "group_knowledge",
+  hub_kb_articles: "group_knowledge",
+  hub_kb_categories: "group_knowledge",
+};
+
+// Inventory, Procurement and Assets each start their nav priorities at 10, so
+// inside the shared Operations group they would interleave. Nudge Procurement
+// and Assets after Inventory to keep each module's items contiguous.
+const priorityOverride: Record<string, number> = {
+  hub_po_purchase_orders: 20,
+  hub_po_suppliers: 21,
+  hub_as_assets: 30,
+  hub_as_assignments: 31,
+};
+
+const groupedRouteResources = buildRouteResources(
+  extensionContributions.routeDefinitions
+).map((resource) => {
+  const parent = resourceGroupParent[resource.name];
+  const priority = priorityOverride[resource.name];
+  if (!parent && priority === undefined) return resource;
+  return {
+    ...resource,
+    meta: {
+      ...resource.meta,
+      ...(parent ? { parent } : {}),
+      ...(priority !== undefined ? { priority } : {}),
+    },
+  };
+});
+
 export const configuredResources = [
-  ...buildRouteResources(extensionContributions.routeDefinitions),
+  ...sidebarGroups,
+  ...groupedRouteResources,
   ...extensionContributions.resources,
 ];
 

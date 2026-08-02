@@ -1,4 +1,11 @@
 export const starter = {
+  "groups.revenue": "Revenue",
+  "groups.delivery": "Delivery",
+  "groups.people": "People",
+  "groups.operations": "Operations",
+  "groups.finance": "Finance",
+  "groups.support": "Support",
+  "groups.knowledge": "Knowledge",
   "shell.workspace": "Sales pipeline & accounts",
   "shell.settings": "Settings",
   "shell.footer.freedom": "Furnish the deals that matter.",

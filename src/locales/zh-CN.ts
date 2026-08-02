@@ -1,4 +1,11 @@
 export const starter = {
+  "groups.revenue": "营收",
+  "groups.delivery": "交付",
+  "groups.people": "人事",
+  "groups.operations": "运营",
+  "groups.finance": "财务",
+  "groups.support": "支持",
+  "groups.knowledge": "知识",
   "shell.workspace": "销售管道与客户管理",
   "shell.settings": "设置",
   "shell.footer.freedom": "聚焦真正重要的商机。",
