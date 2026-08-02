@@ -4,6 +4,7 @@ import { Header } from "@/components/app-shell/header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { PropsWithChildren } from "react";
+import { PageErrorBoundary } from "./page-error-boundary";
 
 // Primary navigation now lives in the top bar (app-shell/header.tsx +
 // top-nav.tsx); the left sidebar has been removed so pages span full width.
@@ -31,7 +32,7 @@ export function Layout({ children }: PropsWithChildren) {
             "lg:py-7"
           )}
         >
-          {children}
+          <PageErrorBoundary>{children}</PageErrorBoundary>
         </main>
       </SidebarInset>
     </SidebarProvider>

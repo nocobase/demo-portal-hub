@@ -1,41 +1,10 @@
 import { BarChart3, CreditCard, PieChart, PiggyBank, Receipt, TrendingUp } from "lucide-react";
-import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { BudgetVsActual } from "@/pages/finance/budget";
-import { CashFlow } from "@/pages/finance/cash-flow";
-import { FinanceDashboard } from "@/pages/finance/dashboard";
-import { ExpenseDecision } from "@/pages/finance/expenses/decision";
-import { ExpenseCreate, ExpenseEdit } from "@/pages/finance/expenses/form";
-import { ExpenseListPage } from "@/pages/finance/expenses/list";
-import { ExpenseShow } from "@/pages/finance/expenses/show";
-import { InvoiceCreate, InvoiceEdit } from "@/pages/finance/invoices/form";
-import { ItemCreate, ItemEdit } from "@/pages/finance/invoices/items-form";
-import { InvoiceListPage } from "@/pages/finance/invoices/list";
-import { InvoiceShow } from "@/pages/finance/invoices/show";
-import { FinanceReports } from "@/pages/finance/reports";
 import { financeRoutes } from "@/pages/finance/routes";
-
-const denied = <AccessDenied />;
-
-// --- Nested invoice-scoped surfaces (inside the invoice detail drawer) ------
-// The line item belongs to the invoice via its scalar invoice_id FK, so the
-// create/edit forms carry the parent invoice id from the URL.
-
-function InvoiceScopedItemCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <ItemCreate presetInvoiceId={id} />;
-}
-
-function InvoiceScopedItemEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <ItemEdit presetInvoiceId={id} idParam="itemId" />;
-}
 
 // Nested children rendered inside the invoice detail drawer (2nd URL level):
 // /invoices/show/:id/edit, /invoices/show/:id/items/create and
@@ -44,29 +13,26 @@ const invoiceShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_fin_invoices.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_fin_invoices" action="edit" fallback={denied}>
-        <InvoiceEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_invoices.show.edit"),
+      })),
   },
   {
     name: "hub_fin_invoices.show.items.create",
     path: "items/create",
-    element: (
-      <CanAccess resource="hub_fin_invoice_items" action="create" fallback={denied}>
-        <InvoiceScopedItemCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_invoices.show.items.create"),
+      })),
   },
   {
     name: "hub_fin_invoices.show.items.edit",
     path: "items/edit/:itemId",
-    element: (
-      <CanAccess resource="hub_fin_invoice_items" action="edit" fallback={denied}>
-        <InvoiceScopedItemEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_invoices.show.items.edit"),
+      })),
   },
 ];
 
@@ -76,20 +42,18 @@ const expenseShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_fin_expenses.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_fin_expenses" action="edit" fallback={denied}>
-        <ExpenseEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_expenses.show.edit"),
+      })),
   },
   {
     name: "hub_fin_expenses.show.decision",
     path: "decision/:action",
-    element: (
-      <CanAccess resource="hub_fin_expenses" action="edit" fallback={denied}>
-        <ExpenseDecision />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_expenses.show.decision"),
+      })),
   },
 ];
 
@@ -100,7 +64,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "finance-dashboard",
     path: financeRoutes.dashboard,
-    element: <FinanceDashboard />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("finance-dashboard"),
+      })),
     resource: {
       meta: {
         label: "Finance",
@@ -115,7 +82,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_fin_invoices",
     path: financeRoutes.invoices,
-    element: <InvoiceListPage />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_invoices"),
+      })),
     resource: {
       meta: {
         label: "Invoices",
@@ -135,31 +105,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_fin_invoices.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_fin_invoices" action="create" fallback={denied}>
-            <InvoiceCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_invoices.create"),
+          })),
       },
       {
         name: "hub_fin_invoices.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_fin_invoices" action="edit" fallback={denied}>
-            <InvoiceEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_invoices.edit"),
+          })),
       },
       {
         name: "hub_fin_invoices.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_fin_invoices" action="show" fallback={denied}>
-            <InvoiceShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_invoices.show"),
+          })),
         children: invoiceShowChildren,
       },
     ],
@@ -167,7 +134,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_fin_expenses",
     path: financeRoutes.expenses,
-    element: <ExpenseListPage />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_fin_expenses"),
+      })),
     resource: {
       meta: {
         label: "Expenses",
@@ -187,31 +157,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_fin_expenses.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_fin_expenses" action="create" fallback={denied}>
-            <ExpenseCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_expenses.create"),
+          })),
       },
       {
         name: "hub_fin_expenses.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_fin_expenses" action="edit" fallback={denied}>
-            <ExpenseEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_expenses.edit"),
+          })),
       },
       {
         name: "hub_fin_expenses.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_fin_expenses" action="show" fallback={denied}>
-            <ExpenseShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_fin_expenses.show"),
+          })),
         children: expenseShowChildren,
       },
     ],
@@ -219,7 +186,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "finance-reports",
     path: financeRoutes.reports,
-    element: <FinanceReports />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("finance-reports"),
+      })),
     resource: {
       meta: {
         label: "Reports",
@@ -234,7 +204,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "finance-cashflow",
     path: financeRoutes.cashFlow,
-    element: <CashFlow />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("finance-cashflow"),
+      })),
     resource: {
       meta: {
         label: "Cash flow",
@@ -249,7 +222,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "finance-budget",
     path: financeRoutes.budget,
-    element: <BudgetVsActual />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("finance-budget"),
+      })),
     resource: {
       meta: {
         label: "Budget",

@@ -1,89 +1,53 @@
 import { CalendarCheck, CalendarDays, Network, Users } from "lucide-react";
-import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import {
-  DepartmentCreate,
-  DepartmentEdit,
-} from "@/pages/hr/departments/create-edit";
-import { DepartmentsLayout } from "@/pages/hr/departments/tree";
-import { DepartmentShow } from "@/pages/hr/departments/show";
-import { EmployeeCreate, EmployeeEdit } from "@/pages/hr/employees/create-edit";
-import { EmployeesLayout } from "@/pages/hr/employees/list";
-import { EmployeeShow } from "@/pages/hr/employees/show";
-import { LeaveCreate, LeaveEdit } from "@/pages/hr/leave/create-edit";
-import { LeaveLayout } from "@/pages/hr/leave/list";
-import { LeaveShow } from "@/pages/hr/leave/show";
-import { LeaveCalendarPage } from "@/pages/hr/leave-calendar";
-import { OrgChartPage } from "@/pages/hr/org-chart";
 import { hrRoutes } from "@/pages/hr/routes";
 
-const denied = <AccessDenied />;
-
-// Leave entries opened from inside an employee drawer: preset the employee
-// (read from whichever route param carries the employee id) and return to
-// that employee's detail drawer on close (contextual nav state).
-function ScopedLeaveCreate({ empParam }: { empParam: string }) {
-  const params = useParams();
-  return <LeaveCreate presetEmployeeId={params[empParam]} />;
-}
-
-// A nested leave *show* drawer (opened from a leave row inside an employee
-// drawer) can itself open an edit drawer one level deeper.
 function makeLeaveShowChildren(prefix: string): AppRouteDefinition[] {
   return [
     {
       name: `${prefix}.edit`,
       path: "edit",
-      element: (
-        <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
-          <LeaveEdit idParam="leaveId" />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent(`${prefix}.edit`),
+        })),
     },
   ];
 }
 
-// Leave sub-surfaces that live inside an employee detail drawer. `empParam` is
-// the route param carrying the employee id at this depth (`id` at top level,
-// `empId` when the employee drawer is itself nested under a department).
 function makeEmployeeLeaveChildren(
   prefix: string,
-  empParam: string
+  _empParam: string
 ): AppRouteDefinition[] {
   return [
     {
       name: `${prefix}.leave.create`,
       path: "leave/create",
-      element: (
-        <CanAccess resource="hub_hr_leave_requests" action="create" fallback={denied}>
-          <ScopedLeaveCreate empParam={empParam} />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent(`${prefix}.leave.create`),
+        })),
     },
     {
       name: `${prefix}.leave.show`,
       path: "leave/show/:leaveId",
-      element: (
-        <CanAccess resource="hub_hr_leave_requests" action="show" fallback={denied}>
-          <LeaveShow idParam="leaveId" />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent(`${prefix}.leave.show`),
+        })),
       children: makeLeaveShowChildren(`${prefix}.leave.show`),
     },
     {
       name: `${prefix}.leave.edit`,
       path: "leave/edit/:leaveId",
-      element: (
-        <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
-          <LeaveEdit idParam="leaveId" />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent(`${prefix}.leave.edit`),
+        })),
     },
   ];
 }
@@ -92,11 +56,10 @@ const employeeShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_hr_employees.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_hr_employees" action="edit" fallback={denied}>
-        <EmployeeEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_employees.show.edit"),
+      })),
   },
   ...makeEmployeeLeaveChildren("hub_hr_employees.show", "id"),
 ];
@@ -107,11 +70,10 @@ const departmentEmployeeShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_hr_departments.show.employee.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_hr_employees" action="edit" fallback={denied}>
-        <EmployeeEdit idParam="empId" />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_departments.show.employee.edit"),
+      })),
   },
   ...makeEmployeeLeaveChildren("hub_hr_departments.show.employee", "empId"),
 ];
@@ -120,20 +82,18 @@ const departmentShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_hr_departments.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_hr_departments" action="edit" fallback={denied}>
-        <DepartmentEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_departments.show.edit"),
+      })),
   },
   {
     name: "hub_hr_departments.show.employee.show",
     path: "employees/show/:empId",
-    element: (
-      <CanAccess resource="hub_hr_employees" action="show" fallback={denied}>
-        <EmployeeShow idParam="empId" />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_departments.show.employee.show"),
+      })),
     children: departmentEmployeeShowChildren,
   },
 ];
@@ -142,11 +102,10 @@ const leaveShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_hr_leave_requests.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
-        <LeaveEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_leave_requests.show.edit"),
+      })),
   },
 ];
 
@@ -154,7 +113,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_hr_employees",
     path: hrRoutes.employees,
-    element: <EmployeesLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_employees"),
+      })),
     resource: {
       meta: {
         label: "Employees",
@@ -177,31 +139,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_hr_employees.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_hr_employees" action="create" fallback={denied}>
-            <EmployeeCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_employees.create"),
+          })),
       },
       {
         name: "hub_hr_employees.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_hr_employees" action="edit" fallback={denied}>
-            <EmployeeEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_employees.edit"),
+          })),
       },
       {
         name: "hub_hr_employees.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_hr_employees" action="show" fallback={denied}>
-            <EmployeeShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_employees.show"),
+          })),
         children: employeeShowChildren,
       },
     ],
@@ -209,7 +168,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_hr_departments",
     path: hrRoutes.departments,
-    element: <DepartmentsLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_departments"),
+      })),
     resource: {
       meta: {
         label: "Departments",
@@ -231,31 +193,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_hr_departments.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_hr_departments" action="create" fallback={denied}>
-            <DepartmentCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_departments.create"),
+          })),
       },
       {
         name: "hub_hr_departments.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_hr_departments" action="edit" fallback={denied}>
-            <DepartmentEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_departments.edit"),
+          })),
       },
       {
         name: "hub_hr_departments.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_hr_departments" action="show" fallback={denied}>
-            <DepartmentShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_departments.show"),
+          })),
         children: departmentShowChildren,
       },
     ],
@@ -263,7 +222,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_hr_leave_requests",
     path: hrRoutes.leave,
-    element: <LeaveLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_hr_leave_requests"),
+      })),
     resource: {
       meta: {
         label: "Leave approvals",
@@ -285,31 +247,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_hr_leave_requests.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_hr_leave_requests" action="create" fallback={denied}>
-            <LeaveCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_leave_requests.create"),
+          })),
       },
       {
         name: "hub_hr_leave_requests.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_hr_leave_requests" action="edit" fallback={denied}>
-            <LeaveEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_leave_requests.edit"),
+          })),
       },
       {
         name: "hub_hr_leave_requests.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_hr_leave_requests" action="show" fallback={denied}>
-            <LeaveShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_hr_leave_requests.show"),
+          })),
         children: leaveShowChildren,
       },
     ],
@@ -317,7 +276,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hr-org-chart",
     path: hrRoutes.orgChart,
-    element: <OrgChartPage />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hr-org-chart"),
+      })),
     resource: {
       meta: {
         label: "Org chart",
@@ -334,7 +296,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hr-leave-calendar",
     path: hrRoutes.leaveCalendar,
-    element: <LeaveCalendarPage />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hr-leave-calendar"),
+      })),
     resource: {
       meta: {
         label: "Leave calendar",

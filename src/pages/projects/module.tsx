@@ -1,89 +1,35 @@
 import { CalendarDays, Flag, FolderKanban, ListChecks, SquareKanban } from "lucide-react";
-import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { ProjectCalendarPage } from "@/pages/projects/calendar";
-import { MilestonesLayout } from "@/pages/projects/milestones/list";
-import { MilestoneCreate, MilestoneEdit } from "@/pages/projects/milestones/form";
-import { MilestoneShow } from "@/pages/projects/milestones/show";
-import { MyTasksPage } from "@/pages/projects/my-tasks";
-import { ProjectsLayout } from "@/pages/projects/projects/list";
-import { ProjectCreate, ProjectEdit } from "@/pages/projects/projects/form";
-import { ProjectShow } from "@/pages/projects/projects/show";
 import { projectRoutes } from "@/pages/projects/routes";
-import { TaskBoardPage } from "@/pages/projects/tasks/board";
-import { ChecklistCreate, ChecklistEdit } from "@/pages/projects/tasks/checklist";
-import { TaskCreate, TaskEdit } from "@/pages/projects/tasks/form";
-import { TaskShow } from "@/pages/projects/tasks/show";
-
-const denied = <AccessDenied />;
-
-// --- Nested project-scoped surfaces (inside the project detail drawer) ------
-
-function ProjectScopedTaskCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <TaskCreate presetProjectId={id} />;
-}
-
-function ProjectScopedTaskEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <TaskEdit presetProjectId={id} idParam="taskId" />;
-}
-
-function ProjectScopedMilestoneCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <MilestoneCreate presetProjectId={id} />;
-}
-
-function ProjectScopedMilestoneEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <MilestoneEdit presetProjectId={id} idParam="msId" />;
-}
-
-// --- Nested task-scoped surfaces (inside the task detail drawer) -----------
-
-function TaskScopedChecklistCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <ChecklistCreate presetTaskId={id} />;
-}
-
-function TaskScopedChecklistEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <ChecklistEdit presetTaskId={id} />;
-}
 
 const taskShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_pj_tasks.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_pj_tasks" action="edit" fallback={denied}>
-        <TaskEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_tasks.show.edit"),
+      })),
   },
   {
     name: "hub_pj_tasks.show.checklist.create",
     path: "checklist/create",
-    element: (
-      <CanAccess resource="hub_pj_checklist" action="create" fallback={denied}>
-        <TaskScopedChecklistCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_tasks.show.checklist.create"),
+      })),
   },
   {
     name: "hub_pj_tasks.show.checklist.edit",
     path: "checklist/edit/:itemId",
-    element: (
-      <CanAccess resource="hub_pj_checklist" action="edit" fallback={denied}>
-        <TaskScopedChecklistEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_tasks.show.checklist.edit"),
+      })),
   },
 ];
 
@@ -91,11 +37,10 @@ const milestoneShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_pj_milestones.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_pj_milestones" action="edit" fallback={denied}>
-        <MilestoneEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_milestones.show.edit"),
+      })),
   },
 ];
 
@@ -103,47 +48,42 @@ const projectShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_pj_projects.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_pj_projects" action="edit" fallback={denied}>
-        <ProjectEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_projects.show.edit"),
+      })),
   },
   {
     name: "hub_pj_projects.show.tasks.create",
     path: "tasks/create",
-    element: (
-      <CanAccess resource="hub_pj_tasks" action="create" fallback={denied}>
-        <ProjectScopedTaskCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_projects.show.tasks.create"),
+      })),
   },
   {
     name: "hub_pj_projects.show.tasks.edit",
     path: "tasks/edit/:taskId",
-    element: (
-      <CanAccess resource="hub_pj_tasks" action="edit" fallback={denied}>
-        <ProjectScopedTaskEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_projects.show.tasks.edit"),
+      })),
   },
   {
     name: "hub_pj_projects.show.milestones.create",
     path: "milestones/create",
-    element: (
-      <CanAccess resource="hub_pj_milestones" action="create" fallback={denied}>
-        <ProjectScopedMilestoneCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_projects.show.milestones.create"),
+      })),
   },
   {
     name: "hub_pj_projects.show.milestones.edit",
     path: "milestones/edit/:msId",
-    element: (
-      <CanAccess resource="hub_pj_milestones" action="edit" fallback={denied}>
-        <ProjectScopedMilestoneEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_pj_projects.show.milestones.edit"),
+      })),
   },
 ];
 
@@ -152,7 +92,10 @@ export const projectsModule = {
     {
       name: "hub_pj_projects",
       path: projectRoutes.projects,
-      element: <ProjectsLayout />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_pj_projects"),
+        })),
       resource: {
         meta: {
           label: "Projects",
@@ -174,31 +117,28 @@ export const projectsModule = {
           name: "hub_pj_projects.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_pj_projects" action="create" fallback={denied}>
-              <ProjectCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_projects.create"),
+            })),
         },
         {
           name: "hub_pj_projects.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_pj_projects" action="edit" fallback={denied}>
-              <ProjectEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_projects.edit"),
+            })),
         },
         {
           name: "hub_pj_projects.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_pj_projects" action="show" fallback={denied}>
-              <ProjectShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_projects.show"),
+            })),
           children: projectShowChildren,
         },
       ],
@@ -206,11 +146,10 @@ export const projectsModule = {
     {
       name: "hub_pj_tasks",
       path: projectRoutes.tasks,
-      element: (
-        <CanAccess resource="hub_pj_tasks" action="list" fallback={denied}>
-          <TaskBoardPage />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_pj_tasks"),
+        })),
       resource: {
         meta: {
           label: "Task board",
@@ -231,31 +170,28 @@ export const projectsModule = {
           name: "hub_pj_tasks.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_pj_tasks" action="create" fallback={denied}>
-              <TaskCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_tasks.create"),
+            })),
         },
         {
           name: "hub_pj_tasks.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_pj_tasks" action="edit" fallback={denied}>
-              <TaskEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_tasks.edit"),
+            })),
         },
         {
           name: "hub_pj_tasks.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_pj_tasks" action="show" fallback={denied}>
-              <TaskShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_tasks.show"),
+            })),
           children: taskShowChildren,
         },
       ],
@@ -263,7 +199,10 @@ export const projectsModule = {
     {
       name: "hub_pj_milestones",
       path: projectRoutes.milestones,
-      element: <MilestonesLayout />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_pj_milestones"),
+        })),
       resource: {
         meta: {
           label: "Milestones",
@@ -285,31 +224,28 @@ export const projectsModule = {
           name: "hub_pj_milestones.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_pj_milestones" action="create" fallback={denied}>
-              <MilestoneCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_milestones.create"),
+            })),
         },
         {
           name: "hub_pj_milestones.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_pj_milestones" action="edit" fallback={denied}>
-              <MilestoneEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_milestones.edit"),
+            })),
         },
         {
           name: "hub_pj_milestones.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_pj_milestones" action="show" fallback={denied}>
-              <MilestoneShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_pj_milestones.show"),
+            })),
           children: milestoneShowChildren,
         },
       ],
@@ -317,7 +253,10 @@ export const projectsModule = {
     {
       name: "projects-my-tasks",
       path: projectRoutes.myTasks,
-      element: <MyTasksPage />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("projects-my-tasks"),
+        })),
       resource: {
         meta: {
           label: "My tasks",
@@ -334,7 +273,10 @@ export const projectsModule = {
     {
       name: "projects-calendar",
       path: projectRoutes.projectCalendar,
-      element: <ProjectCalendarPage />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("projects-calendar"),
+        })),
       resource: {
         meta: {
           label: "Calendar",

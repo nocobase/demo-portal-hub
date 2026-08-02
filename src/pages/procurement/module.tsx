@@ -1,38 +1,6 @@
 import { BarChart3, PackageOpen, Truck } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
 import { procurementRoutes } from "./routes";
-import { SpendAnalysisDashboard } from "./spend-analysis";
-import { PurchaseOrdersLayout } from "./purchase-orders/list";
-import {
-  PurchaseOrderCreate,
-  PurchaseOrderEdit,
-} from "./purchase-orders/create-edit";
-import { PurchaseOrderShow } from "./purchase-orders/show";
-import { PoItemCreate, PoItemEdit } from "./purchase-orders/item-form";
-import { SuppliersLayout } from "./suppliers/list";
-import { SupplierCreate, SupplierEdit } from "./suppliers/create-edit";
-import { SupplierShow } from "./suppliers/show";
-
-const denied = <AccessDenied />;
-
-// --- Supplier-scoped surfaces (nested inside the supplier detail drawer) ----
-// From a supplier's PO sub-list, a PO opens one level deeper as a nested SHOW
-// drawer under suppliers/show/:id/po/show/:poId. Its own edit / line-item
-// actions resolve against the :poId param so they keep working at this depth.
-
-function SupplierScopedPoShow() {
-  return <PurchaseOrderShow idParam="poId" />;
-}
-
-function SupplierScopedPoEdit() {
-  return <PurchaseOrderEdit idParam="poId" />;
-}
-
-function SupplierScopedPoItemCreate() {
-  return <PoItemCreate idParam="poId" />;
-}
 
 // Children rendered under a nested PO show drawer (edit + line-item CRUD),
 // keyed off the :poId param so the deeper PO surface is fully functional.
@@ -40,36 +8,36 @@ const nestedPoShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_po_suppliers.show.po.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
-        <SupplierScopedPoEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_po_suppliers.show.po.show.edit"),
+      })),
   },
   {
     name: "hub_po_suppliers.show.po.show.items.create",
     path: "items/create",
-    element: (
-      <CanAccess resource="hub_po_items" action="create" fallback={denied}>
-        <SupplierScopedPoItemCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_po_suppliers.show.po.show.items.create"),
+      })),
   },
   {
     name: "hub_po_suppliers.show.po.show.items.edit",
     path: "items/edit/:itemId",
-    element: (
-      <CanAccess resource="hub_po_items" action="edit" fallback={denied}>
-        <PoItemEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_po_suppliers.show.po.show.items.edit"),
+      })),
   },
 ];
 
 const spendAnalysisRoutes: AppRouteDefinition = {
   name: "po-spend",
   path: procurementRoutes.spendAnalysis,
-  element: <SpendAnalysisDashboard />,
+  lazy: () =>
+    import("./route-components").then((module) => ({
+      default: module.routeComponent("po-spend"),
+    })),
   resource: {
     meta: {
       label: "Spend analysis",
@@ -88,7 +56,10 @@ const spendAnalysisRoutes: AppRouteDefinition = {
 const purchaseOrderRoutes: AppRouteDefinition = {
   name: "hub_po_purchase_orders",
   path: procurementRoutes.purchaseOrders,
-  element: <PurchaseOrdersLayout />,
+  lazy: () =>
+    import("./route-components").then((module) => ({
+      default: module.routeComponent("hub_po_purchase_orders"),
+    })),
   resource: {
     meta: {
       label: "Purchase Orders",
@@ -111,58 +82,52 @@ const purchaseOrderRoutes: AppRouteDefinition = {
       name: "hub_po_purchase_orders.create",
       path: "create",
       resourceAction: "create",
-      element: (
-        <CanAccess resource="hub_po_purchase_orders" action="create" fallback={denied}>
-          <PurchaseOrderCreate />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_purchase_orders.create"),
+        })),
     },
     {
       name: "hub_po_purchase_orders.edit",
       path: "edit/:id",
       resourceAction: "edit",
-      element: (
-        <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
-          <PurchaseOrderEdit />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_purchase_orders.edit"),
+        })),
     },
     {
       name: "hub_po_purchase_orders.show",
       path: "show/:id",
       resourceAction: "show",
-      element: (
-        <CanAccess resource="hub_po_purchase_orders" action="show" fallback={denied}>
-          <PurchaseOrderShow />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_purchase_orders.show"),
+        })),
       children: [
         {
           name: "hub_po_purchase_orders.show.edit",
           path: "edit",
-          element: (
-            <CanAccess resource="hub_po_purchase_orders" action="edit" fallback={denied}>
-              <PurchaseOrderEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_po_purchase_orders.show.edit"),
+            })),
         },
         {
           name: "hub_po_purchase_orders.show.items.create",
           path: "items/create",
-          element: (
-            <CanAccess resource="hub_po_items" action="create" fallback={denied}>
-              <PoItemCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_po_purchase_orders.show.items.create"),
+            })),
         },
         {
           name: "hub_po_purchase_orders.show.items.edit",
           path: "items/edit/:itemId",
-          element: (
-            <CanAccess resource="hub_po_items" action="edit" fallback={denied}>
-              <PoItemEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_po_purchase_orders.show.items.edit"),
+            })),
         },
       ],
     },
@@ -172,7 +137,10 @@ const purchaseOrderRoutes: AppRouteDefinition = {
 const supplierRoutes: AppRouteDefinition = {
   name: "hub_po_suppliers",
   path: procurementRoutes.suppliers,
-  element: <SuppliersLayout />,
+  lazy: () =>
+    import("./route-components").then((module) => ({
+      default: module.routeComponent("hub_po_suppliers"),
+    })),
   resource: {
     meta: {
       label: "Suppliers",
@@ -194,49 +162,44 @@ const supplierRoutes: AppRouteDefinition = {
       name: "hub_po_suppliers.create",
       path: "create",
       resourceAction: "create",
-      element: (
-        <CanAccess resource="hub_po_suppliers" action="create" fallback={denied}>
-          <SupplierCreate />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_suppliers.create"),
+        })),
     },
     {
       name: "hub_po_suppliers.edit",
       path: "edit/:id",
       resourceAction: "edit",
-      element: (
-        <CanAccess resource="hub_po_suppliers" action="edit" fallback={denied}>
-          <SupplierEdit />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_suppliers.edit"),
+        })),
     },
     {
       name: "hub_po_suppliers.show",
       path: "show/:id",
       resourceAction: "show",
-      element: (
-        <CanAccess resource="hub_po_suppliers" action="show" fallback={denied}>
-          <SupplierShow />
-        </CanAccess>
-      ),
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_po_suppliers.show"),
+        })),
       children: [
         {
           name: "hub_po_suppliers.show.edit",
           path: "edit",
-          element: (
-            <CanAccess resource="hub_po_suppliers" action="edit" fallback={denied}>
-              <SupplierEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_po_suppliers.show.edit"),
+            })),
         },
         {
           name: "hub_po_suppliers.show.po.show",
           path: "po/show/:poId",
-          element: (
-            <CanAccess resource="hub_po_purchase_orders" action="show" fallback={denied}>
-              <SupplierScopedPoShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_po_suppliers.show.po.show"),
+            })),
           children: nestedPoShowChildren,
         },
       ],

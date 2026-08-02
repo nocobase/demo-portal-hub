@@ -1,6 +1,6 @@
 import { NocoBaseAIExtensionProvider } from "./global-ai-chat";
 import type { AppExtension } from "@nocobase/portal-sdk/extensions";
-import { LoadingState } from "@/components/app-shell/loading-state";
+import { defineAppRoutes } from "@nocobase/portal-sdk/routing";
 import {
   Bot,
   MessageSquare,
@@ -9,40 +9,7 @@ import {
   Sparkles,
   Wrench,
 } from "lucide-react";
-import { lazy, Suspense, type ReactNode } from "react";
-import { Outlet, Route } from "react-router";
-
-const AIChatPage = lazy(() =>
-  import("./demo").then((module) => ({ default: module.AIChatPage }))
-);
-const FloatingChatPage = lazy(() =>
-  import("./demo/floating").then((module) => ({
-    default: module.FloatingChatPage,
-  }))
-);
-const ShortcutPage = lazy(() =>
-  import("./demo/shortcut").then((module) => ({
-    default: module.ShortcutPage,
-  }))
-);
-const PageContextPage = lazy(() =>
-  import("./demo/page-context").then((module) => ({
-    default: module.PageContextPage,
-  }))
-);
-const ToolCardsPage = lazy(() =>
-  import("./demo/tool-cards").then((module) => ({
-    default: module.ToolCardsPage,
-  }))
-);
-
-function LazyDemoRoute({ children }: { children: ReactNode }) {
-  return (
-    <Suspense fallback={<LoadingState className="min-h-[320px]" />}>
-      {children}
-    </Suspense>
-  );
-}
+import "./locales";
 
 const nocobaseAIExtension: AppExtension = {
   id: "nocobase-ai",
@@ -53,6 +20,8 @@ const nocobaseAIExtension: AppExtension = {
         name: "ai-components",
         meta: {
           label: "AI Components",
+          i18nKey: "navigation.group",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <Bot />,
           acl: { type: "authenticated" },
         },
@@ -63,6 +32,8 @@ const nocobaseAIExtension: AppExtension = {
         meta: {
           parent: "ai-components",
           label: "Chat window",
+          i18nKey: "navigation.chat",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <MessageSquare />,
           description:
             "Build freely with AI while NocoBase keeps the application reliable.",
@@ -75,6 +46,8 @@ const nocobaseAIExtension: AppExtension = {
         meta: {
           parent: "ai-components",
           label: "Floating chat",
+          i18nKey: "navigation.floating",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <PanelRight />,
           acl: { type: "authenticated" },
         },
@@ -85,6 +58,8 @@ const nocobaseAIExtension: AppExtension = {
         meta: {
           parent: "ai-components",
           label: "Employee tasks",
+          i18nKey: "navigation.tasks",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <Sparkles />,
           acl: { type: "authenticated" },
         },
@@ -95,6 +70,8 @@ const nocobaseAIExtension: AppExtension = {
         meta: {
           parent: "ai-components",
           label: "Page context",
+          i18nKey: "navigation.context",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <MousePointer2 />,
           acl: { type: "authenticated" },
         },
@@ -105,55 +82,61 @@ const nocobaseAIExtension: AppExtension = {
         meta: {
           parent: "ai-components",
           label: "Tool cards",
+          i18nKey: "navigation.tools",
+          i18nOptions: { ns: "nocobase-ai" },
           icon: <Wrench />,
           acl: { type: "authenticated" },
         },
       },
     ],
-    routes: (
-      <Route key="nocobase-ai" path="ai-chat" element={<Outlet />}>
-        <Route
-          index
-          element={
-            <LazyDemoRoute>
-              <AIChatPage />
-            </LazyDemoRoute>
-          }
-        />
-        <Route
-          path="floating"
-          element={
-            <LazyDemoRoute>
-              <FloatingChatPage />
-            </LazyDemoRoute>
-          }
-        />
-        <Route
-          path="shortcut"
-          element={
-            <LazyDemoRoute>
-              <ShortcutPage />
-            </LazyDemoRoute>
-          }
-        />
-        <Route
-          path="context"
-          element={
-            <LazyDemoRoute>
-              <PageContextPage />
-            </LazyDemoRoute>
-          }
-        />
-        <Route
-          path="tools"
-          element={
-            <LazyDemoRoute>
-              <ToolCardsPage />
-            </LazyDemoRoute>
-          }
-        />
-      </Route>
-    ),
+    routes: defineAppRoutes([
+      {
+        name: "development.ai",
+        path: "ai-chat",
+        children: [
+          {
+            name: "development.ai.chat",
+            index: true,
+            lazy: () =>
+              import("./demo").then((module) => ({
+                default: module.AIChatPage,
+              })),
+          },
+          {
+            name: "development.ai.floating",
+            path: "floating",
+            lazy: () =>
+              import("./demo/floating").then((module) => ({
+                default: module.FloatingChatPage,
+              })),
+          },
+          {
+            name: "development.ai.shortcut",
+            path: "shortcut",
+            lazy: () =>
+              import("./demo/shortcut").then((module) => ({
+                default: module.ShortcutPage,
+              })),
+          },
+          {
+            name: "development.ai.context",
+            path: "context",
+            lazy: () =>
+              import("./demo/page-context").then((module) => ({
+                default: module.PageContextPage,
+              })),
+          },
+          {
+            name: "development.ai.tools",
+            path: "tools",
+            lazy: () =>
+              import("./demo/tool-cards").then((module) => ({
+                default: module.ToolCardsPage,
+              })),
+          },
+        ],
+      },
+    ]),
   },
 };
 

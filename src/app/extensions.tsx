@@ -161,12 +161,12 @@ export const configuredResources = [
   ...extensionContributions.resources,
 ];
 
-export const configuredRouteElements = [
-  ...renderAppRoutes(extensionContributions.routeDefinitions, {
+export const configuredRouteElements = renderAppRoutes(
+  extensionContributions.routeDefinitions,
+  {
     AccessGuard: RouteAccessGuard,
-  }),
-  ...extensionContributions.routeElements,
-];
+  }
+);
 
 export const extensionStandaloneRouteElements = import.meta.env.DEV
   ? [createDevelopmentRoute(appExtensions)]

@@ -1,118 +1,65 @@
 import { ClipboardList, Package, Wrench } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { AssetCreate, AssetEdit } from "./assets/create-edit";
-import { AssetsLayout } from "./assets/layout";
-import { AssetShow } from "./assets/show";
-import {
-  AssetNestedAssign,
-  AssignmentCreate,
-  AssignmentEdit,
-} from "./assignments/create-edit";
-import { AssignmentShow } from "./assignments/show";
-import { AssignmentsLayout } from "./assignments/layout";
-import {
-  AssetNestedMaintenance,
-  MaintenanceCreate,
-  MaintenanceEdit,
-} from "./maintenance/create-edit";
-import { MaintenanceShow } from "./maintenance/show";
-import { MaintenanceLayout } from "./maintenance/layout";
 import { assetsRoutes } from "./routes";
-
-const denied = <AccessDenied />;
-
-// --- Nested asset-scoped assignment surfaces --------------------------------
-// Opened from inside the asset detail drawer at
-// `/asset-registry/show/:id/assignments/show/:asgId`. The record id comes from
-// the `asgId` param so it does not collide with the parent asset `:id`.
-
-function AssetScopedAssignmentShow() {
-  return <AssignmentShow idParam="asgId" />;
-}
-
-function AssetScopedAssignmentEdit() {
-  return <AssignmentEdit idParam="asgId" />;
-}
-
-// Maintenance records opened from the asset detail drawer at
-// `/asset-registry/show/:id/maintenance/show/:mId`. `mId` avoids colliding with
-// the parent asset `:id`.
-
-function AssetScopedMaintenanceShow() {
-  return <MaintenanceShow idParam="mId" />;
-}
-
-function AssetScopedMaintenanceEdit() {
-  return <MaintenanceEdit idParam="mId" />;
-}
 
 const assetShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_as_assets.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_as_assets" action="edit" fallback={denied}>
-        <AssetEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets.show.edit"),
+      })),
   },
   {
     name: "hub_as_assets.show.assign",
     path: "assign",
-    element: (
-      <CanAccess resource="hub_as_assignments" action="create" fallback={denied}>
-        <AssetNestedAssign />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets.show.assign"),
+      })),
   },
   {
     name: "hub_as_assets.show.assignments.show",
     path: "assignments/show/:asgId",
-    element: (
-      <CanAccess resource="hub_as_assignments" action="show" fallback={denied}>
-        <AssetScopedAssignmentShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets.show.assignments.show"),
+      })),
     children: [
       {
         name: "hub_as_assets.show.assignments.show.edit",
         path: "edit",
-        element: (
-          <CanAccess resource="hub_as_assignments" action="edit" fallback={denied}>
-            <AssetScopedAssignmentEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assets.show.assignments.show.edit"),
+          })),
       },
     ],
   },
   {
     name: "hub_as_assets.show.maintenance.create",
     path: "maintenance/create",
-    element: (
-      <CanAccess resource="hub_as_maintenance" action="create" fallback={denied}>
-        <AssetNestedMaintenance />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets.show.maintenance.create"),
+      })),
   },
   {
     name: "hub_as_assets.show.maintenance.show",
     path: "maintenance/show/:mId",
-    element: (
-      <CanAccess resource="hub_as_maintenance" action="show" fallback={denied}>
-        <AssetScopedMaintenanceShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets.show.maintenance.show"),
+      })),
     children: [
       {
         name: "hub_as_assets.show.maintenance.show.edit",
         path: "edit",
-        element: (
-          <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
-            <AssetScopedMaintenanceEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assets.show.maintenance.show.edit"),
+          })),
       },
     ],
   },
@@ -122,11 +69,10 @@ const assignmentShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_as_assignments.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_as_assignments" action="edit" fallback={denied}>
-        <AssignmentEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assignments.show.edit"),
+      })),
   },
 ];
 
@@ -134,11 +80,10 @@ const maintenanceShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_as_maintenance.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
-        <MaintenanceEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_maintenance.show.edit"),
+      })),
   },
 ];
 
@@ -146,7 +91,10 @@ const routes: AppRouteDefinition[] = [
   {
     name: "hub_as_assets",
     path: assetsRoutes.assets,
-    element: <AssetsLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assets"),
+      })),
     resource: {
       meta: {
         label: "Assets",
@@ -169,31 +117,28 @@ const routes: AppRouteDefinition[] = [
         name: "hub_as_assets.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_as_assets" action="create" fallback={denied}>
-            <AssetCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assets.create"),
+          })),
       },
       {
         name: "hub_as_assets.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_as_assets" action="edit" fallback={denied}>
-            <AssetEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assets.edit"),
+          })),
       },
       {
         name: "hub_as_assets.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_as_assets" action="show" fallback={denied}>
-            <AssetShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assets.show"),
+          })),
         children: assetShowChildren,
       },
     ],
@@ -201,7 +146,10 @@ const routes: AppRouteDefinition[] = [
   {
     name: "hub_as_assignments",
     path: assetsRoutes.assignments,
-    element: <AssignmentsLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_assignments"),
+      })),
     resource: {
       meta: {
         label: "Assignments",
@@ -224,43 +172,28 @@ const routes: AppRouteDefinition[] = [
         name: "hub_as_assignments.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess
-            resource="hub_as_assignments"
-            action="create"
-            fallback={denied}
-          >
-            <AssignmentCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assignments.create"),
+          })),
       },
       {
         name: "hub_as_assignments.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess
-            resource="hub_as_assignments"
-            action="edit"
-            fallback={denied}
-          >
-            <AssignmentEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assignments.edit"),
+          })),
       },
       {
         name: "hub_as_assignments.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess
-            resource="hub_as_assignments"
-            action="show"
-            fallback={denied}
-          >
-            <AssignmentShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_assignments.show"),
+          })),
         children: assignmentShowChildren,
       },
     ],
@@ -268,7 +201,10 @@ const routes: AppRouteDefinition[] = [
   {
     name: "hub_as_maintenance",
     path: assetsRoutes.maintenance,
-    element: <MaintenanceLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_as_maintenance"),
+      })),
     resource: {
       meta: {
         label: "Maintenance",
@@ -291,31 +227,28 @@ const routes: AppRouteDefinition[] = [
         name: "hub_as_maintenance.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_as_maintenance" action="create" fallback={denied}>
-            <MaintenanceCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_maintenance.create"),
+          })),
       },
       {
         name: "hub_as_maintenance.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_as_maintenance" action="edit" fallback={denied}>
-            <MaintenanceEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_maintenance.edit"),
+          })),
       },
       {
         name: "hub_as_maintenance.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_as_maintenance" action="show" fallback={denied}>
-            <MaintenanceShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_as_maintenance.show"),
+          })),
         children: maintenanceShowChildren,
       },
     ],

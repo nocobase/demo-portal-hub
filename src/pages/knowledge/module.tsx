@@ -1,36 +1,9 @@
 import { BookOpen, FolderTree, LibraryBig, Search, Tags } from "lucide-react";
-import { useParams } from "react-router";
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { ArticleFeedback, FeedbackShow } from "@/pages/knowledge/articles/feedback";
-import { ArticleCreate, ArticleEdit } from "@/pages/knowledge/articles/form";
-import { ArticlesLayout } from "@/pages/knowledge/articles/list";
-import { ArticleShow, ArticleShowDrawer } from "@/pages/knowledge/articles/show";
-import { CategoryCreate, CategoryEdit } from "@/pages/knowledge/categories/form";
-import { CategoriesLayout } from "@/pages/knowledge/categories/list";
-import { CategoryShow } from "@/pages/knowledge/categories/show";
-import { KnowledgeOverview } from "@/pages/knowledge/dashboard";
 import { knowledgeRoutes } from "@/pages/knowledge/routes";
-import { KnowledgeSearch } from "@/pages/knowledge/search";
-import { KnowledgeTags } from "@/pages/knowledge/tags";
-
-const denied = <AccessDenied />;
-
-// --- Category-scoped article surfaces (inside the category detail drawer) ---
-
-function CategoryScopedArticleCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <ArticleCreate presetCategoryId={id} />;
-}
-
-function CategoryScopedArticleEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <ArticleEdit presetCategoryId={id} idParam="articleId" />;
-}
 
 // --- Nested children of the article reader (show) route ---------------------
 
@@ -38,30 +11,27 @@ const articleShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_kb_articles.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
-        <ArticleEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_articles.show.edit"),
+      })),
   },
   {
     name: "hub_kb_articles.show.feedback",
     path: "feedback",
-    element: (
-      <CanAccess resource="hub_kb_article_feedback" action="create" fallback={denied}>
-        <ArticleFeedback />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_articles.show.feedback"),
+      })),
   },
   {
     // One level deeper: view a single feedback entry from the reader.
     name: "hub_kb_articles.show.feedback.view",
     path: "feedback/view/:feedbackId",
-    element: (
-      <CanAccess resource="hub_kb_article_feedback" action="show" fallback={denied}>
-        <FeedbackShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_articles.show.feedback.view"),
+      })),
   },
 ];
 
@@ -71,39 +41,35 @@ const categoryShowChildren: AppRouteDefinition[] = [
   {
     name: "hub_kb_categories.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_kb_categories" action="edit" fallback={denied}>
-        <CategoryEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_categories.show.edit"),
+      })),
   },
   {
     name: "hub_kb_categories.show.articles.create",
     path: "articles/create",
-    element: (
-      <CanAccess resource="hub_kb_articles" action="create" fallback={denied}>
-        <CategoryScopedArticleCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_categories.show.articles.create"),
+      })),
   },
   {
     name: "hub_kb_categories.show.articles.edit",
     path: "articles/edit/:articleId",
-    element: (
-      <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
-        <CategoryScopedArticleEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_categories.show.articles.edit"),
+      })),
   },
   {
     // One level deeper: open an article's SHOW drawer from the category.
     name: "hub_kb_categories.show.articles.show",
     path: "articles/show/:articleId",
-    element: (
-      <CanAccess resource="hub_kb_articles" action="show" fallback={denied}>
-        <ArticleShowDrawer idParam="articleId" />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_categories.show.articles.show"),
+      })),
   },
 ];
 
@@ -111,7 +77,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "knowledge_overview",
     path: knowledgeRoutes.overview,
-    element: <KnowledgeOverview />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("knowledge_overview"),
+      })),
     resource: {
       meta: {
         label: "KB Overview",
@@ -126,7 +95,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_kb_articles",
     path: knowledgeRoutes.articles,
-    element: <ArticlesLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_articles"),
+      })),
     resource: {
       meta: {
         label: "Articles",
@@ -148,21 +120,19 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_kb_articles.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_kb_articles" action="create" fallback={denied}>
-            <ArticleCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_kb_articles.create"),
+          })),
       },
       {
         name: "hub_kb_articles.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_kb_articles" action="edit" fallback={denied}>
-            <ArticleEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_kb_articles.edit"),
+          })),
       },
     ],
   },
@@ -170,17 +140,19 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
     // Reader (show) page — a standalone route, not a nav item.
     name: "hub_kb_articles.show",
     path: knowledgeRoutes.articlesShow,
-    element: (
-      <CanAccess resource="hub_kb_articles" action="show" fallback={denied}>
-        <ArticleShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_articles.show"),
+      })),
     children: articleShowChildren,
   },
   {
     name: "kb-search",
     path: knowledgeRoutes.search,
-    element: <KnowledgeSearch />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("kb-search"),
+      })),
     resource: {
       meta: {
         label: "Search",
@@ -197,7 +169,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "kb-tags",
     path: knowledgeRoutes.tags,
-    element: <KnowledgeTags />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("kb-tags"),
+      })),
     resource: {
       meta: {
         label: "Topics",
@@ -214,7 +189,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hub_kb_categories",
     path: knowledgeRoutes.categories,
-    element: <CategoriesLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_kb_categories"),
+      })),
     resource: {
       meta: {
         label: "Categories",
@@ -236,31 +214,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: "hub_kb_categories.create",
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource="hub_kb_categories" action="create" fallback={denied}>
-            <CategoryCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_kb_categories.create"),
+          })),
       },
       {
         name: "hub_kb_categories.edit",
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource="hub_kb_categories" action="edit" fallback={denied}>
-            <CategoryEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_kb_categories.edit"),
+          })),
       },
       {
         name: "hub_kb_categories.show",
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource="hub_kb_categories" action="show" fallback={denied}>
-            <CategoryShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hub_kb_categories.show"),
+          })),
         children: categoryShowChildren,
       },
     ],

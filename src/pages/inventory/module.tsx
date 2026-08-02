@@ -5,91 +5,42 @@ import {
   PackageX,
   Warehouse,
 } from "lucide-react";
-import { useParams } from "react-router";
 
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { InventoryDashboard } from "./dashboard";
-import { InventoryReorder } from "./reorder";
 import { inventoryRoutes } from "./routes";
-import { ProductCreate, ProductEdit } from "./products/form";
-import { ProductsLayout } from "./products/list";
-import { ProductShow } from "./products/show";
-import { WarehouseCreate, WarehouseEdit } from "./warehouses/form";
-import { WarehousesLayout } from "./warehouses/list";
-import { WarehouseShow } from "./warehouses/show";
-import { StockMoveCreate, StockMoveEdit } from "./stock-moves/form";
-import { StockMovesLayout } from "./stock-moves/list";
-import { StockMoveShow } from "./stock-moves/show";
-
-const denied = <AccessDenied />;
-
-// Surfaces opened from inside a product drawer inherit the product they were
-// opened from; close-to is resolved from the route-surface navigation state.
-function ProductNestedMoveCreate() {
-  const { id } = useParams<{ id: string }>();
-  return <StockMoveCreate presetProductId={id} />;
-}
-
-function ProductNestedMoveEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <StockMoveEdit presetProductId={id} idParam="moveId" />;
-}
-
-// Nested SHOW of a stock move opened from inside a product drawer (one level
-// deeper — the URL becomes products/show/:id/moves/show/:moveId).
-function ProductNestedMoveShow() {
-  return <StockMoveShow idParam="moveId" embedded />;
-}
-
-// A product opened from inside a warehouse drawer reads its id from :productId
-// and renders read-only (its own sub-actions are not routable at this depth).
-function WarehouseNestedProductShow() {
-  return <ProductShow idParam="productId" embedded />;
-}
-
-// A stock move opened from inside a warehouse drawer.
-function WarehouseNestedMoveShow() {
-  return <StockMoveShow idParam="moveId" embedded />;
-}
 
 const productContextChildren: AppRouteDefinition[] = [
   {
     name: "hub_inv_products.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_inv_products" action="edit" fallback={denied}>
-        <ProductEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_products.show.edit"),
+      })),
   },
   {
     name: "hub_inv_products.show.moves.create",
     path: "moves/create",
-    element: (
-      <CanAccess resource="hub_inv_stock_moves" action="create" fallback={denied}>
-        <ProductNestedMoveCreate />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_products.show.moves.create"),
+      })),
   },
   {
     name: "hub_inv_products.show.moves.edit",
     path: "moves/edit/:moveId",
-    element: (
-      <CanAccess resource="hub_inv_stock_moves" action="edit" fallback={denied}>
-        <ProductNestedMoveEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_products.show.moves.edit"),
+      })),
   },
   {
     name: "hub_inv_products.show.moves.show",
     path: "moves/show/:moveId",
-    element: (
-      <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
-        <ProductNestedMoveShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_products.show.moves.show"),
+      })),
   },
 ];
 
@@ -97,29 +48,26 @@ const warehouseContextChildren: AppRouteDefinition[] = [
   {
     name: "hub_inv_warehouses.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_inv_warehouses" action="edit" fallback={denied}>
-        <WarehouseEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_warehouses.show.edit"),
+      })),
   },
   {
     name: "hub_inv_warehouses.show.products.show",
     path: "products/show/:productId",
-    element: (
-      <CanAccess resource="hub_inv_products" action="show" fallback={denied}>
-        <WarehouseNestedProductShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_warehouses.show.products.show"),
+      })),
   },
   {
     name: "hub_inv_warehouses.show.moves.show",
     path: "moves/show/:moveId",
-    element: (
-      <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
-        <WarehouseNestedMoveShow />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_warehouses.show.moves.show"),
+      })),
   },
 ];
 
@@ -127,11 +75,10 @@ const stockMoveContextChildren: AppRouteDefinition[] = [
   {
     name: "hub_inv_stock_moves.show.edit",
     path: "edit",
-    element: (
-      <CanAccess resource="hub_inv_stock_moves" action="edit" fallback={denied}>
-        <StockMoveEdit />
-      </CanAccess>
-    ),
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hub_inv_stock_moves.show.edit"),
+      })),
   },
 ];
 
@@ -143,7 +90,10 @@ export const inventoryModule = {
     {
       name: "inventory-dashboard",
       path: inventoryRoutes.dashboard,
-      element: <InventoryDashboard />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("inventory-dashboard"),
+        })),
       resource: {
         meta: {
           label: "Inventory",
@@ -160,7 +110,10 @@ export const inventoryModule = {
     {
       name: "hub_inv_products",
       path: inventoryRoutes.products,
-      element: <ProductsLayout />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_inv_products"),
+        })),
       resource: {
         meta: {
           label: "Products",
@@ -182,31 +135,28 @@ export const inventoryModule = {
           name: "hub_inv_products.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_inv_products" action="create" fallback={denied}>
-              <ProductCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_products.create"),
+            })),
         },
         {
           name: "hub_inv_products.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_inv_products" action="edit" fallback={denied}>
-              <ProductEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_products.edit"),
+            })),
         },
         {
           name: "hub_inv_products.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_inv_products" action="show" fallback={denied}>
-              <ProductShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_products.show"),
+            })),
           children: productContextChildren,
         },
       ],
@@ -214,7 +164,10 @@ export const inventoryModule = {
     {
       name: "hub_inv_warehouses",
       path: inventoryRoutes.warehouses,
-      element: <WarehousesLayout />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_inv_warehouses"),
+        })),
       resource: {
         meta: {
           label: "Warehouses",
@@ -236,31 +189,28 @@ export const inventoryModule = {
           name: "hub_inv_warehouses.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_inv_warehouses" action="create" fallback={denied}>
-              <WarehouseCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_warehouses.create"),
+            })),
         },
         {
           name: "hub_inv_warehouses.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_inv_warehouses" action="edit" fallback={denied}>
-              <WarehouseEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_warehouses.edit"),
+            })),
         },
         {
           name: "hub_inv_warehouses.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_inv_warehouses" action="show" fallback={denied}>
-              <WarehouseShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_warehouses.show"),
+            })),
           children: warehouseContextChildren,
         },
       ],
@@ -268,7 +218,10 @@ export const inventoryModule = {
     {
       name: "hub_inv_stock_moves",
       path: inventoryRoutes.stockMoves,
-      element: <StockMovesLayout />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("hub_inv_stock_moves"),
+        })),
       resource: {
         meta: {
           label: "Stock moves",
@@ -290,31 +243,28 @@ export const inventoryModule = {
           name: "hub_inv_stock_moves.create",
           path: "create",
           resourceAction: "create",
-          element: (
-            <CanAccess resource="hub_inv_stock_moves" action="create" fallback={denied}>
-              <StockMoveCreate />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_stock_moves.create"),
+            })),
         },
         {
           name: "hub_inv_stock_moves.edit",
           path: "edit/:id",
           resourceAction: "edit",
-          element: (
-            <CanAccess resource="hub_inv_stock_moves" action="edit" fallback={denied}>
-              <StockMoveEdit />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_stock_moves.edit"),
+            })),
         },
         {
           name: "hub_inv_stock_moves.show",
           path: "show/:id",
           resourceAction: "show",
-          element: (
-            <CanAccess resource="hub_inv_stock_moves" action="show" fallback={denied}>
-              <StockMoveShow />
-            </CanAccess>
-          ),
+          lazy: () =>
+            import("./route-components").then((module) => ({
+              default: module.routeComponent("hub_inv_stock_moves.show"),
+            })),
           children: stockMoveContextChildren,
         },
       ],
@@ -322,7 +272,10 @@ export const inventoryModule = {
     {
       name: "inv-reorder",
       path: inventoryRoutes.reorder,
-      element: <InventoryReorder />,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("inv-reorder"),
+        })),
       resource: {
         meta: {
           label: "Reorder",

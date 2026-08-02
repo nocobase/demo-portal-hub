@@ -1,38 +1,22 @@
 import { Gauge, HelpCircle, LifeBuoy, ShieldCheck } from "lucide-react";
-import { useParams } from "react-router";
 
 import {
   defineAppRoutes,
   type AppRouteDefinition,
 } from "@nocobase/portal-sdk/routing";
-import { AccessDenied } from "@/components/access-control/access-denied";
-import { CanAccess } from "@/components/access-control/can-access";
-import { HelpdeskDashboard } from "./dashboard";
-import { FaqCreate, FaqEdit, FaqPage } from "./faq";
 import { helpdeskRoutes } from "./routes";
-import { SlaPolicyCreate, SlaPoliciesLayout, SlaPolicyShow } from "./sla-policies";
-import { TicketCreate, TicketEdit } from "./tickets/create-edit";
-import { TicketsLayout } from "./tickets/list";
-import { ReplyEdit } from "./tickets/replies";
-import { TicketShow } from "./tickets/show";
-import { TicketStatusChange } from "./tickets/status-change";
 
 const RESOURCE = "hub_hd_tickets";
 const REPLIES = "hub_hd_replies";
-const denied = <AccessDenied />;
-
-// --- Nested ticket-scoped surfaces (inside the ticket detail drawer) -------
-
-function TicketScopedReplyEdit() {
-  const { id } = useParams<{ id: string }>();
-  return <ReplyEdit presetTicketId={id} />;
-}
 
 const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "helpdesk-dashboard",
     path: helpdeskRoutes.dashboard,
-    element: <HelpdeskDashboard />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("helpdesk-dashboard"),
+      })),
     resource: {
       meta: {
         label: "Workload",
@@ -49,7 +33,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: RESOURCE,
     path: helpdeskRoutes.tickets,
-    element: <TicketsLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent(RESOURCE),
+      })),
     resource: {
       meta: {
         label: "Helpdesk",
@@ -71,58 +58,52 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         name: `${RESOURCE}.create`,
         path: "create",
         resourceAction: "create",
-        element: (
-          <CanAccess resource={RESOURCE} action="create" fallback={denied}>
-            <TicketCreate />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent(`${RESOURCE}.create`),
+          })),
       },
       {
         name: `${RESOURCE}.edit`,
         path: "edit/:id",
         resourceAction: "edit",
-        element: (
-          <CanAccess resource={RESOURCE} action="edit" fallback={denied}>
-            <TicketEdit />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent(`${RESOURCE}.edit`),
+          })),
       },
       {
         name: `${RESOURCE}.show`,
         path: "show/:id",
         resourceAction: "show",
-        element: (
-          <CanAccess resource={RESOURCE} action="show" fallback={denied}>
-            <TicketShow />
-          </CanAccess>
-        ),
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent(`${RESOURCE}.show`),
+          })),
         children: [
           {
             name: `${RESOURCE}.show.edit`,
             path: "edit",
-            element: (
-              <CanAccess resource={RESOURCE} action="edit" fallback={denied}>
-                <TicketEdit returnTo="show" />
-              </CanAccess>
-            ),
+            lazy: () =>
+              import("./route-components").then((module) => ({
+                default: module.routeComponent(`${RESOURCE}.show.edit`),
+              })),
           },
           {
             name: `${RESOURCE}.show.status`,
             path: "status",
-            element: (
-              <CanAccess resource={RESOURCE} action="edit" fallback={denied}>
-                <TicketStatusChange />
-              </CanAccess>
-            ),
+            lazy: () =>
+              import("./route-components").then((module) => ({
+                default: module.routeComponent(`${RESOURCE}.show.status`),
+              })),
           },
           {
             name: `${RESOURCE}.show.replies.edit`,
             path: "replies/edit/:replyId",
-            element: (
-              <CanAccess resource={REPLIES} action="edit" fallback={denied}>
-                <TicketScopedReplyEdit />
-              </CanAccess>
-            ),
+            lazy: () =>
+              import("./route-components").then((module) => ({
+                default: module.routeComponent(`${RESOURCE}.show.replies.edit`),
+              })),
           },
         ],
       },
@@ -131,7 +112,10 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
   {
     name: "hd-sla",
     path: helpdeskRoutes.slaPolicies,
-    element: <SlaPoliciesLayout />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hd-sla"),
+      })),
     resource: {
       meta: {
         label: "SLA policies",
@@ -148,19 +132,28 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
       {
         name: "hd-sla.create",
         path: "create",
-        element: <SlaPolicyCreate />,
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hd-sla.create"),
+          })),
       },
       {
         name: "hd-sla.show",
         path: "show/:id",
-        element: <SlaPolicyShow />,
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hd-sla.show"),
+          })),
       },
     ],
   },
   {
     name: "hd-faq",
     path: helpdeskRoutes.faq,
-    element: <FaqPage />,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hd-faq"),
+      })),
     resource: {
       meta: {
         label: "FAQ",
@@ -177,12 +170,18 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
       {
         name: "hd-faq.create",
         path: "create",
-        element: <FaqCreate />,
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hd-faq.create"),
+          })),
       },
       {
         name: "hd-faq.edit",
         path: "edit/:id",
-        element: <FaqEdit />,
+        lazy: () =>
+          import("./route-components").then((module) => ({
+            default: module.routeComponent("hd-faq.edit"),
+          })),
       },
     ],
   },
