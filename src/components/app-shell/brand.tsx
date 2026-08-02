@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-const APP_NAME = "Enterprise Hub";
+const APP_NAME = "All in one";
 // Base-path aware (Vite injects BASE_URL = the portal base, e.g. /x/hub/).
 const LOGO = `${import.meta.env.BASE_URL}logo-mark.png`;
 const LOGO_DARK = `${import.meta.env.BASE_URL}logo-mark-dark.png`;
