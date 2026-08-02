@@ -17,12 +17,12 @@ import {
   formatCurrency,
   formatNumber,
   labelFor,
-  signedQty,
 } from "./constants";
 import { useChartTheme } from "@/pages/home/theme";
 import { inventoryRoutes } from "./routes";
 import { EnumBadge, hexA, useLocale } from "./shared";
 import type { ProductRecord, StockMoveRecord } from "./types";
+import { useOnHandBy } from "./aggregates";
 
 const WEEKS_BACK = 8;
 
@@ -38,24 +38,31 @@ export function InventoryDashboard() {
     errorNotification: false,
     queryOptions: { retry: false },
   });
+  // On-hand totals are summed by the server, so the dashboard no longer pulls
+  // the whole stock-move history to add up quantities in the browser.
+  const { totals: onHand, isLoading: onHandLoading } =
+    useOnHandBy("product_id");
+
+  // The trend chart is the one thing that still needs individual moves, and
+  // only inside its own window — so the fetch is bounded to those weeks
+  // instead of growing with the collection.
+  const trendSince = useMemo(() => {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - WEEKS_BACK * 7);
+    return cutoff.toISOString();
+  }, []);
+
   const moves = useList<StockMoveRecord>({
     resource: "hub_inv_stock_moves",
-    pagination: { mode: "server", currentPage: 1, pageSize: 2000 },
+    pagination: { mode: "server", currentPage: 1, pageSize: 500 },
+    filters: [{ field: "moved_at", operator: "gte", value: trendSince }],
+    sorters: [{ field: "moved_at", order: "desc" }],
     errorNotification: false,
     queryOptions: { retry: false },
   });
 
-  const loading = products.query.isLoading || moves.query.isLoading;
-
-  const onHand = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const move of moves.result.data) {
-      if (move.product_id === null || move.product_id === undefined) continue;
-      const key = String(move.product_id);
-      map.set(key, (map.get(key) ?? 0) + signedQty(move.type, move.qty));
-    }
-    return map;
-  }, [moves.result.data]);
+  const loading =
+    products.query.isLoading || moves.query.isLoading || onHandLoading;
 
   const enriched = useMemo(
     () =>

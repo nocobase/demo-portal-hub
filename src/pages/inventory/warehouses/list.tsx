@@ -1,4 +1,4 @@
-import { useList, useTranslate } from "@refinedev/core";
+import { useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Pencil, Trash2 } from "lucide-react";
@@ -12,9 +12,9 @@ import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
-import { signedQty } from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
-import type { StockMoveRecord, WarehouseRecord } from "../types";
+import type { WarehouseRecord } from "../types";
+import { useOnHandBy } from "../aggregates";
 
 export function WarehousesLayout() {
   return (
@@ -32,23 +32,9 @@ function WarehouseList() {
   const translate = useTranslate();
   const openChild = useOpenContextualChild();
 
-  // Units currently held per warehouse, summed across all products.
-  const { result: moves } = useList<StockMoveRecord>({
-    resource: "hub_inv_stock_moves",
-    pagination: { mode: "server", currentPage: 1, pageSize: 1000 },
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
-  const unitsByWarehouse = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const move of moves.data) {
-      if (move.warehouse_id === null || move.warehouse_id === undefined)
-        continue;
-      const key = String(move.warehouse_id);
-      map.set(key, (map.get(key) ?? 0) + signedQty(move.type, move.qty));
-    }
-    return map;
-  }, [moves.data]);
+  // Units currently held per warehouse, summed across all products by the
+  // server rather than by walking the whole stock-move history here.
+  const { totals: unitsByWarehouse } = useOnHandBy("warehouse_id");
 
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<WarehouseRecord>();

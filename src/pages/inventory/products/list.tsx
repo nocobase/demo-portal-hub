@@ -1,4 +1,4 @@
-import { useList, useTranslate } from "@refinedev/core";
+import { useTranslate } from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
 import { Eye, Pencil, Trash2 } from "lucide-react";
@@ -21,11 +21,11 @@ import {
   PRODUCT_STATUSES,
   formatCurrency,
   labelFor,
-  signedQty,
 } from "../constants";
 import { EnumBadge, useLocale } from "../shared";
 import { useOpenContextualChild } from "../route-surfaces";
-import type { ProductRecord, StockMoveRecord } from "../types";
+import type { ProductRecord } from "../types";
+import { useOnHandBy } from "../aggregates";
 
 export function ProductsLayout() {
   return (
@@ -39,23 +39,9 @@ export function ProductsLayout() {
   );
 }
 
-/** Aggregate on-hand quantity per product from every stock move. */
+/** On-hand quantity per product, summed on the server. */
 export function useOnHandByProduct() {
-  const { result } = useList<StockMoveRecord>({
-    resource: "hub_inv_stock_moves",
-    pagination: { mode: "server", currentPage: 1, pageSize: 1000 },
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
-  return useMemo(() => {
-    const map = new Map<string, number>();
-    for (const move of result.data) {
-      if (move.product_id === null || move.product_id === undefined) continue;
-      const key = String(move.product_id);
-      map.set(key, (map.get(key) ?? 0) + signedQty(move.type, move.qty));
-    }
-    return map;
-  }, [result.data]);
+  return useOnHandBy("product_id").totals;
 }
 
 function ProductList() {
