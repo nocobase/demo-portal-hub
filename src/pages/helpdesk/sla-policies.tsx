@@ -196,8 +196,30 @@ type SlaFormValues = {
 
 export function SlaPolicyCreate() {
   const translate = useTranslate();
-  const close = useRouteSurfaceClose();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
+  return (
+    <>
+      <RouteDrawer
+        title={translate("helpdesk.sla.create.title", { ns: "starter" }, "New SLA policy")}
+        description={translate(
+          "helpdesk.sla.create.description",
+          { ns: "starter" },
+          "Define response and resolution targets for a priority level."
+        )}
+        closeLabel={translate("buttons.close", "Close")}
+        closeTo={helpdeskRoutes.slaPolicies}
+        beforeClose={beforeClose}
+      >
+        <SlaPolicyCreateForm />
+      </RouteDrawer>
+      {confirmation}
+    </>
+  );
+}
+
+function SlaPolicyCreateForm() {
+  const translate = useTranslate();
+  const close = useRouteSurfaceClose();
   const {
     refineCore: { onFinish },
     register,
@@ -219,87 +241,72 @@ export function SlaPolicyCreate() {
   });
 
   return (
-    <>
-      <RouteDrawer
-        title={translate("helpdesk.sla.create.title", { ns: "starter" }, "New SLA policy")}
-        description={translate(
-          "helpdesk.sla.create.description",
-          { ns: "starter" },
-          "Define response and resolution targets for a priority level."
-        )}
-        closeLabel={translate("buttons.close", "Close")}
-        closeTo={helpdeskRoutes.slaPolicies}
-        beforeClose={beforeClose}
-      >
-        <form
-          onSubmit={handleSubmit((values) =>
-            onFinish({
-              name: values.name,
-              priority: values.priority,
-              response_mins: Number(values.response_mins),
-              resolve_mins: Number(values.resolve_mins),
-            })
-          )}
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
-            <div className="space-y-2">
-              <Label htmlFor="sla-new-name">
-                {translate("helpdesk.sla.fields.name", { ns: "starter" }, "Policy name")}
-              </Label>
-              <Input id="sla-new-name" {...register("name", { required: true })} autoFocus />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sla-new-priority">
-                {translate("helpdesk.sla.fields.priority", { ns: "starter" }, "Priority")}
-              </Label>
-              <NativeSelect id="sla-new-priority" {...register("priority", { required: true })}>
-                {TICKET_PRIORITIES.map((option) => (
-                  <NativeSelectOption key={option.value} value={option.value}>
-                    {labelFor(TICKET_PRIORITIES, option.value, translate)}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="sla-new-response">
-                  {translate("helpdesk.sla.fields.responseMins", { ns: "starter" }, "Response target (minutes)")}
-                </Label>
-                <Input
-                  id="sla-new-response"
-                  type="number"
-                  min={1}
-                  {...register("response_mins", { required: true, valueAsNumber: true })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sla-new-resolve">
-                  {translate("helpdesk.sla.fields.resolveMins", { ns: "starter" }, "Resolve target (minutes)")}
-                </Label>
-                <Input
-                  id="sla-new-resolve"
-                  type="number"
-                  min={1}
-                  {...register("resolve_mins", { required: true, valueAsNumber: true })}
-                />
-              </div>
-            </div>
+    <form
+      onSubmit={handleSubmit((values) =>
+        onFinish({
+          name: values.name,
+          priority: values.priority,
+          response_mins: Number(values.response_mins),
+          resolve_mins: Number(values.resolve_mins),
+        })
+      )}
+      className="flex min-h-0 flex-1 flex-col"
+    >
+      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+        <div className="space-y-2">
+          <Label htmlFor="sla-new-name">
+            {translate("helpdesk.sla.fields.name", { ns: "starter" }, "Policy name")}
+          </Label>
+          <Input id="sla-new-name" {...register("name", { required: true })} autoFocus />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sla-new-priority">
+            {translate("helpdesk.sla.fields.priority", { ns: "starter" }, "Priority")}
+          </Label>
+          <NativeSelect id="sla-new-priority" {...register("priority", { required: true })}>
+            {TICKET_PRIORITIES.map((option) => (
+              <NativeSelectOption key={option.value} value={option.value}>
+                {labelFor(TICKET_PRIORITIES, option.value, translate)}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="sla-new-response">
+              {translate("helpdesk.sla.fields.responseMins", { ns: "starter" }, "Response target (minutes)")}
+            </Label>
+            <Input
+              id="sla-new-response"
+              type="number"
+              min={1}
+              {...register("response_mins", { required: true, valueAsNumber: true })}
+            />
           </div>
-          <RouteDrawerFooter className="flex-row justify-end">
-            <Button type="button" variant="outline" onClick={() => close()}>
-              {translate("buttons.cancel", "Cancel")}
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting
-                ? translate("helpdesk.sla.create.submitting", { ns: "starter" }, "Creating...")
-                : translate("helpdesk.sla.create.submit", { ns: "starter" }, "Create policy")}
-            </Button>
-          </RouteDrawerFooter>
-        </form>
-      </RouteDrawer>
-      {confirmation}
-    </>
+          <div className="space-y-2">
+            <Label htmlFor="sla-new-resolve">
+              {translate("helpdesk.sla.fields.resolveMins", { ns: "starter" }, "Resolve target (minutes)")}
+            </Label>
+            <Input
+              id="sla-new-resolve"
+              type="number"
+              min={1}
+              {...register("resolve_mins", { required: true, valueAsNumber: true })}
+            />
+          </div>
+        </div>
+      </div>
+      <RouteDrawerFooter className="flex-row justify-end">
+        <Button type="button" variant="outline" onClick={() => close()}>
+          {translate("buttons.cancel", "Cancel")}
+        </Button>
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting
+            ? translate("helpdesk.sla.create.submitting", { ns: "starter" }, "Creating...")
+            : translate("helpdesk.sla.create.submit", { ns: "starter" }, "Create policy")}
+        </Button>
+      </RouteDrawerFooter>
+    </form>
   );
 }
 

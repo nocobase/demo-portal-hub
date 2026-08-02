@@ -302,8 +302,30 @@ function FaqFormFields({
 
 export function FaqCreate() {
   const translate = useTranslate();
-  const close = useRouteSurfaceClose();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
+  return (
+    <>
+      <RouteDrawer
+        title={translate("helpdesk.faq.create.title", { ns: "starter" }, "New question")}
+        description={translate(
+          "helpdesk.faq.create.description",
+          { ns: "starter" },
+          "Add a self-service answer to the knowledge base."
+        )}
+        closeLabel={translate("buttons.close", "Close")}
+        closeTo={helpdeskRoutes.faq}
+        beforeClose={beforeClose}
+      >
+        <FaqCreateForm />
+      </RouteDrawer>
+      {confirmation}
+    </>
+  );
+}
+
+function FaqCreateForm() {
+  const translate = useTranslate();
+  const close = useRouteSurfaceClose();
   const form = useForm<FaqRecord, HttpError, FaqFormValues>({
     refineCoreProps: {
       resource: RESOURCE,
@@ -318,49 +340,56 @@ export function FaqCreate() {
   } = form;
 
   return (
-    <>
-      <RouteDrawer
-        title={translate("helpdesk.faq.create.title", { ns: "starter" }, "New question")}
-        description={translate(
-          "helpdesk.faq.create.description",
-          { ns: "starter" },
-          "Add a self-service answer to the knowledge base."
-        )}
-        closeLabel={translate("buttons.close", "Close")}
-        closeTo={helpdeskRoutes.faq}
-        beforeClose={beforeClose}
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((values) => onFinish(values))}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((values) => onFinish(values))}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-              <FaqFormFields form={form} />
-            </div>
-            <RouteDrawerFooter className="flex-row justify-end">
-              <Button type="button" variant="outline" onClick={() => close()}>
-                {translate("buttons.cancel", "Cancel")}
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? translate("helpdesk.faq.create.submitting", { ns: "starter" }, "Creating...")
-                  : translate("helpdesk.faq.create.submit", { ns: "starter" }, "Create question")}
-              </Button>
-            </RouteDrawerFooter>
-          </form>
-        </Form>
-      </RouteDrawer>
-      {confirmation}
-    </>
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <FaqFormFields form={form} />
+        </div>
+        <RouteDrawerFooter className="flex-row justify-end">
+          <Button type="button" variant="outline" onClick={() => close()}>
+            {translate("buttons.cancel", "Cancel")}
+          </Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting
+              ? translate("helpdesk.faq.create.submitting", { ns: "starter" }, "Creating...")
+              : translate("helpdesk.faq.create.submit", { ns: "starter" }, "Create question")}
+          </Button>
+        </RouteDrawerFooter>
+      </form>
+    </Form>
   );
 }
 
 export function FaqEdit() {
   const translate = useTranslate();
   const { id } = useParams<{ id: string }>();
-  const close = useRouteSurfaceClose();
   const { beforeClose, confirmation } = useRefineUnsavedChangesGuard();
+  return (
+    <>
+      <RouteDrawer
+        title={translate("helpdesk.faq.edit.title", { ns: "starter" }, "Edit question")}
+        description={translate(
+          "helpdesk.faq.edit.description",
+          { ns: "starter" },
+          "Update the question, answer or category."
+        )}
+        closeLabel={translate("buttons.close", "Close")}
+        closeTo={helpdeskRoutes.faq}
+        beforeClose={beforeClose}
+      >
+        <FaqEditForm id={id} />
+      </RouteDrawer>
+      {confirmation}
+    </>
+  );
+}
+
+function FaqEditForm({ id }: { id?: string }) {
+  const translate = useTranslate();
+  const close = useRouteSurfaceClose();
   const form = useForm<FaqRecord, HttpError, FaqFormValues>({
     refineCoreProps: {
       resource: RESOURCE,
@@ -387,40 +416,25 @@ export function FaqEdit() {
   }, [record, form]);
 
   return (
-    <>
-      <RouteDrawer
-        title={translate("helpdesk.faq.edit.title", { ns: "starter" }, "Edit question")}
-        description={translate(
-          "helpdesk.faq.edit.description",
-          { ns: "starter" },
-          "Update the question, answer or category."
-        )}
-        closeLabel={translate("buttons.close", "Close")}
-        closeTo={helpdeskRoutes.faq}
-        beforeClose={beforeClose}
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit((values) => onFinish(values))}
+        className="flex min-h-0 flex-1 flex-col"
       >
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit((values) => onFinish(values))}
-            className="flex min-h-0 flex-1 flex-col"
-          >
-            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-              <FaqFormFields form={form} />
-            </div>
-            <RouteDrawerFooter className="flex-row justify-end">
-              <Button type="button" variant="outline" onClick={() => close()}>
-                {translate("buttons.cancel", "Cancel")}
-              </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting
-                  ? translate("helpdesk.faq.edit.submitting", { ns: "starter" }, "Saving...")
-                  : translate("helpdesk.faq.edit.submit", { ns: "starter" }, "Save changes")}
-              </Button>
-            </RouteDrawerFooter>
-          </form>
-        </Form>
-      </RouteDrawer>
-      {confirmation}
-    </>
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <FaqFormFields form={form} />
+        </div>
+        <RouteDrawerFooter className="flex-row justify-end">
+          <Button type="button" variant="outline" onClick={() => close()}>
+            {translate("buttons.cancel", "Cancel")}
+          </Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting
+              ? translate("helpdesk.faq.edit.submitting", { ns: "starter" }, "Saving...")
+              : translate("helpdesk.faq.edit.submit", { ns: "starter" }, "Save changes")}
+          </Button>
+        </RouteDrawerFooter>
+      </form>
+    </Form>
   );
 }
