@@ -95,7 +95,7 @@ export const homeLocale = {
     "buildStory.title": "Built by AI agents",
     "buildStory.badge": "100% agent-built",
     "buildStory.description":
-      "This portal was designed and coded end-to-end by AI agents — no hand-written boilerplate. It's an open demo: download it and keep customizing it with your own coding agent.",
+      "Puts sales, projects, HR, inventory, procurement, finance, support, assets and a knowledge base in one back office, so the whole company runs from a single place. This whole system was designed and built end-to-end by an AI coding agent. You can connect your own coding agent and keep developing it.",
     "buildStory.stat.time": "Effective build",
     "buildStory.unit.hour": "h",
     "buildStory.unit.min": " min",
@@ -213,7 +213,7 @@ export const homeLocale = {
     "buildStory.title": "由 AI Agent 搭建",
     "buildStory.badge": "100% Agent 构建",
     "buildStory.description":
-      "这个门户从设计到编码全部由 AI agent 完成,没有手写样板代码。它是一个开放 demo:下载后,用你自己的编码 agent 继续定制。",
+      "把销售、项目、人事、库存、采购、财务、客服、资产和知识库放进同一个后台,一个入口就能看到全公司在忙什么。整套系统从设计到实现,都由 AI coding agent 完成。你可以接入你的 Coding Agent,继续开发它。",
     "buildStory.stat.time": "有效搭建",
     "buildStory.unit.hour": " 小时",
     "buildStory.unit.min": " 分钟",
