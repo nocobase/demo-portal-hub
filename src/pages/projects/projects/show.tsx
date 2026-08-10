@@ -1,7 +1,17 @@
 import { useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
 import ReactECharts from "echarts-for-react";
-import { CheckCircle2, Circle, Flag, Pencil, Plus, Trash2 } from "lucide-react";
-import { useMemo } from "react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Circle,
+  Flag,
+  Link2,
+  Pencil,
+  Plus,
+  Printer,
+  Trash2,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { DeleteButton } from "@/components/resources/buttons/delete";
@@ -34,11 +44,13 @@ import {
   SimpleTable,
   useLocale,
 } from "../shared";
+import { useProjectRollups } from "./list";
 import type {
   MilestoneRecord,
   ProjectRecord,
   TaskRecord,
 } from "../types";
+import { milestoneTransitionValues } from "../transitions";
 
 export function ProjectShow() {
   const locale = useLocale();
@@ -47,6 +59,7 @@ export function ProjectShow() {
   const closeTo = useContextualCloseTo();
   const { id } = useParams<{ id: string }>();
   const nested = useOutlet();
+  const [copied, setCopied] = useState(false);
   const { result: record, query } = useShow<ProjectRecord>({
     resource: "hub_pj_projects",
     id,
@@ -76,15 +89,38 @@ export function ProjectShow() {
       nested={nested}
       actions={
         record ? (
-          <EditButton
-            resource="hub_pj_projects"
-            recordItemId={record.id}
-            variant="outline"
-            size="icon-sm"
-            onClick={() => openChild("edit")}
-          >
-            <Pencil />
-          </EditButton>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={translate("projects.common.copyLink", { ns: "starter" }, "Copy link")}
+              onClick={() => {
+                if (typeof window === "undefined") return;
+                void navigator.clipboard?.writeText(window.location.href);
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1500);
+              }}
+            >
+              <Link2 className={cn("size-4", copied && "text-emerald-600")} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={translate("projects.common.print", { ns: "starter" }, "Print")}
+              onClick={() => window.print()}
+            >
+              <Printer className="size-4" />
+            </Button>
+            <EditButton
+              resource="hub_pj_projects"
+              recordItemId={record.id}
+              variant="outline"
+              size="icon-sm"
+              onClick={() => openChild("edit")}
+            >
+              <Pencil />
+            </EditButton>
+          </div>
         ) : null
       }
     >
@@ -139,10 +175,18 @@ export function ProjectShow() {
                 ],
               ]}
             />
+            {record ? (
+              <>
+                <Separator />
+                <ProjectHealthPanel project={record} />
+              </>
+            ) : null}
             {id ? (
               <>
                 <Separator />
                 <ProjectProgress projectId={id} />
+                <Separator />
+                <ProjectRisks projectId={id} locale={locale} />
                 <Separator />
                 <TasksSection projectId={id} locale={locale} />
                 <Separator />
@@ -153,6 +197,204 @@ export function ProjectShow() {
         )}
       </div>
     </RouteDrawer>
+  );
+}
+
+
+/**
+ * Schedule-versus-delivery read-out: the same health signal the portfolio list
+ * shows, expanded so a reviewer can see why a project is flagged.
+ */
+function ProjectHealthPanel({ project }: { project: ProjectRecord }) {
+  const translate = useTranslate();
+  const { rollupFor } = useProjectRollups();
+  const rollup = rollupFor(project);
+
+  const labels: Record<string, string> = {
+    on_track: translate("projects.health.on_track", { ns: "starter" }, "On track"),
+    at_risk: translate("projects.health.at_risk", { ns: "starter" }, "At risk"),
+    off_track: translate("projects.health.off_track", { ns: "starter" }, "Off track"),
+    done: translate("projects.health.done", { ns: "starter" }, "Delivered"),
+  };
+  const tone: Record<string, string> = {
+    on_track: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+    at_risk: "bg-amber-500/15 text-amber-700 dark:text-amber-300",
+    off_track: "bg-red-500/15 text-red-700 dark:text-red-300",
+    done: "bg-slate-500/15 text-slate-700 dark:text-slate-300",
+  };
+
+  return (
+    <DrawerSection
+      title={translate("projects.projects.show.health", { ns: "starter" }, "Health")}
+      action={
+        <span
+          className={cn(
+            "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+            tone[rollup.health]
+          )}
+        >
+          {labels[rollup.health]}
+        </span>
+      }
+    >
+      <div className="space-y-3">
+        <Bar
+          label={translate(
+            "projects.projects.show.delivered",
+            { ns: "starter" },
+            "Work delivered"
+          )}
+          value={rollup.progress}
+          className="bg-emerald-500"
+        />
+        <Bar
+          label={translate(
+            "projects.projects.show.scheduleUsed",
+            { ns: "starter" },
+            "Schedule used"
+          )}
+          value={rollup.elapsed}
+          className="bg-blue-500"
+        />
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <Metric
+            value={rollup.overdueTasks}
+            label={translate(
+              "projects.projects.show.overdueTasks",
+              { ns: "starter" },
+              "Overdue tasks"
+            )}
+            danger={rollup.overdueTasks > 0}
+          />
+          <Metric
+            value={rollup.tasks - rollup.doneTasks}
+            label={translate(
+              "projects.projects.show.openTasks",
+              { ns: "starter" },
+              "Open tasks"
+            )}
+          />
+          <Metric
+            value={rollup.milestones - rollup.doneMilestones}
+            label={translate(
+              "projects.projects.show.openMilestones",
+              { ns: "starter" },
+              "Open milestones"
+            )}
+          />
+        </div>
+      </div>
+    </DrawerSection>
+  );
+}
+
+function Bar({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: number;
+  className: string;
+}) {
+  return (
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-medium tabular-nums">{value}%</span>
+      </div>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn("h-full rounded-full transition-all", className)}
+          style={{ width: `${Math.min(100, value)}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function Metric({
+  value,
+  label,
+  danger,
+}: {
+  value: number;
+  label: string;
+  danger?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border p-2.5">
+      <p
+        className={cn(
+          "text-xl font-semibold tabular-nums",
+          danger && "text-red-600 dark:text-red-400"
+        )}
+      >
+        {value}
+      </p>
+      <p className="text-[11px] text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
+/** The overdue tasks that drive the health flag, listed so they can be actioned. */
+function ProjectRisks({
+  projectId,
+  locale,
+}: {
+  projectId: string;
+  locale: string;
+}) {
+  const translate = useTranslate();
+  const openChild = useOpenContextualChild();
+  const today = todayIso();
+  const { result } = useList<TaskRecord>({
+    resource: "hub_pj_tasks",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "due_date", order: "asc" }],
+    filters: [
+      { field: "hub_pj_task_project_id", operator: "eq", value: projectId },
+      { field: "due_date", operator: "lt", value: today },
+    ],
+    meta: { appends: ["assignee"] },
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const overdue = result.data.filter((task) => task.status !== "done");
+  if (overdue.length === 0) return null;
+
+  return (
+    <DrawerSection
+      title={translate("projects.projects.show.risks", { ns: "starter" }, "Risks")}
+      action={
+        <span className="flex items-center gap-1.5 text-xs font-medium text-red-600 dark:text-red-400">
+          <AlertTriangle className="size-3.5" />
+          {translate(
+            "projects.projects.show.riskCount",
+            { ns: "starter", count: overdue.length },
+            `${overdue.length} overdue`
+          )}
+        </span>
+      }
+    >
+      <ul className="space-y-1">
+        {overdue.slice(0, 6).map((task) => (
+          <li key={String(task.id)}>
+            <button
+              type="button"
+              onClick={() => openChild(`tasks/edit/${task.id}`)}
+              className="flex w-full items-center justify-between gap-2 rounded-md border border-red-500/25 bg-red-500/5 px-3 py-2 text-left text-sm hover:border-red-500/50"
+            >
+              <span className="truncate">{task.title}</span>
+              <span className="shrink-0 text-xs font-medium text-red-600 tabular-nums dark:text-red-400">
+                {formatDate(task.due_date, locale)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </DrawerSection>
   );
 }
 
@@ -521,7 +763,7 @@ function MilestonesSection({
                           updateMilestone({
                             resource: "hub_pj_milestones",
                             id: milestone.id,
-                            values: { done: true },
+                            values: milestoneTransitionValues(true, milestone),
                           })
                         }
                       >

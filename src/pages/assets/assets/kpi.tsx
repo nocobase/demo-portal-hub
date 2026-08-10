@@ -2,7 +2,6 @@ import { useTranslate } from "@refinedev/core";
 import ReactECharts from "echarts-for-react";
 import { Boxes, PackageCheck, ShieldCheck, Wrench } from "lucide-react";
 import { useMemo } from "react";
-import type { ReactNode } from "react";
 import {
   Card,
   CardContent,
@@ -10,30 +9,34 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/pages/home/theme";
-import { ASSET_CATEGORIES, ASSET_STATUSES, formatCurrency, labelFor } from "../constants";
+import {
+  ASSET_CATEGORIES,
+  ASSET_STATUSES,
+  formatCurrency,
+  labelFor,
+} from "../constants";
+import { KpiStrip, type KpiTile } from "@/lib/table-kit";
 import type { AssetRecord } from "../types";
 
-type Stat = {
-  label: string;
-  value: string;
-  hint: string;
-  icon: typeof Boxes;
-  tone: string;
+type AssetsKpiProps = {
+  assets: AssetRecord[];
+  locale: string;
+  /** Currently applied status filter, so the matching tile reads as selected. */
+  activeStatus?: string;
+  onSelectStatus?: (status: string) => void;
 };
 
 export function AssetsKpi({
   assets,
   locale,
-}: {
-  assets: AssetRecord[];
-  locale: string;
-}) {
+  activeStatus,
+  onSelectStatus,
+}: AssetsKpiProps) {
   const translate = useTranslate();
   const chart = useChartTheme();
 
-  const { stats, statusData, categoryData } = useMemo(() => {
+  const { tiles, statusData, categoryData } = useMemo(() => {
     const byStatus: Record<string, number> = {};
     const byCategory: Record<string, number> = {};
     let totalValue = 0;
@@ -48,6 +51,7 @@ export function AssetsKpi({
     const statusData = ASSET_STATUSES.map((status) => ({
       name: labelFor(ASSET_STATUSES, status.value, translate),
       value: byStatus[status.value] ?? 0,
+      statusValue: status.value,
     })).filter((item) => item.value > 0);
 
     const categoryData = ASSET_CATEGORIES.map((category) => ({
@@ -55,8 +59,9 @@ export function AssetsKpi({
       value: byCategory[category.value] ?? 0,
     }));
 
-    const stats: Stat[] = [
+    const tiles: KpiTile[] = [
       {
+        key: "total",
         label: translate("assets.kpi.totalAssets", { ns: "starter" }, "Total assets"),
         value: String(assets.length),
         hint: translate(
@@ -68,30 +73,39 @@ export function AssetsKpi({
         tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
       },
       {
+        key: "assigned",
         label: translate("assets.kpi.assigned", { ns: "starter" }, "Assigned"),
         value: String(byStatus["assigned"] ?? 0),
         hint: translate("assets.kpi.assigned.hint", { ns: "starter" }, "In use by staff"),
         icon: ShieldCheck,
         tone: "text-sky-600 bg-sky-500/12 dark:text-sky-400",
+        onClick: onSelectStatus ? () => onSelectStatus("assigned") : undefined,
+        active: activeStatus === "assigned",
       },
       {
+        key: "in_stock",
         label: translate("assets.kpi.inStock", { ns: "starter" }, "In stock"),
         value: String(byStatus["in_stock"] ?? 0),
         hint: translate("assets.kpi.inStock.hint", { ns: "starter" }, "Ready to assign"),
         icon: PackageCheck,
         tone: "text-teal-600 bg-teal-500/12 dark:text-teal-400",
+        onClick: onSelectStatus ? () => onSelectStatus("in_stock") : undefined,
+        active: activeStatus === "in_stock",
       },
       {
+        key: "repair",
         label: translate("assets.kpi.inRepair", { ns: "starter" }, "In repair"),
         value: String(byStatus["repair"] ?? 0),
         hint: translate("assets.kpi.inRepair.hint", { ns: "starter" }, "Out for service"),
         icon: Wrench,
         tone: "text-amber-600 bg-amber-500/12 dark:text-amber-400",
+        onClick: onSelectStatus ? () => onSelectStatus("repair") : undefined,
+        active: activeStatus === "repair",
       },
     ];
 
-    return { stats, statusData, categoryData };
-  }, [assets, locale, translate]);
+    return { tiles, statusData, categoryData };
+  }, [activeStatus, assets, locale, onSelectStatus, translate]);
 
   const axisBase = {
     axisLine: { lineStyle: { color: chart.grid } },
@@ -159,11 +173,7 @@ export function AssetsKpi({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((stat) => (
-          <StatCard key={stat.label} stat={stat} />
-        ))}
-      </div>
+      <KpiStrip tiles={tiles} />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <Card>
@@ -185,6 +195,13 @@ export function AssetsKpi({
               option={statusOption}
               style={{ height: 240 }}
               opts={{ renderer: "svg" }}
+              onEvents={{
+                // Slice click drills the table down to that lifecycle state.
+                click: (params: { data?: { statusValue?: string } }) => {
+                  const value = params.data?.statusValue;
+                  if (value) onSelectStatus?.(value);
+                },
+              }}
             />
           </CardContent>
         </Card>
@@ -213,33 +230,5 @@ export function AssetsKpi({
         </Card>
       </div>
     </div>
-  );
-}
-
-function StatCard({ stat }: { stat: Stat }) {
-  const Icon = stat.icon;
-  const iconNode: ReactNode = <Icon className="size-5" />;
-  return (
-    <Card className="overflow-hidden">
-      <CardContent className="pt-6">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{stat.label}</p>
-            <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight">
-              {stat.value}
-            </p>
-          </div>
-          <span
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-xl",
-              stat.tone
-            )}
-          >
-            {iconNode}
-          </span>
-        </div>
-        <p className="mt-3 truncate text-xs text-muted-foreground">{stat.hint}</p>
-      </CardContent>
-    </Card>
   );
 }

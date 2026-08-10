@@ -7,6 +7,7 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { AgentPerformance } from "./agent-performance";
 import { HelpdeskDashboard } from "./dashboard";
 import { FaqCreate, FaqEdit, FaqPage } from "./faq";
 import { helpdeskRoutes } from "./routes";
@@ -127,6 +128,24 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         ],
       },
     ],
+  },
+  {
+    name: "hd-agents",
+    path: helpdeskRoutes.agentPerformance,
+    element: <AgentPerformance />,
+    resource: {
+      meta: {
+        label: "Agent performance",
+        i18nKey: "helpdesk.resources.agentPerformance",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey:
+          "helpdesk.resources.agentPerformance.description",
+        priority: 52,
+        icon: <Gauge />,
+        description: "Workload, response speed and SLA outcomes by agent.",
+        acl: false,
+      },
+    },
   },
   {
     name: "hd-sla",

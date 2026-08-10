@@ -2,6 +2,7 @@
 // Pills/badges use the unified blue-forward tone set; every lookup has a
 // fallback for unknown enum values (per the hub design contract).
 import type { useTranslate } from "@refinedev/core";
+export { formatCurrency, formatDate, toDateInputValue } from "@/lib/table-kit";
 
 export const CURRENCY = "USD";
 
@@ -88,27 +89,90 @@ export const labelFor = (
     : option.label;
 };
 
-export const formatCurrency = (
-  value: number | null | undefined,
-  locale: string
-) =>
-  new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: CURRENCY,
-    maximumFractionDigits: 0,
-  }).format(Number(value ?? 0));
-
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
-
-export const toDateInputValue = (value: string | null | undefined) =>
-  value ? String(value).slice(0, 10) : "";
-
 export const todayIso = () => new Date().toISOString().slice(0, 10);
+
+// --- lifecycle state machine -------------------------------------------------
+// Legal moves only, the way an ITAM tool gates them. Assignment and return are
+// driven by the assignment records themselves, so `assigned` is never picked by
+// hand from a status dropdown.
+export const ASSET_TRANSITIONS: Record<string, string[]> = {
+  in_stock: ["repair", "retired"],
+  assigned: ["repair", "retired"],
+  repair: ["in_stock", "retired"],
+  retired: ["in_stock"],
+};
+
+export const canTransition = (from: string | null | undefined, to: string) =>
+  (ASSET_TRANSITIONS[from ?? "in_stock"] ?? []).includes(to);
+
+// Legal work-order moves keep maintenance status changes explicit.
+export const MAINTENANCE_TRANSITIONS: Record<string, string[]> = {
+  Scheduled: ["In progress", "Done"],
+  "In progress": ["Done"],
+  Done: ["In progress"],
+};
+
+export const canTransitionMaintenance = (
+  from: string | null | undefined,
+  to: string
+) => (MAINTENANCE_TRANSITIONS[from ?? "Scheduled"] ?? []).includes(to);
+
+// --- depreciation ------------------------------------------------------------
+// Straight-line over a category-specific useful life. There is no per-asset
+// useful-life field in the backend, so the table below is the schedule.
+export const USEFUL_LIFE_MONTHS: Record<string, number> = {
+  laptop: 36,
+  monitor: 60,
+  phone: 24,
+  peripheral: 36,
+  other: 48,
+};
+
+export type Depreciation = {
+  usefulLifeMonths: number;
+  monthsInService: number;
+  accumulated: number;
+  netBookValue: number;
+  percentDepreciated: number;
+  isFullyDepreciated: boolean;
+};
+
+export const depreciationFor = (asset: {
+  category?: string | null;
+  value?: number | null;
+  purchase_date?: string | null;
+}): Depreciation | null => {
+  const cost = Number(asset.value ?? 0);
+  if (!asset.purchase_date || cost <= 0) return null;
+
+  const usefulLifeMonths = USEFUL_LIFE_MONTHS[asset.category ?? "other"] ?? 48;
+  const elapsed =
+    (Date.now() - new Date(asset.purchase_date).getTime()) /
+    (1000 * 60 * 60 * 24 * 30.44);
+  const monthsInService = Math.max(0, Math.round(elapsed));
+  const capped = Math.min(monthsInService, usefulLifeMonths);
+  const accumulated = (cost / usefulLifeMonths) * capped;
+
+  return {
+    usefulLifeMonths,
+    monthsInService,
+    accumulated,
+    netBookValue: cost - accumulated,
+    percentDepreciated:
+      usefulLifeMonths === 0 ? 0 : (capped / usefulLifeMonths) * 100,
+    isFullyDepreciated: monthsInService >= usefulLifeMonths,
+  };
+};
+
+/** Signed day delta to a date — negative means overdue. */
+export const daysUntil = (value: string | null | undefined) => {
+  if (!value) return null;
+  const target = new Date(value).getTime();
+  if (Number.isNaN(target)) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((target - today.getTime()) / (1000 * 60 * 60 * 24));
+};
 
 export const assigneeName = (
   assignee:

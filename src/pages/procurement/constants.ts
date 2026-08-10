@@ -1,4 +1,5 @@
 import type { useTranslate } from "@refinedev/core";
+export { formatCurrency, formatDate, toDateInputValue } from "@/lib/table-kit";
 import type { PurchaseOrderStatus, SupplierStatus } from "./types";
 
 export const CURRENCY = "USD";
@@ -68,28 +69,32 @@ export const supplierStatusLabel = (
   translate?: ReturnType<typeof useTranslate>
 ) => labelFor(SUPPLIER_STATUSES, value, translate);
 
-export const formatCurrency = (
-  value: number | null | undefined,
-  locale = "en-US"
-) =>
-  new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: CURRENCY,
-    maximumFractionDigits: 0,
-  }).format(Number(value ?? 0));
+// --- PO workflow -------------------------------------------------------------
+// The requisition ladder a buyer walks: draft is edited, sent is committed with
+// the supplier, received closes it out. Cancel is available until goods land.
+// Only these moves are offered, and the UI blocks anything else.
+export const PO_TRANSITIONS: Record<PurchaseOrderStatus, PurchaseOrderStatus[]> = {
+  draft: ["sent", "cancelled"],
+  sent: ["received", "cancelled"],
+  received: [],
+  cancelled: ["draft"],
+};
 
-export const formatDate = (
-  value: string | null | undefined,
-  locale = "en-US"
-) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
+/** Ordered workflow stages for the stepper on the order detail. */
+export const PO_WORKFLOW: PurchaseOrderStatus[] = ["draft", "sent", "received"];
 
-export const toDateInputValue = (value: string | null | undefined) =>
-  value ? String(value).slice(0, 10) : "";
+export const canTransitionPo = (
+  from: PurchaseOrderStatus | null | undefined,
+  to: PurchaseOrderStatus
+) => (PO_TRANSITIONS[from ?? "draft"] ?? []).includes(to);
+
+/** Verb shown on the button that performs a transition. */
+export const PO_TRANSITION_LABELS: Record<PurchaseOrderStatus, { i18nKey: string; label: string }> = {
+  draft: { i18nKey: "procurement.po.workflow.reopen", label: "Return to draft" },
+  sent: { i18nKey: "procurement.po.workflow.send", label: "Send to supplier" },
+  received: { i18nKey: "procurement.po.workflow.receive", label: "Mark received" },
+  cancelled: { i18nKey: "procurement.po.workflow.cancel", label: "Cancel order" },
+};
 
 /** qty * unit_price for one line, tolerating nulls. */
 export const lineTotal = (

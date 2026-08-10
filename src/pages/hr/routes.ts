@@ -13,4 +13,5 @@ export const hrRoutes = {
   leaveShow: "/leave/show/:id",
   orgChart: "/org-chart",
   leaveCalendar: "/leave-calendar",
+  lifecycle: "/joiners-leavers",
 } as const;

@@ -1,4 +1,10 @@
-import { useList, useTranslate } from "@refinedev/core";
+import {
+  useList,
+  useNotification,
+  useTranslate,
+  useUpdate,
+  type CrudFilter,
+} from "@refinedev/core";
 import { useTable } from "@refinedev/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
 import ReactECharts from "echarts-for-react";
@@ -10,11 +16,13 @@ import {
   MessageSquare,
   Pencil,
   Plus,
+  ShieldAlert,
   Table2,
   Trash2,
   TriangleAlert,
+  UserPlus,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -30,12 +38,21 @@ import {
 import { DataTable } from "@/components/data-table/data-table";
 import {
   DataTableFilterCombobox,
+  DataTableFilterDropdownDateRangePicker,
   DataTableFilterDropdownText,
 } from "@/components/data-table/data-table-filter";
 import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { ShowButton } from "@/components/resources/buttons/show";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/pages/home/theme";
@@ -48,7 +65,28 @@ import {
   relativeTime,
   statusClassFor,
 } from "../constants";
+import {
+  BulkActionBar,
+  ListToolbar,
+  densityClass,
+  exportCsv,
+  storedColumnVisibility,
+  useColumnVisibilityPersistence,
+  usePersistentState,
+  useSavedViews,
+  type Density,
+} from "@/lib/table-kit";
+import { useUserOptions } from "../pickers";
 import { getTicketShowPath, helpdeskRoutes } from "../routes";
+import {
+  AGE_BUCKETS,
+  ageBucketFor,
+  slaLabel,
+  slaStateFor,
+  slaTone,
+  ticketAgeHours,
+  useSlaByPriority,
+} from "../sla";
 import {
   CategoryBadge,
   PriorityPill,
@@ -59,6 +97,42 @@ import type { TicketRecord } from "../types";
 
 const RESOURCE = "hub_hd_tickets";
 const OPEN_STATUSES = new Set(["open", "pending"]);
+const STORAGE_KEY = "helpdesk.tickets";
+
+// Agent queues. Everything expressible as a server filter rides on the table's
+// permanent filter; SLA breach is derived per row and shown in the SLA column.
+type Queue = "all" | "open" | "unassigned" | "escalated" | "solved";
+
+const QUEUES: Array<{ value: Queue; label: string; i18nKey: string }> = [
+  { value: "all", label: "All", i18nKey: "helpdesk.queues.all" },
+  { value: "open", label: "Open", i18nKey: "helpdesk.queues.open" },
+  { value: "unassigned", label: "Unassigned", i18nKey: "helpdesk.queues.unassigned" },
+  { value: "escalated", label: "High & urgent", i18nKey: "helpdesk.queues.escalated" },
+  { value: "solved", label: "Solved", i18nKey: "helpdesk.queues.solved" },
+];
+
+function queueFilters(queue: Queue): CrudFilter[] {
+  switch (queue) {
+    case "open":
+      return [{ field: "status", operator: "in", value: ["open", "pending"] }];
+    case "unassigned":
+      return [
+        { field: "status", operator: "in", value: ["open", "pending"] },
+        // `$null` fails the bigint cast on this column; equality against null
+        // is what the backend accepts.
+        { field: "assigneeId", operator: "eq", value: null },
+      ];
+    case "escalated":
+      return [
+        { field: "status", operator: "in", value: ["open", "pending"] },
+        { field: "priority", operator: "in", value: ["high", "urgent"] },
+      ];
+    case "solved":
+      return [{ field: "status", operator: "in", value: ["resolved", "closed"] }];
+    default:
+      return [];
+  }
+}
 
 export function TicketsLayout() {
   return (
@@ -74,6 +148,7 @@ function TicketBoard() {
   const translate = useTranslate();
   const chart = useChartTheme();
   const [view, setView] = useState<"board" | "list">("board");
+  const { byPriority: slaByPriority } = useSlaByPriority();
 
   const { result, query } = useList<TicketRecord>({
     resource: RESOURCE,
@@ -104,6 +179,19 @@ function TicketBoard() {
     const byPriority = TICKET_PRIORITIES.map(
       (p) => open.filter((t) => t.priority === p.value).length
     );
+
+    // SLA breach + backlog ageing are derived here rather than filtered on the
+    // server: both depend on the policy table and on "now".
+    const breached = open.filter((ticket) => {
+      const state = slaStateFor(ticket, slaByPriority);
+      return state?.isBreached ?? false;
+    });
+    const ageCounts = new Map<string, number>();
+    for (const ticket of open) {
+      const bucket = ageBucketFor(ticketAgeHours(ticket));
+      ageCounts.set(bucket, (ageCounts.get(bucket) ?? 0) + 1);
+    }
+
     return {
       openCount: open.length,
       escalated: escalated.length,
@@ -111,8 +199,49 @@ function TicketBoard() {
       replies,
       resolutionRate,
       byPriority,
+      breachedCount: breached.length,
+      ageCounts,
     };
-  }, [tickets]);
+  }, [slaByPriority, tickets]);
+
+  const agingOption = {
+    color: [chart.palette[1] ?? chart.palette[0]],
+    grid: { left: 0, right: 16, top: 6, bottom: 0, containLabel: true },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      backgroundColor: chart.tooltipBg,
+      borderColor: chart.tooltipBorder,
+      borderWidth: 1,
+      textStyle: { color: chart.tooltipText, fontSize: 12 },
+      padding: [6, 10],
+    },
+    xAxis: {
+      type: "category",
+      data: AGE_BUCKETS.map((bucket) =>
+        translate(bucket.i18nKey, { ns: "starter" }, bucket.label)
+      ),
+      axisLine: { lineStyle: { color: chart.grid } },
+      axisTick: { show: false },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+    },
+    yAxis: {
+      type: "value",
+      splitLine: { lineStyle: { color: chart.grid } },
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: chart.axis, fontSize: 11 },
+      minInterval: 1,
+    },
+    series: [
+      {
+        type: "bar",
+        barWidth: 26,
+        itemStyle: { borderRadius: [4, 4, 0, 0] },
+        data: AGE_BUCKETS.map((bucket) => stats.ageCounts.get(bucket.id) ?? 0),
+      },
+    ],
+  };
 
   const grouped = useMemo(() => {
     const map = new Map<string, TicketRecord[]>();
@@ -221,14 +350,19 @@ function TicketBoard() {
           )}
         />
         <StatTile
-          icon={MessageSquare}
-          tone="text-teal-600 bg-teal-500/12 dark:text-teal-400"
-          label={translate("helpdesk.kpi.replies.label", { ns: "starter" }, "Total replies")}
-          value={stats.replies}
-          hint={translate("helpdesk.kpi.replies.hint", { ns: "starter" }, "Across all tickets")}
+          icon={ShieldAlert}
+          tone="text-red-600 bg-red-500/12 dark:text-red-400"
+          label={translate("helpdesk.kpi.breached.label", { ns: "starter" }, "SLA breached")}
+          value={stats.breachedCount}
+          hint={translate(
+            "helpdesk.kpi.breached.hint",
+            { ns: "starter" },
+            "Open work past its resolve target"
+          )}
         />
       </div>
 
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>
@@ -252,6 +386,31 @@ function TicketBoard() {
           />
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            {translate("helpdesk.chart.aging.title", { ns: "starter" }, "Backlog ageing")}
+          </CardTitle>
+          <CardDescription>
+            {translate(
+              "helpdesk.chart.aging.description",
+              { ns: "starter" },
+              "How long the open queue has been waiting. A tail on the right means work is stalling."
+            )}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ReactECharts
+            key={`aging-${chart.isDark}`}
+            option={agingOption}
+            style={{ height: 180 }}
+            opts={{ renderer: "svg" }}
+            showLoading={query.isLoading}
+          />
+        </CardContent>
+      </Card>
+      </div>
 
       {/* View toggle */}
       <div className="flex items-center justify-between gap-2">
@@ -423,6 +582,25 @@ function ColumnSkeleton() {
 
 function TicketTable() {
   const translate = useTranslate();
+  const notify = useNotification();
+  const { mutateAsync: updateTicket } = useUpdate<TicketRecord>();
+  const { byPriority } = useSlaByPriority();
+  const { options: userOptions } = useUserOptions();
+  const { result: categoryCatalog } = useList<TicketRecord>({
+    resource: RESOURCE,
+    pagination: { mode: "server", currentPage: 1, pageSize: 500 },
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const [density, setDensity] = usePersistentState<Density>(
+    `${STORAGE_KEY}.density`,
+    "comfortable"
+  );
+  const [queue, setQueue] = usePersistentState<Queue>(`${STORAGE_KEY}.queue`, "all");
+  const [isBulkBusy, setIsBulkBusy] = useState(false);
+
+  const permanentFilters = useMemo(() => queueFilters(queue), [queue]);
 
   const statusOptions = useMemo(
     () =>
@@ -440,10 +618,55 @@ function TicketTable() {
       })),
     [translate]
   );
+  const categoryOptions = useMemo(
+    () => {
+      const known = TICKET_CATEGORIES.map((c) => ({
+        value: c.value,
+        label: labelFor(TICKET_CATEGORIES, c.value, translate),
+      }));
+      const knownValues = new Set<string>(known.map((option) => option.value));
+      const discovered = Array.from(
+        new Set(
+          categoryCatalog.data
+            .map((ticket) => ticket.category)
+            .filter((value): value is string => Boolean(value))
+        )
+      )
+        .filter((value) => !knownValues.has(value))
+        .sort()
+        .map((value) => ({
+          value,
+          label: labelFor(TICKET_CATEGORIES, value, translate),
+        }));
+      return [...known, ...discovered];
+    },
+    [categoryCatalog.data, translate]
+  );
 
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<TicketRecord>();
     return [
+      columnHelper.display({
+        id: "select",
+        size: 44,
+        enableSorting: false,
+        enableHiding: false,
+        header: ({ table }) => (
+          <Checkbox
+            aria-label={translate("helpdesk.ops.selectAll", { ns: "starter" }, "Select all")}
+            checked={table.getIsAllRowsSelected()}
+            indeterminate={table.getIsSomeRowsSelected()}
+            onCheckedChange={(value) => table.toggleAllRowsSelected(Boolean(value))}
+          />
+        ),
+        cell: ({ row }) => (
+          <Checkbox
+            aria-label={translate("helpdesk.ops.selectRow", { ns: "starter" }, "Select row")}
+            checked={row.getIsSelected()}
+            onCheckedChange={(value) => row.toggleSelected(Boolean(value))}
+          />
+        ),
+      }),
       columnHelper.accessor("subject", {
         id: "subject",
         header: ({ column, table }) => (
@@ -471,6 +694,46 @@ function TicketTable() {
           </Link>
         ),
       }),
+      columnHelper.display({
+        id: "sla",
+        header: translate("helpdesk.list.columns.sla", { ns: "starter" }, "SLA"),
+        enableSorting: false,
+        size: 132,
+        cell: ({ row }) => {
+          const state = slaStateFor(row.original, byPriority);
+          if (!state) {
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
+          const tone = slaTone(state);
+          return (
+            <div className="flex flex-col gap-1">
+              <span
+                className={cn(
+                  "text-xs font-medium tabular-nums",
+                  tone === "breached" && "text-red-600 dark:text-red-400",
+                  tone === "risk" && "text-amber-600 dark:text-amber-400",
+                  tone === "ok" && "text-muted-foreground"
+                )}
+              >
+                {slaLabel(state, translate)}
+              </span>
+              {state.isRunning && (
+                <span className="h-1 w-full overflow-hidden rounded-full bg-muted">
+                  <span
+                    className={cn(
+                      "block h-full rounded-full",
+                      tone === "breached" && "bg-red-500",
+                      tone === "risk" && "bg-amber-500",
+                      tone === "ok" && "bg-emerald-500"
+                    )}
+                    style={{ width: `${state.percentElapsed}%` }}
+                  />
+                </span>
+              )}
+            </div>
+          );
+        },
+      }),
       columnHelper.accessor("status", {
         id: "status",
         header: ({ column, table }) => (
@@ -482,8 +745,9 @@ function TicketTable() {
               column={column}
               table={table}
               options={statusOptions}
-              defaultOperator="eq"
-              operators={["eq", "in"]}
+              multiple
+              defaultOperator="in"
+              operators={["in"]}
             />
           </div>
         ),
@@ -503,14 +767,40 @@ function TicketTable() {
               column={column}
               table={table}
               options={priorityOptions}
-              defaultOperator="eq"
-              operators={["eq", "in"]}
+              multiple
+              defaultOperator="in"
+              operators={["in"]}
             />
           </div>
         ),
         enableSorting: false,
         cell: ({ getValue }) => (
           <PriorityPill value={getValue()} label={labelFor(TICKET_PRIORITIES, getValue(), translate)} />
+        ),
+      }),
+      columnHelper.accessor("category", {
+        id: "category",
+        header: ({ column, table }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.category", { ns: "starter" }, "Category")}
+            </span>
+            <DataTableFilterCombobox
+              column={column}
+              table={table}
+              options={categoryOptions}
+              multiple
+              defaultOperator="in"
+              operators={["in"]}
+            />
+          </div>
+        ),
+        enableSorting: false,
+        cell: ({ getValue }) => (
+          <CategoryBadge
+            value={getValue()}
+            label={labelFor(TICKET_CATEGORIES, getValue(), translate)}
+          />
         ),
       }),
       columnHelper.accessor((record) => record.requester, {
@@ -524,6 +814,24 @@ function TicketTable() {
         header: translate("helpdesk.list.columns.assignee", { ns: "starter" }, "Assignee"),
         enableSorting: false,
         cell: ({ getValue }) => <UserChip user={getValue()} />,
+      }),
+      columnHelper.accessor("createdAt", {
+        id: "createdAt",
+        header: ({ column }) => (
+          <div className="flex items-center gap-1">
+            <span>
+              {translate("helpdesk.list.columns.age", { ns: "starter" }, "Age")}
+            </span>
+            <DataTableSorter column={column} />
+            <DataTableFilterDropdownDateRangePicker column={column} />
+          </div>
+        ),
+        enableSorting: true,
+        cell: ({ getValue }) => (
+          <span className="text-xs text-muted-foreground">
+            {relativeTime(getValue(), translate)}
+          </span>
+        ),
       }),
       columnHelper.accessor("updatedAt", {
         id: "updatedAt",
@@ -546,6 +854,7 @@ function TicketTable() {
         id: "actions",
         header: translate("helpdesk.list.columns.actions", { ns: "starter" }, "Actions"),
         enableSorting: false,
+        enableHiding: false,
         size: 120,
         cell: ({ row }) => (
           <div className="flex items-center gap-1">
@@ -578,17 +887,206 @@ function TicketTable() {
         ),
       }),
     ];
-  }, [priorityOptions, statusOptions, translate]);
+  }, [byPriority, categoryOptions, priorityOptions, statusOptions, translate]);
 
   const table = useTable<TicketRecord>({
     columns,
+    enableRowSelection: true,
+    getRowId: (row) => String(row.id),
+    initialState: { columnVisibility: storedColumnVisibility(STORAGE_KEY) },
     refineCoreProps: {
       resource: RESOURCE,
-      syncWithLocation: false,
+      syncWithLocation: true,
       meta: { appends: ["requester", "assignee"] },
+      filters: { permanent: permanentFilters },
       sorters: { initial: [{ field: "createdAt", order: "desc" }] },
     },
   });
 
-  return <DataTable table={table} />;
+  useColumnVisibilityPersistence(STORAGE_KEY, table);
+  const savedViews = useSavedViews(STORAGE_KEY, table, []);
+
+  const exportQuery = useList<TicketRecord>({
+    resource: RESOURCE,
+    filters: table.refineCore.filters,
+    sorters: table.refineCore.sorters,
+    meta: { appends: ["requester", "assignee"] },
+    pagination: { mode: "server", currentPage: 1, pageSize: 1000 },
+    queryOptions: { enabled: false, retry: false },
+    errorNotification: false,
+  });
+
+  const handleExport = useCallback(async () => {
+    const { data } = await exportQuery.query.refetch();
+    exportCsv<TicketRecord>(
+      "tickets",
+      [
+        { header: "Subject", value: (row) => row.subject },
+        { header: "Status", value: (row) => row.status },
+        { header: "Priority", value: (row) => row.priority },
+        { header: "Category", value: (row) => row.category },
+        {
+          header: "Requester",
+          value: (row) => row.requester?.nickname ?? row.requester?.username,
+        },
+        {
+          header: "Assignee",
+          value: (row) => row.assignee?.nickname ?? row.assignee?.username,
+        },
+        { header: "Opened", value: (row) => row.createdAt },
+        { header: "Updated", value: (row) => row.updatedAt },
+        {
+          header: "SLA",
+          value: (row) => {
+            const state = slaStateFor(row, byPriority);
+            return state ? (state.isBreached ? "breached" : "within target") : "";
+          },
+        },
+      ],
+      data?.data ?? []
+    );
+  }, [byPriority, exportQuery.query]);
+
+  const selectedRows = table.reactTable.getSelectedRowModel().rows;
+
+  const applyBulk = useCallback(
+    async (values: Record<string, unknown>, message: string) => {
+      setIsBulkBusy(true);
+      try {
+        for (const row of selectedRows) {
+          await updateTicket({
+            resource: RESOURCE,
+            id: row.original.id,
+            values,
+            successNotification: false,
+          });
+        }
+        notify.open?.({
+          type: "success",
+          message: message.replace("{{count}}", String(selectedRows.length)),
+        });
+        table.reactTable.resetRowSelection();
+      } finally {
+        setIsBulkBusy(false);
+      }
+    },
+    [notify, selectedRows, table, updateTicket]
+  );
+
+  const columnLabels = useMemo(
+    () => ({
+      subject: translate("helpdesk.list.columns.subject", { ns: "starter" }, "Ticket"),
+      sla: translate("helpdesk.list.columns.sla", { ns: "starter" }, "SLA"),
+      status: translate("helpdesk.list.columns.status", { ns: "starter" }, "Status"),
+      priority: translate("helpdesk.list.columns.priority", { ns: "starter" }, "Priority"),
+      category: translate("helpdesk.list.columns.category", { ns: "starter" }, "Category"),
+      requester: translate("helpdesk.list.columns.requester", { ns: "starter" }, "Requester"),
+      assignee: translate("helpdesk.list.columns.assignee", { ns: "starter" }, "Assignee"),
+      createdAt: translate("helpdesk.list.columns.age", { ns: "starter" }, "Age"),
+      updatedAt: translate("helpdesk.list.columns.updated", { ns: "starter" }, "Updated"),
+    }),
+    [translate]
+  );
+
+  return (
+    <div className="flex flex-col gap-3">
+      <ListToolbar i18nPrefix="helpdesk.ops"
+        table={table}
+        savedViews={savedViews}
+        density={density}
+        onDensityChange={setDensity}
+        columnLabels={columnLabels}
+        onExport={handleExport}
+        isExporting={exportQuery.query.isFetching}
+      >
+        {QUEUES.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => setQueue(option.value)}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+              queue === option.value
+                ? "border-primary/40 bg-primary/10 text-primary"
+                : "border-border/70 text-muted-foreground hover:bg-muted"
+            )}
+          >
+            {translate(option.i18nKey, { ns: "starter" }, option.label)}
+          </button>
+        ))}
+      </ListToolbar>
+
+      <BulkActionBar i18nPrefix="helpdesk.ops"
+        count={selectedRows.length}
+        isBusy={isBulkBusy}
+        onClear={() => table.reactTable.resetRowSelection()}
+      >
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="outline" size="sm" className="text-xs" disabled={isBulkBusy}>
+                <UserPlus className="size-3.5" />
+                {translate("helpdesk.bulk.assign", { ns: "starter" }, "Assign to")}
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+            <DropdownMenuLabel>
+              {translate("helpdesk.list.columns.assignee", { ns: "starter" }, "Assignee")}
+            </DropdownMenuLabel>
+            {userOptions.slice(0, 30).map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() =>
+                  void applyBulk(
+                    { assigneeId: Number(option.value) },
+                    translate(
+                      "helpdesk.bulk.assignResult",
+                      { ns: "starter" },
+                      "{{count}} tickets reassigned"
+                    )
+                  )
+                }
+              >
+                {option.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            render={
+              <Button variant="outline" size="sm" className="text-xs" disabled={isBulkBusy}>
+                {translate("helpdesk.bulk.setStatus", { ns: "starter" }, "Set status")}
+              </Button>
+            }
+          />
+          <DropdownMenuContent align="end">
+            {TICKET_STATUSES.map((status) => (
+              <DropdownMenuItem
+                key={status.value}
+                onClick={() =>
+                  void applyBulk(
+                    { status: status.value },
+                    translate(
+                      "helpdesk.bulk.statusResult",
+                      { ns: "starter" },
+                      "{{count}} tickets updated"
+                    )
+                  )
+                }
+              >
+                {labelFor(TICKET_STATUSES, status.value, translate)}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </BulkActionBar>
+
+      <div className={densityClass(density)}>
+        <DataTable table={table} />
+      </div>
+    </div>
+  );
 }

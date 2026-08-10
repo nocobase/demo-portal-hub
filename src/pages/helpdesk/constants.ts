@@ -1,4 +1,5 @@
 import type { useTranslate } from "@refinedev/core";
+export { formatDateTime } from "@/lib/table-kit";
 
 // ---------------------------------------------------------------------------
 // Enum option sets — labels live here, DB columns store the plain value.
@@ -85,22 +86,16 @@ export const labelFor = (
   translate?: ReturnType<typeof useTranslate>
 ) => {
   const option = options.find((item) => item.value === value);
-  if (!option) return "—";
+  if (!option) {
+    if (!value) return "—";
+    return String(value)
+      .replace(/[_-]+/g, " ")
+      .replace(/\b\w/g, (character) => character.toUpperCase());
+  }
   return option.i18nKey && translate
     ? translate(option.i18nKey, { ns: "starter" }, option.label)
     : option.label;
 };
-
-export const formatDateTime = (
-  value: string | null | undefined,
-  locale: string
-) =>
-  value
-    ? new Intl.DateTimeFormat(locale, {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "—";
 
 export const relativeTime = (
   value: string | null | undefined,

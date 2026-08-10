@@ -1,19 +1,28 @@
-import { useTranslate } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { useList, useTranslate } from "@refinedev/core";
+import { AtSign, Building2, Contact, Eye, Pencil, Trash2 } from "lucide-react";
 import { useMemo } from "react";
+import { Link } from "react-router";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
-import { DataTable } from "@/components/data-table/data-table";
-import { DataTableFilterDropdownText } from "@/components/data-table/data-table-filter";
-import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
-import { EditButton } from "@/components/resources/buttons/edit";
-import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
+import { Button } from "@/components/ui/button";
+import { ListToolbar } from "@/lib/table-kit";
+import {
+  BulkBar,
+  DataGrid,
+  KpiBar,
+  useCsvExport,
+  useSalesList,
+  type BuiltInView,
+  type GridColumn,
+} from "../grid";
+import { formatDate } from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
-import type { ContactRecord } from "../types";
+import { useLocale } from "../shared";
+import type { AccountRecord, ContactRecord } from "../types";
+
+const APPENDS = ["account"];
 
 export function ContactsLayout() {
   return (
@@ -29,151 +38,280 @@ export function ContactsLayout() {
 
 function ContactList() {
   const translate = useTranslate();
+  const locale = useLocale();
   const openChild = useOpenContextualChild();
 
-  const columns = useMemo(() => {
-    const columnHelper = createColumnHelper<ContactRecord>();
-    return [
-      columnHelper.accessor("name", {
-        id: "name",
-        header: ({ column, table }) => (
-          <div className="flex items-center gap-1">
-            <span>
-              {translate("sales.contacts.fields.name", { ns: "starter" }, "Name")}
-            </span>
-            <DataTableSorter column={column} />
-            <DataTableFilterDropdownText
-              column={column}
-              table={table}
-              defaultOperator="contains"
-              operators={["contains", "eq", "startswith"]}
-            />
-          </div>
+  const { result: accounts } = useList<AccountRecord>({
+    resource: "hub_sales_accounts",
+    pagination: { mode: "server", currentPage: 1, pageSize: 300 },
+    sorters: [{ field: "name", order: "asc" }],
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const accountOptions = useMemo(
+    () =>
+      accounts.data
+        .filter((account) => account.name)
+        .map((account) => ({
+          value: String(account.id),
+          label: account.name as string,
+        })),
+    [accounts.data]
+  );
+
+  const views = useMemo<BuiltInView[]>(
+    () => [
+      {
+        id: "all",
+        label: translate("sales.contacts.views.all", { ns: "starter" }, "All contacts"),
+        sort: { field: "name", order: "asc" },
+      },
+      {
+        id: "recent",
+        label: translate(
+          "sales.contacts.views.recent",
+          { ns: "starter" },
+          "Recently added"
         ),
-        enableSorting: true,
-        cell: ({ getValue, row }) => (
+        sort: { field: "createdAt", order: "desc" },
+      },
+    ],
+    [translate]
+  );
+
+  const state = useSalesList<ContactRecord>({
+    listId: "contacts",
+    resource: "hub_sales_contacts",
+    searchField: "name",
+    defaultSort: { field: "name", order: "asc" },
+    views,
+    appends: APPENDS,
+    initiallyHidden: ["createdAt"],
+  });
+
+  const columns = useMemo<Array<GridColumn<ContactRecord>>>(
+    () => [
+      {
+        id: "name",
+        header: translate("sales.contacts.fields.name", { ns: "starter" }, "Name"),
+        sortField: "name",
+        cell: (record) => (
           <button
             type="button"
-            className="font-medium text-left text-primary underline-offset-2 hover:underline"
-            onClick={() => openChild(`show/${row.original.id}`)}
+            className="text-left font-medium text-primary underline-offset-2 hover:underline"
+            onClick={() => openChild(`show/${record.id}`)}
           >
-            {getValue() || "—"}
+            {record.name || "—"}
           </button>
         ),
-      }),
-      columnHelper.accessor("title", {
+        csv: (record) => record.name ?? "",
+      },
+      {
         id: "title",
-        header: translate(
-          "sales.contacts.fields.jobTitle",
-          { ns: "starter" },
-          "Job title"
-        ),
-        enableSorting: false,
-        cell: ({ getValue }) => getValue() || "—",
-      }),
-      columnHelper.accessor("email", {
+        header: translate("sales.contacts.fields.jobTitle", { ns: "starter" }, "Job title"),
+        cell: (record) => record.title || "—",
+        csv: (record) => record.title ?? "",
+      },
+      {
         id: "email",
         header: translate("sales.contacts.fields.email", { ns: "starter" }, "Email"),
-        enableSorting: false,
-        cell: ({ getValue }) => {
-          const value = getValue();
-          return value ? (
+        cell: (record) =>
+          record.email ? (
             <a
-              href={`mailto:${value}`}
+              href={`mailto:${record.email}`}
               className="text-primary underline-offset-2 hover:underline"
-              onClick={(event) => event.stopPropagation()}
             >
-              {value}
+              {record.email}
             </a>
           ) : (
             "—"
-          );
-        },
-      }),
-      columnHelper.accessor("phone", {
+          ),
+        csv: (record) => record.email ?? "",
+      },
+      {
         id: "phone",
         header: translate("sales.contacts.fields.phone", { ns: "starter" }, "Phone"),
-        enableSorting: false,
-        cell: ({ getValue }) => getValue() || "—",
-      }),
-      columnHelper.accessor((record) => record.account, {
-        id: "account",
-        header: translate(
-          "sales.contacts.fields.account",
-          { ns: "starter" },
-          "Account"
-        ),
-        enableSorting: false,
-        cell: ({ getValue, row }) => {
-          const account = getValue();
-          if (!account?.name) return "—";
-          return (
-            <button
-              type="button"
-              className="text-left text-primary underline-offset-2 hover:underline"
-              onClick={(event) => {
-                event.stopPropagation();
-                openChild(`show/${row.original.id}`);
-              }}
+        width: "10rem",
+        cell: (record) =>
+          record.phone ? (
+            <a
+              href={`tel:${record.phone}`}
+              className="text-primary underline-offset-2 hover:underline"
             >
-              {account.name}
-            </button>
-          );
-        },
-      }),
-      columnHelper.display({
-        id: "actions",
-        header: translate("sales.common.actions", { ns: "starter" }, "Actions"),
-        enableSorting: false,
-        size: 144,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
-            <ShowButton
-              resource="hub_sales_contacts"
-              recordItemId={row.original.id}
+              {record.phone}
+            </a>
+          ) : (
+            "—"
+          ),
+        csv: (record) => record.phone ?? "",
+      },
+      {
+        id: "account",
+        header: translate("sales.contacts.fields.account", { ns: "starter" }, "Account"),
+        cell: (record) =>
+          record.account?.name ? (
+            <Link
+              to={`/accounts/show/${record.account.id}`}
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              {record.account.name}
+            </Link>
+          ) : (
+            "—"
+          ),
+        csv: (record) => record.account?.name ?? "",
+      },
+      {
+        id: "createdAt",
+        header: translate("sales.contacts.columns.added", { ns: "starter" }, "Added"),
+        sortField: "createdAt",
+        width: "9rem",
+        cell: (record) => formatDate(record.createdAt, locale),
+        csv: (record) => record.createdAt?.slice(0, 10) ?? "",
+      },
+    ],
+    [locale, openChild, translate]
+  );
+
+  const { exportCsv, exporting } = useCsvExport<ContactRecord>({
+    resource: "hub_sales_contacts",
+    filters: state.filters,
+    sorters: state.sorters,
+    appends: APPENDS,
+    columns,
+    filename: "contacts.csv",
+  });
+
+  const reachable = state.rows.filter((record) => record.email).length;
+  const linked = state.rows.filter((record) => record.account_id).length;
+
+  return (
+    <ListView resource="hub_sales_contacts">
+      <KpiBar
+        loading={state.query.isLoading}
+        tiles={[
+          {
+            id: "count",
+            label: translate("sales.contacts.kpi.count", { ns: "starter" }, "Contacts"),
+            value: String(state.total),
+            icon: Contact,
+          },
+          {
+            id: "accounts",
+            label: translate(
+              "sales.contacts.kpi.accounts",
+              { ns: "starter" },
+              "Accounts covered"
+            ),
+            value: String(accountOptions.length),
+            icon: Building2,
+          },
+          {
+            id: "email",
+            label: translate(
+              "sales.contacts.kpi.reachable",
+              { ns: "starter" },
+              "With email (page)"
+            ),
+            value:
+              state.rows.length === 0
+                ? "—"
+                : `${Math.round((reachable / state.rows.length) * 100)}%`,
+            hint: translate(
+              "sales.contacts.kpi.reachable.hint",
+              { ns: "starter" },
+              "Reachable by email"
+            ),
+            tone: "positive",
+            icon: AtSign,
+          },
+          {
+            id: "linked",
+            label: translate(
+              "sales.contacts.kpi.linked",
+              { ns: "starter" },
+              "Linked to an account (page)"
+            ),
+            value:
+              state.rows.length === 0
+                ? "—"
+                : `${Math.round((linked / state.rows.length) * 100)}%`,
+            tone: linked === state.rows.length ? "positive" : "warning",
+          },
+        ]}
+      />
+
+      <ListToolbar
+        state={{ ...state, columns }}
+        facets={[
+          {
+            field: "account_id",
+            label: translate("sales.contacts.fields.account", { ns: "starter" }, "Account"),
+            options: accountOptions,
+          },
+        ]}
+        searchPlaceholder={translate(
+          "sales.contacts.searchPlaceholder",
+          { ns: "starter" },
+          "Search contacts…"
+        )}
+        onExport={exportCsv}
+        exporting={exporting}
+      />
+
+      <DataGrid
+        state={state}
+        columns={columns}
+        onRowOpen={(record) => openChild(`show/${record.id}`)}
+        emptyTitle={translate(
+          "sales.contacts.empty.title",
+          { ns: "starter" },
+          "No contacts yet"
+        )}
+        emptyDescription={translate(
+          "sales.contacts.empty.description",
+          { ns: "starter" },
+          "Add people to an account to keep the relationship map current."
+        )}
+        rowActions={(record) => (
+          <>
+            <Button
               variant="ghost"
-              size="icon"
-              onClick={() => openChild(`show/${row.original.id}`)}
+              size="icon-sm"
+              onClick={() => openChild(`show/${record.id}`)}
             >
               <Eye />
-            </ShowButton>
-            <EditButton
-              resource="hub_sales_contacts"
-              recordItemId={row.original.id}
+            </Button>
+            <Button
               variant="ghost"
-              size="icon"
-              onClick={() => openChild(`edit/${row.original.id}`)}
+              size="icon-sm"
+              onClick={() => openChild(`edit/${record.id}`)}
             >
               <Pencil />
-            </EditButton>
+            </Button>
             <DeleteButton
               resource="hub_sales_contacts"
-              recordItemId={row.original.id}
+              recordItemId={record.id}
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               className="text-destructive hover:text-destructive"
             >
               <Trash2 />
             </DeleteButton>
-          </div>
-        ),
-      }),
-    ];
-  }, [openChild, translate]);
+          </>
+        )}
+      />
 
-  const table = useTable<ContactRecord>({
-    columns,
-    refineCoreProps: {
-      resource: "hub_sales_contacts",
-      syncWithLocation: false,
-      meta: { appends: ["account"] },
-      sorters: { initial: [{ field: "name", order: "asc" }] },
-    },
-  });
-
-  return (
-    <ListView resource="hub_sales_contacts">
-      <DataTable table={table} />
+      <BulkBar
+        resource="hub_sales_contacts"
+        selected={state.selected}
+        onClear={() => state.setSelected([])}
+        onDone={() => {
+          state.setSelected([]);
+          void state.query.refetch();
+        }}
+      />
     </ListView>
   );
 }

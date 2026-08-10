@@ -7,6 +7,9 @@ const enUS = {
   "helpdesk.resources.dashboard": "Workload",
   "helpdesk.resources.dashboard.description":
     "SLA health, queue workload and the priority mix.",
+  "helpdesk.resources.agentPerformance": "Agent performance",
+  "helpdesk.resources.agentPerformance.description":
+    "Workload, response speed and SLA outcomes by agent.",
   "helpdesk.resources.slaPolicies": "SLA policies",
   "helpdesk.resources.slaPolicies.description":
     "Response and resolution targets by priority.",
@@ -127,6 +130,46 @@ const enUS = {
   "helpdesk.dashboard.watchlist.breached": "Breached",
   "helpdesk.dashboard.watchlist.atRisk": "At risk",
 
+  // Agent performance
+  "helpdesk.agentPerformance.title": "Agent performance",
+  "helpdesk.agentPerformance.description":
+    "Compare workload, response speed, solve rate and SLA outcomes across the support team.",
+  "helpdesk.agentPerformance.kpi.activeAgents": "Active agents",
+  "helpdesk.agentPerformance.kpi.activeAgents.hint":
+    "Agents holding open work",
+  "helpdesk.agentPerformance.kpi.solveRate": "Team solve rate",
+  "helpdesk.agentPerformance.kpi.solveRate.hint":
+    "Resolved or closed tickets",
+  "helpdesk.agentPerformance.kpi.slaAttainment": "Team SLA attainment",
+  "helpdesk.agentPerformance.kpi.slaAttainment.hint":
+    "Tickets completed within SLA",
+  "helpdesk.agentPerformance.kpi.firstResponse": "Median first response",
+  "helpdesk.agentPerformance.kpi.firstResponse.hint":
+    "Across tickets with an agent reply",
+  "helpdesk.agentPerformance.chart.open.title": "Open tickets by agent",
+  "helpdesk.agentPerformance.chart.open.description":
+    "The ten busiest queues by open and pending ticket count.",
+  "helpdesk.agentPerformance.chart.mix.title": "Solved versus open",
+  "helpdesk.agentPerformance.chart.mix.description":
+    "Completed work compared with the current queue for the same agents.",
+  "helpdesk.agentPerformance.chart.solved": "Solved",
+  "helpdesk.agentPerformance.table.title": "Agent scorecard",
+  "helpdesk.agentPerformance.table.description":
+    "Rows with breached tickets are highlighted.",
+  "helpdesk.agentPerformance.table.agent": "Agent",
+  "helpdesk.agentPerformance.table.assigned": "Assigned",
+  "helpdesk.agentPerformance.table.open": "Open",
+  "helpdesk.agentPerformance.table.solved": "Solved",
+  "helpdesk.agentPerformance.table.solveRate": "Solve rate",
+  "helpdesk.agentPerformance.table.slaAttainment": "SLA attainment",
+  "helpdesk.agentPerformance.table.breached": "Breached",
+  "helpdesk.agentPerformance.table.replies": "Replies authored",
+  "helpdesk.agentPerformance.table.firstResponse": "Avg. first response",
+  "helpdesk.agentPerformance.noResponse": "—",
+  "helpdesk.agentPerformance.empty.title": "No agent activity",
+  "helpdesk.agentPerformance.empty.description":
+    "Agent performance appears after tickets have been assigned.",
+
   // Field labels
   "helpdesk.fields.subject": "Subject",
   "helpdesk.fields.description": "Description",
@@ -180,6 +223,20 @@ const enUS = {
   "helpdesk.sla.columns.priority": "Priority",
   "helpdesk.sla.columns.response": "Response target",
   "helpdesk.sla.columns.resolve": "Resolve target",
+  "helpdesk.sla.columns.tickets": "Tickets",
+  "helpdesk.sla.columns.breached": "Breached",
+  "helpdesk.sla.columns.attainment": "Attainment %",
+  "helpdesk.sla.attainment.label": "SLA attainment",
+  "helpdesk.sla.kpi.policies": "Policies",
+  "helpdesk.sla.kpi.covered": "Tickets covered",
+  "helpdesk.sla.kpi.attainment": "Team attainment",
+  "helpdesk.sla.kpi.breached": "Breached",
+  "helpdesk.sla.uncovered.title": "SLA coverage gap",
+  "helpdesk.sla.uncovered.description": "No SLA policy covers: {{priorities}}",
+  "helpdesk.sla.export.name": "Name",
+  "helpdesk.sla.export.priority": "Priority",
+  "helpdesk.sla.export.response": "Response target (mins)",
+  "helpdesk.sla.export.resolve": "Resolve target (mins)",
   "helpdesk.sla.minutes": "{{count}}m",
   "helpdesk.sla.hours": "{{count}}h",
   "helpdesk.sla.show.description":
@@ -208,8 +265,16 @@ const enUS = {
     "Quick answers to the questions the helpdesk sees most often.",
   "helpdesk.faq.search.placeholder": "Search questions and answers...",
   "helpdesk.faq.empty": "No questions match your search.",
+  "helpdesk.faq.empty.description": "Try another search or category.",
   "helpdesk.faq.resultCount": "{{count}} results",
   "helpdesk.faq.categoryOther": "Other",
+  "helpdesk.faq.filters.all": "All",
+  "helpdesk.faq.kpi.articles": "Articles",
+  "helpdesk.faq.kpi.categories": "Categories",
+  "helpdesk.faq.kpi.uncategorised": "Uncategorised",
+  "helpdesk.faq.export.question": "Question",
+  "helpdesk.faq.export.answer": "Answer",
+  "helpdesk.faq.export.category": "Category",
   "helpdesk.faq.new": "New question",
   "helpdesk.faq.edit": "Edit",
   "helpdesk.faq.delete": "Delete",
@@ -230,6 +295,73 @@ const enUS = {
   "helpdesk.faq.fields.answer.placeholder": "Write a clear, self-service answer.",
   "helpdesk.faq.fields.category": "Category",
   "helpdesk.faq.fields.category.placeholder": "e.g. Accounts",
+  // --- Production list ops (toolbar, views, bulk, states) ---
+  "helpdesk.ops.selectAll": "Select all",
+  "helpdesk.ops.selectRow": "Select row",
+  "helpdesk.ops.clearFilters": "Clear filters",
+  "helpdesk.ops.saveView": "Save view",
+  "helpdesk.ops.saveViewTitle": "Save current filters",
+  "helpdesk.ops.saveViewPlaceholder": "View name",
+  "helpdesk.ops.saveViewConfirm": "Save",
+  "helpdesk.ops.density": "Row density",
+  "helpdesk.ops.densityCompact": "Compact",
+  "helpdesk.ops.densityComfortable": "Comfortable",
+  "helpdesk.ops.columns": "Columns",
+  "helpdesk.ops.columnsTitle": "Visible columns",
+  "helpdesk.ops.columnsReset": "Reset columns",
+  "helpdesk.ops.exportCsv": "Export CSV",
+  "helpdesk.ops.exporting": "Exporting...",
+  "helpdesk.ops.selected": "{{count}} selected",
+  "helpdesk.ops.bulkDelete": "Delete",
+  "helpdesk.ops.clearSelection": "Clear",
+  "helpdesk.ops.error.title": "Something went wrong",
+  "helpdesk.ops.error.description":
+    "The data could not be loaded. Check your connection and try again.",
+  "helpdesk.ops.error.retry": "Retry",
+  "helpdesk.ops.empty.title": "Nothing here yet",
+
+  // Agent queues
+  "helpdesk.queues.all": "All",
+  "helpdesk.queues.open": "Open",
+  "helpdesk.queues.unassigned": "Unassigned",
+  "helpdesk.queues.escalated": "High & urgent",
+  "helpdesk.queues.solved": "Solved",
+
+  // Bulk actions
+  "helpdesk.bulk.assign": "Assign to",
+  "helpdesk.bulk.assignResult": "{{count}} tickets reassigned",
+  "helpdesk.bulk.setStatus": "Set status",
+  "helpdesk.bulk.statusResult": "{{count}} tickets updated",
+
+  // List columns
+  "helpdesk.list.columns.sla": "SLA",
+  "helpdesk.list.columns.category": "Category",
+  "helpdesk.list.columns.age": "Age",
+
+  // SLA countdown
+  "helpdesk.sla.dueIn": "{{time}} left",
+  "helpdesk.sla.breachedBy": "Breached {{time}}",
+  "helpdesk.sla.closedMet": "Met",
+  "helpdesk.sla.closedBreached": "Closed late",
+  "helpdesk.sla.countdown": "Time to resolve",
+  "helpdesk.sla.outcome": "SLA outcome",
+  "helpdesk.sla.dueAt": "Target {{time}}",
+
+  // Thread roles
+  "helpdesk.thread.fromRequester": "Requester",
+  "helpdesk.thread.fromAgent": "Agent",
+
+  // Backlog ageing
+  "helpdesk.kpi.breached.label": "SLA breached",
+  "helpdesk.kpi.breached.hint": "Open work past its resolve target",
+  "helpdesk.chart.aging.title": "Backlog ageing",
+  "helpdesk.chart.aging.description":
+    "How long the open queue has been waiting. A tail on the right means work is stalling.",
+  "helpdesk.aging.bucket.d0": "< 1 day",
+  "helpdesk.aging.bucket.d1": "1–3 days",
+  "helpdesk.aging.bucket.d3": "3–7 days",
+  "helpdesk.aging.bucket.d7": "1–2 weeks",
+  "helpdesk.aging.bucket.d14": "2+ weeks",
 };
 
 const zhCN: Record<keyof typeof enUS, string> = {
@@ -239,6 +371,9 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.resources.tickets.description": "支持工单、优先级与回复记录。",
   "helpdesk.resources.dashboard": "工作负载",
   "helpdesk.resources.dashboard.description": "SLA 健康度、队列负载与优先级分布。",
+  "helpdesk.resources.agentPerformance": "客服绩效",
+  "helpdesk.resources.agentPerformance.description":
+    "按客服查看工作量、响应速度与 SLA 结果。",
   "helpdesk.resources.slaPolicies": "SLA 策略",
   "helpdesk.resources.slaPolicies.description": "各优先级的响应与解决时限目标。",
   "helpdesk.resources.faq": "自助 FAQ",
@@ -350,6 +485,40 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.dashboard.watchlist.breached": "已超时",
   "helpdesk.dashboard.watchlist.atRisk": "有风险",
 
+  // 客服绩效
+  "helpdesk.agentPerformance.title": "客服绩效",
+  "helpdesk.agentPerformance.description":
+    "比较支持团队的工作量、响应速度、解决率与 SLA 结果。",
+  "helpdesk.agentPerformance.kpi.activeAgents": "活跃客服",
+  "helpdesk.agentPerformance.kpi.activeAgents.hint": "当前持有未关闭工单的客服",
+  "helpdesk.agentPerformance.kpi.solveRate": "团队解决率",
+  "helpdesk.agentPerformance.kpi.solveRate.hint": "已解决或已关闭的工单",
+  "helpdesk.agentPerformance.kpi.slaAttainment": "团队 SLA 达标率",
+  "helpdesk.agentPerformance.kpi.slaAttainment.hint": "在 SLA 时限内完成的工单",
+  "helpdesk.agentPerformance.kpi.firstResponse": "首次响应中位数",
+  "helpdesk.agentPerformance.kpi.firstResponse.hint": "基于已有客服回复的工单",
+  "helpdesk.agentPerformance.chart.open.title": "各客服未关闭工单",
+  "helpdesk.agentPerformance.chart.open.description":
+    "按待处理与处理中工单数展示最繁忙的十个队列。",
+  "helpdesk.agentPerformance.chart.mix.title": "已解决与未关闭对比",
+  "helpdesk.agentPerformance.chart.mix.description":
+    "比较同一组客服已完成的工作与当前队列。",
+  "helpdesk.agentPerformance.chart.solved": "已解决",
+  "helpdesk.agentPerformance.table.title": "客服绩效表",
+  "helpdesk.agentPerformance.table.description": "存在 SLA 超时工单的行会被高亮。",
+  "helpdesk.agentPerformance.table.agent": "客服",
+  "helpdesk.agentPerformance.table.assigned": "已分配",
+  "helpdesk.agentPerformance.table.open": "未关闭",
+  "helpdesk.agentPerformance.table.solved": "已解决",
+  "helpdesk.agentPerformance.table.solveRate": "解决率",
+  "helpdesk.agentPerformance.table.slaAttainment": "SLA 达标率",
+  "helpdesk.agentPerformance.table.breached": "已超时",
+  "helpdesk.agentPerformance.table.replies": "已发送回复",
+  "helpdesk.agentPerformance.table.firstResponse": "平均首次响应",
+  "helpdesk.agentPerformance.noResponse": "—",
+  "helpdesk.agentPerformance.empty.title": "暂无客服活动",
+  "helpdesk.agentPerformance.empty.description": "分配工单后将显示客服绩效。",
+
   // Field labels
   "helpdesk.fields.subject": "主题",
   "helpdesk.fields.description": "描述",
@@ -399,6 +568,20 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.sla.columns.priority": "优先级",
   "helpdesk.sla.columns.response": "响应目标",
   "helpdesk.sla.columns.resolve": "解决目标",
+  "helpdesk.sla.columns.tickets": "工单数",
+  "helpdesk.sla.columns.breached": "已超时",
+  "helpdesk.sla.columns.attainment": "达标率 %",
+  "helpdesk.sla.attainment.label": "SLA 达标率",
+  "helpdesk.sla.kpi.policies": "策略数",
+  "helpdesk.sla.kpi.covered": "已覆盖工单",
+  "helpdesk.sla.kpi.attainment": "团队达标率",
+  "helpdesk.sla.kpi.breached": "已超时",
+  "helpdesk.sla.uncovered.title": "SLA 覆盖缺口",
+  "helpdesk.sla.uncovered.description": "以下优先级没有 SLA 策略：{{priorities}}",
+  "helpdesk.sla.export.name": "名称",
+  "helpdesk.sla.export.priority": "优先级",
+  "helpdesk.sla.export.response": "响应目标（分钟）",
+  "helpdesk.sla.export.resolve": "解决目标（分钟）",
   "helpdesk.sla.minutes": "{{count}} 分钟",
   "helpdesk.sla.hours": "{{count}} 小时",
   "helpdesk.sla.show.description": "编辑该优先级的响应与解决时限目标。",
@@ -423,8 +606,16 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.faq.subtitle": "帮助台最常被问到的问题与快速解答。",
   "helpdesk.faq.search.placeholder": "搜索问题或答案……",
   "helpdesk.faq.empty": "没有匹配的问题。",
+  "helpdesk.faq.empty.description": "请尝试其他搜索词或分类。",
   "helpdesk.faq.resultCount": "{{count}} 条结果",
   "helpdesk.faq.categoryOther": "其他",
+  "helpdesk.faq.filters.all": "全部",
+  "helpdesk.faq.kpi.articles": "文章数",
+  "helpdesk.faq.kpi.categories": "分类数",
+  "helpdesk.faq.kpi.uncategorised": "未分类",
+  "helpdesk.faq.export.question": "问题",
+  "helpdesk.faq.export.answer": "答案",
+  "helpdesk.faq.export.category": "分类",
   "helpdesk.faq.new": "新建问题",
   "helpdesk.faq.edit": "编辑",
   "helpdesk.faq.delete": "删除",
@@ -444,6 +635,72 @@ const zhCN: Record<keyof typeof enUS, string> = {
   "helpdesk.faq.fields.answer.placeholder": "撰写清晰的自助解答。",
   "helpdesk.faq.fields.category": "分类",
   "helpdesk.faq.fields.category.placeholder": "例如：账户",
+  // --- 生产级列表操作(工具条 / 视图 / 批量 / 三态) ---
+  "helpdesk.ops.selectAll": "全选",
+  "helpdesk.ops.selectRow": "选择本行",
+  "helpdesk.ops.clearFilters": "清除筛选",
+  "helpdesk.ops.saveView": "保存视图",
+  "helpdesk.ops.saveViewTitle": "保存当前筛选",
+  "helpdesk.ops.saveViewPlaceholder": "视图名称",
+  "helpdesk.ops.saveViewConfirm": "保存",
+  "helpdesk.ops.density": "行高",
+  "helpdesk.ops.densityCompact": "紧凑",
+  "helpdesk.ops.densityComfortable": "宽松",
+  "helpdesk.ops.columns": "列",
+  "helpdesk.ops.columnsTitle": "显示的列",
+  "helpdesk.ops.columnsReset": "恢复默认列",
+  "helpdesk.ops.exportCsv": "导出 CSV",
+  "helpdesk.ops.exporting": "导出中...",
+  "helpdesk.ops.selected": "已选择 {{count}} 条",
+  "helpdesk.ops.bulkDelete": "删除",
+  "helpdesk.ops.clearSelection": "取消选择",
+  "helpdesk.ops.error.title": "出错了",
+  "helpdesk.ops.error.description": "数据加载失败，请检查网络后重试。",
+  "helpdesk.ops.error.retry": "重试",
+  "helpdesk.ops.empty.title": "暂无内容",
+
+  // 客服队列
+  "helpdesk.queues.all": "全部",
+  "helpdesk.queues.open": "未关闭",
+  "helpdesk.queues.unassigned": "未指派",
+  "helpdesk.queues.escalated": "高优/紧急",
+  "helpdesk.queues.solved": "已解决",
+
+  // 批量操作
+  "helpdesk.bulk.assign": "指派给",
+  "helpdesk.bulk.assignResult": "已重新指派 {{count}} 张工单",
+  "helpdesk.bulk.setStatus": "设置状态",
+  "helpdesk.bulk.statusResult": "已更新 {{count}} 张工单",
+
+  // 列表列
+  "helpdesk.list.columns.sla": "SLA",
+  "helpdesk.list.columns.category": "分类",
+  "helpdesk.list.columns.age": "已受理",
+
+  // SLA 倒计时
+  "helpdesk.sla.dueIn": "剩余 {{time}}",
+  "helpdesk.sla.breachedBy": "已超时 {{time}}",
+  "helpdesk.sla.closedMet": "达标",
+  "helpdesk.sla.closedBreached": "超时关闭",
+  "helpdesk.sla.countdown": "解决剩余时间",
+  "helpdesk.sla.outcome": "SLA 结果",
+  "helpdesk.sla.dueAt": "目标时间 {{time}}",
+
+  // 对话角色
+  "helpdesk.thread.fromRequester": "提单人",
+  "helpdesk.thread.fromAgent": "客服",
+
+  // 积压老化
+  "helpdesk.kpi.breached.label": "SLA 超时",
+  "helpdesk.kpi.breached.hint": "已超过解决时限的未关闭工单",
+  "helpdesk.chart.aging.title": "积压老化",
+  "helpdesk.chart.aging.description":
+    "未关闭队列已经等了多久。右侧拖尾说明工单正在积压。",
+  "helpdesk.aging.bucket.d0": "1 天内",
+  "helpdesk.aging.bucket.d1": "1–3 天",
+  "helpdesk.aging.bucket.d3": "3–7 天",
+  "helpdesk.aging.bucket.d7": "1–2 周",
+  "helpdesk.aging.bucket.d14": "2 周以上",
 };
 
 export const helpdeskLocale = {

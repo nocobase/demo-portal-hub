@@ -28,6 +28,7 @@ import {
 import { INVOICE_STATUSES, optionLabel } from "../constants";
 import { useContextualCloseTo } from "../route-surfaces";
 import type { Invoice, InvoiceFormValues } from "../types";
+import { writableInvoiceStatus } from "../invoice-metrics";
 
 const DEFAULTS: InvoiceFormValues = {
   invoice_number: "",
@@ -104,7 +105,11 @@ function InvoiceForm({ mode }: { mode: "create" | "edit" }) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit((values) =>
-          onFinish({ ...values, amount: Number(values.amount) || 0 })
+          onFinish({
+            ...values,
+            amount: Number(values.amount) || 0,
+            status: writableInvoiceStatus(values.status),
+          })
         )}
         className="flex min-h-0 flex-1 flex-col"
       >
@@ -123,14 +128,12 @@ function InvoiceForm({ mode }: { mode: "create" | "edit" }) {
             required
             placeholder="Acme Corp"
           />
-          <TextField
-            form={form}
-            name="amount"
-            label={t("finance.invoices.field.amount", "Amount (USD)")}
-            type="number"
-            required
-            placeholder="0.00"
-          />
+          <p className="rounded-lg border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+            {t(
+              "finance.invoices.form.amountDerived",
+              "Invoice total is derived from line items and is not edited on the header."
+            )}
+          </p>
           <div className="grid grid-cols-2 gap-4">
             <TextField
               form={form}
@@ -229,7 +232,7 @@ function StatusField({ form }: { form: UseFormReturn<InvoiceFormValues> }) {
               <SelectValue placeholder={t("finance.invoices.field.statusPlaceholder", "Select status")} />
             </SelectTrigger>
             <SelectContent>
-              {INVOICE_STATUSES.map((option) => (
+              {INVOICE_STATUSES.filter((option) => option.value !== "overdue").map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {optionLabel(option, t)}
                 </SelectItem>

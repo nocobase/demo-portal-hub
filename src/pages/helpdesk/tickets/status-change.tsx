@@ -5,6 +5,7 @@ import { useParams } from "react-router";
 import { useRouteSurfaceClose } from "@nocobase/portal-sdk/routing";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import {
   TICKET_STATUSES,
@@ -16,6 +17,12 @@ import { StatusPill } from "../shared";
 import type { TicketRecord } from "../types";
 
 const TICKETS = "hub_hd_tickets";
+const SAFE_TRANSITIONS: Record<string, string[]> = {
+  open: ["pending"],
+  pending: ["open"],
+  resolved: [],
+  closed: [],
+};
 
 /**
  * Lightweight nested (2nd-level) drawer for the common "just move this
@@ -32,9 +39,10 @@ export const TicketStatusChange = () => {
   });
   const { mutate } = useUpdate<TicketRecord>();
   const [isSaving, setIsSaving] = useState(false);
+  const allowed = SAFE_TRANSITIONS[ticket?.status ?? "open"] ?? [];
 
   const applyStatus = (status: string) => {
-    if (!id || status === ticket?.status) return;
+    if (!id || status === ticket?.status || !allowed.includes(status)) return;
     setIsSaving(true);
     mutate(
       { resource: TICKETS, id, values: { status } },
@@ -75,7 +83,10 @@ export const TicketStatusChange = () => {
               />
             </div>
             <div className="space-y-2">
-              {TICKET_STATUSES.map((status) => {
+              {TICKET_STATUSES.filter(
+                (status) =>
+                  status.value === ticket?.status || allowed.includes(status.value)
+              ).map((status) => {
                 const active = status.value === ticket?.status;
                 return (
                   <button
@@ -113,6 +124,22 @@ export const TicketStatusChange = () => {
                 );
               })}
             </div>
+            <Alert>
+              <AlertTitle>
+                {translate(
+                  "helpdesk.status.resolutionUnavailable.title",
+                  { ns: "starter" },
+                  "Resolution workflow requires server support"
+                )}
+              </AlertTitle>
+              <AlertDescription>
+                {translate(
+                  "helpdesk.status.resolutionUnavailable.description",
+                  { ns: "starter" },
+                  "Resolve, close and reopen are unavailable until the server can require a resolution and write immutable lifecycle timestamps."
+                )}
+              </AlertDescription>
+            </Alert>
             {isSaving ? (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="size-3.5 animate-spin" />

@@ -149,7 +149,7 @@ function LeaveEditForm({ id }: { id?: string }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <LeaveFormFields form={form} />
+          <LeaveFormFields form={form} leaveId={id} />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>

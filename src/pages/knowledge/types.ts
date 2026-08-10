@@ -53,6 +53,7 @@ export type CategoryNode = CategoryRecord & {
 export type FeedbackRecord = {
   id: string | number;
   article_id?: string | number | null;
+  article?: ArticleRecord | null;
   rating?: string | null;
   comment?: string | null;
   author_id?: string | number | null;

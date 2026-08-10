@@ -7,6 +7,7 @@ import {
   useTranslate,
 } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
+import { useMemo } from "react";
 import { ArrowRightLeft, Pencil, RotateCw, Send, ShieldCheck, Trash2 } from "lucide-react";
 import { Link, useNavigate, useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -30,6 +31,7 @@ import {
   relativeTime,
 } from "../constants";
 import { getSlaPolicyShowPath, helpdeskRoutes } from "../routes";
+import { slaLabel, slaStateFor, slaTone } from "../sla";
 import { useOpenContextualChild } from "../route-surfaces";
 import {
   CategoryBadge,
@@ -197,11 +199,15 @@ export const TicketShow = () => {
               ]}
             />
 
-            <MatchedSla priority={ticket.priority} />
+            <MatchedSla ticket={ticket} />
 
             <Separator />
 
-            <RepliesThread ticketId={ticket.id} openChild={openChild} />
+            <RepliesThread
+              ticketId={ticket.id}
+              requesterId={ticket.requesterId}
+              openChild={openChild}
+            />
           </div>
         )}
       </div>
@@ -226,8 +232,9 @@ function slaMinutesLabel(
   return translate("helpdesk.sla.minutes", { ns: "starter", count: mins }, `${mins}m`);
 }
 
-function MatchedSla({ priority }: { priority: string | null | undefined }) {
+function MatchedSla({ ticket }: { ticket: TicketRecord }) {
   const translate = useTranslate();
+  const priority = ticket.priority;
   const { result, query } = useList<SlaPolicyRecord>({
     resource: SLA_POLICIES,
     filters: priority
@@ -239,7 +246,19 @@ function MatchedSla({ priority }: { priority: string | null | undefined }) {
   });
 
   const policy = result.data?.[0];
+  const byPriority = useMemo(() => {
+    const map = new Map<string, SlaPolicyRecord>();
+    if (policy?.priority) map.set(policy.priority, policy);
+    return map;
+  }, [policy]);
+  const state = useMemo(
+    () => slaStateFor(ticket, byPriority),
+    [byPriority, ticket]
+  );
+
   if (query.isLoading || !policy) return null;
+
+  const tone = state ? slaTone(state) : "ok";
 
   return (
     <>
@@ -249,6 +268,40 @@ function MatchedSla({ priority }: { priority: string | null | undefined }) {
           <ShieldCheck className="size-4 text-muted-foreground" />
           {translate("helpdesk.show.matchedSla", { ns: "starter" }, "Matched SLA")}
         </h3>
+
+        {state && (
+          <div
+            className={cn(
+              "flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3",
+              tone === "breached" && "border-red-500/40 bg-red-500/[0.06]",
+              tone === "risk" && "border-amber-500/40 bg-amber-500/[0.06]",
+              tone === "ok" && "border-border/70 bg-muted/30"
+            )}
+          >
+            <div>
+              <p className="text-xs text-muted-foreground">
+                {state.isRunning
+                  ? translate("helpdesk.sla.countdown", { ns: "starter" }, "Time to resolve")
+                  : translate("helpdesk.sla.outcome", { ns: "starter" }, "SLA outcome")}
+              </p>
+              <p
+                className={cn(
+                  "text-lg font-semibold tabular-nums",
+                  tone === "breached" && "text-red-600 dark:text-red-400",
+                  tone === "risk" && "text-amber-600 dark:text-amber-400"
+                )}
+              >
+                {slaLabel(state, translate)}
+              </p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {translate("helpdesk.sla.dueAt", { ns: "starter" }, "Target {{time}}").replace(
+                "{{time}}",
+                formatDateTime(state.resolveDueAt.toISOString(), "en-US")
+              )}
+            </p>
+          </div>
+        )}
         <Link
           to={getSlaPolicyShowPath(policy.id)}
           className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-muted/30 px-4 py-3 text-sm transition-colors hover:border-primary/40 hover:bg-accent/40"
@@ -282,9 +335,11 @@ function MatchedSla({ priority }: { priority: string | null | undefined }) {
 
 function RepliesThread({
   ticketId,
+  requesterId,
   openChild,
 }: {
   ticketId: number | string;
+  requesterId?: number | string | null;
   openChild: (to: string) => void;
 }) {
   const translate = useTranslate();
@@ -333,18 +388,50 @@ function RepliesThread({
         </p>
       ) : (
         <ol className="space-y-3">
-          {replies.map((reply) => (
+          {replies.map((reply) => {
+            // Anything written by the requester is the customer side of the
+            // conversation; everyone else is the support agent.
+            const fromRequester =
+              requesterId != null &&
+              String(reply.authorId ?? reply.author?.id ?? "") === String(requesterId);
+            return (
             <li
               key={reply.id}
-              className="flex gap-3 rounded-xl border border-border/70 bg-card p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]"
+              className={cn(
+                "flex gap-3 rounded-xl border p-3 shadow-[0_1px_3px_rgba(0,0,0,0.05)]",
+                fromRequester
+                  ? "border-border/70 bg-card"
+                  : "border-primary/25 bg-primary/[0.04]"
+              )}
             >
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/12 text-[11px] font-semibold text-primary">
+              <span
+                className={cn(
+                  "flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                  fromRequester
+                    ? "bg-muted text-muted-foreground"
+                    : "bg-primary/12 text-primary"
+                )}
+              >
                 {initialsFor(userLabel(reply.author as UserRef, translate))}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline justify-between gap-2">
-                  <span className="truncate text-sm font-medium text-foreground">
-                    {userLabel(reply.author as UserRef, translate)}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="truncate text-sm font-medium text-foreground">
+                      {userLabel(reply.author as UserRef, translate)}
+                    </span>
+                    <span
+                      className={cn(
+                        "shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide",
+                        fromRequester
+                          ? "bg-muted text-muted-foreground"
+                          : "bg-primary/12 text-primary"
+                      )}
+                    >
+                      {fromRequester
+                        ? translate("helpdesk.thread.fromRequester", { ns: "starter" }, "Requester")
+                        : translate("helpdesk.thread.fromAgent", { ns: "starter" }, "Agent")}
+                    </span>
                   </span>
                   <div className="flex shrink-0 items-center gap-1">
                     <span
@@ -380,7 +467,8 @@ function RepliesThread({
                 </p>
               </div>
             </li>
-          ))}
+            );
+          })}
         </ol>
       )}
 

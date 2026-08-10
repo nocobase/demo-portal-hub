@@ -1,5 +1,5 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Link2, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import { useOutlet, useParams } from "react-router";
 
 import { DeleteButton } from "@/components/resources/buttons/delete";
@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import { INVOICE_STATUSES, lookup, optionLabel } from "../constants";
+import { escapeHtml, openPrintWindow } from "@/lib/table-kit";
 import { useContextualCloseTo, useOpenContextualChild } from "../route-surfaces";
 import {
   DetailItems,
@@ -23,6 +24,10 @@ import {
   StatusTimeline,
 } from "../shared";
 import type { Invoice, InvoiceLineItem } from "../types";
+import {
+  invoiceDisplayStatus,
+  isInvoiceOverdue,
+} from "../invoice-metrics";
 
 const RESOURCE = "hub_fin_invoices";
 
@@ -31,13 +36,6 @@ const TIMELINE_STEPS_KEYS = [
   ["finance.invoices.timeline.sent", "Sent"],
   ["finance.invoices.timeline.paid", "Paid"],
 ] as const;
-
-function isOverdue(inv: Invoice): boolean {
-  if (inv.status === "paid" || inv.status === "draft") return false;
-  if (inv.status === "overdue") return true;
-  if (!inv.due_date) return false;
-  return new Date(inv.due_date).getTime() < Date.now();
-}
 
 export function InvoiceShow() {
   const t = useTranslate();
@@ -50,8 +48,28 @@ export function InvoiceShow() {
     id,
   });
 
-  const overdue = record ? isOverdue(record) : false;
-  const statusOpt = lookup(INVOICE_STATUSES, record?.status);
+  const { result: lineItems, query: lineItemsQuery } = useList<InvoiceLineItem>({
+    resource: "hub_fin_invoice_items",
+    pagination: { mode: "server", currentPage: 1, pageSize: 200 },
+    sorters: [{ field: "id", order: "asc" }],
+    filters: id ? [{ field: "invoice_id", operator: "eq", value: id }] : [],
+    errorNotification: false,
+    queryOptions: { enabled: Boolean(id), retry: false },
+  });
+
+  const overdue = record ? isInvoiceOverdue(record) : false;
+  const statusOpt = lookup(
+    INVOICE_STATUSES,
+    record ? invoiceDisplayStatus(record) : undefined
+  );
+  const lineTotal = lineItems.data.reduce(
+    (sum, item) => sum + (Number(item.amount) || 0),
+    0
+  );
+  const displayAmount = lineItems.data.length > 0 ? lineTotal : Number(record?.amount ?? 0);
+  const amountMismatch =
+    Boolean(record && lineItems.data.length > 0) &&
+    Math.abs(displayAmount - Number(record?.amount ?? 0)) > 0.5;
   const activeIndex =
     record?.status === "paid" ? 2 : overdue || record?.status === "sent" ? 1 : 0;
   const timelineSteps = TIMELINE_STEPS_KEYS.map(([key, fallback]) =>
@@ -75,15 +93,33 @@ export function InvoiceShow() {
       nested={nested}
       actions={
         record ? (
-          <EditButton
-            resource={RESOURCE}
-            recordItemId={record.id}
-            variant="outline"
-            size="icon-sm"
-            onClick={() => openChild("edit")}
-          >
-            <Pencil />
-          </EditButton>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={t("finance.common.copyLink", "Copy link")}
+              onClick={() => void navigator.clipboard?.writeText(window.location.href)}
+            >
+              <Link2 />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={t("finance.invoices.print.action", "Print invoice")}
+              onClick={() => printInvoice({ invoice: record, items: lineItems.data, t })}
+            >
+              <Printer />
+            </Button>
+            <EditButton
+              resource={RESOURCE}
+              recordItemId={record.id}
+              variant="outline"
+              size="icon-sm"
+              onClick={() => openChild("edit")}
+            >
+              <Pencil />
+            </EditButton>
+          </div>
         ) : null
       }
     >
@@ -132,11 +168,22 @@ export function InvoiceShow() {
                 [
                   t("finance.invoices.field.amount", "Amount"),
                   <span key="amount" className="tabular-nums">
-                    {money(record?.amount, true)}
+                    {lineItemsQuery.isError ? "—" : money(displayAmount, true)}
                   </span>,
                 ],
               ]}
             />
+            {amountMismatch ? (
+              <Alert variant="destructive">
+                <AlertTitle>{t("finance.invoices.amountMismatch.title", "Invoice total mismatch")}</AlertTitle>
+                <AlertDescription>
+                  {t(
+                    "finance.invoices.amountMismatch.description",
+                    "The line-item total is shown as authoritative. The stored header amount requires server reconciliation."
+                  )}
+                </AlertDescription>
+              </Alert>
+            ) : null}
             {id ? (
               <>
                 <Separator />
@@ -148,6 +195,85 @@ export function InvoiceShow() {
       </div>
     </RouteDrawer>
   );
+}
+
+/** Client-ready printable invoice, styled independently of the app theme. */
+function printInvoice({
+  invoice,
+  items,
+  t,
+}: {
+  invoice: Invoice;
+  items: InvoiceLineItem[];
+  t: ReturnType<typeof useTranslate>;
+}) {
+  const subtotal = items.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const total = items.length > 0 ? subtotal : Number(invoice.amount) || 0;
+  const field = (label: string, value: string) =>
+    `<div><span class="label">${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></div>`;
+
+  const body = `
+    <div class="doc-head">
+      <div>
+        <h1>${escapeHtml(t("finance.invoices.print.heading", "Invoice"))} ${escapeHtml(
+          invoice.invoice_number ?? ""
+        )}</h1>
+        <p class="muted">${escapeHtml(invoice.client_name ?? "")}</p>
+      </div>
+      <span class="badge">${escapeHtml(invoiceDisplayStatus(invoice) ?? "")}</span>
+    </div>
+    <h2>${escapeHtml(t("finance.invoices.print.details", "Details"))}</h2>
+    <div class="grid">
+      ${field(t("finance.invoices.field.client", "Client"), invoice.client_name ?? "—")}
+      ${field(t("finance.invoices.field.issueDate", "Issue date"), fmtDate(invoice.issue_date))}
+      ${field(t("finance.invoices.field.dueDate", "Due date"), fmtDate(invoice.due_date))}
+      ${field(t("finance.invoices.field.amount", "Amount"), money(total, true))}
+    </div>
+    <h2>${escapeHtml(t("finance.invoices.items.title", "Line items"))}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>${escapeHtml(t("finance.invoices.items.description", "Description"))}</th>
+          <th class="num">${escapeHtml(t("finance.invoices.items.qty", "Qty"))}</th>
+          <th class="num">${escapeHtml(t("finance.invoices.items.unitPrice", "Unit price"))}</th>
+          <th class="num">${escapeHtml(t("finance.invoices.items.lineTotal", "Line total"))}</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${
+          items.length === 0
+            ? `<tr><td colspan="5" class="muted">${escapeHtml(
+                t("finance.invoices.items.empty", "No line items recorded.")
+              )}</td></tr>`
+            : items
+                .map(
+                  (item, index) =>
+                    `<tr><td>${index + 1}</td><td>${escapeHtml(
+                      item.description ?? ""
+                    )}</td><td class="num">${escapeHtml(
+                      item.quantity ?? 0
+                    )}</td><td class="num">${escapeHtml(
+                      money(item.unit_price, true)
+                    )}</td><td class="num">${escapeHtml(
+                      money(item.amount, true)
+                    )}</td></tr>`
+                )
+                .join("")
+        }
+      </tbody>
+      <tfoot>
+        <tr><td colspan="4" class="num">${escapeHtml(
+          t("finance.invoices.print.total", "Total due")
+        )}</td><td class="num">${escapeHtml(money(total, true))}</td></tr>
+      </tfoot>
+    </table>
+    <footer>${escapeHtml(
+      t("finance.invoices.print.footer", "Please quote the invoice number with your payment.")
+    )}</footer>
+  `;
+
+  openPrintWindow(invoice.invoice_number ?? "invoice", body);
 }
 
 function LineItemsSection({

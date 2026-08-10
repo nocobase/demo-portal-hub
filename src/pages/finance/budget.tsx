@@ -1,5 +1,6 @@
 import { useList, useTranslate } from "@refinedev/core";
 import ReactECharts from "echarts-for-react";
+import { AlertTriangle, Gauge, PiggyBank, Wallet } from "lucide-react";
 import { useMemo } from "react";
 
 import {
@@ -11,7 +12,9 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/pages/home/theme";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EXPENSE_CATEGORIES, optionLabel } from "./constants";
+import { KpiStrip, type KpiTile } from "@/lib/table-kit";
 import { money, PageHeader } from "./shared";
 import type { Budget, Expense } from "./types";
 
@@ -60,8 +63,59 @@ export function BudgetVsActual() {
   const totals = useMemo(() => {
     const budget = rows.reduce((sum, r) => sum + r.budget, 0);
     const actual = rows.reduce((sum, r) => sum + r.actual, 0);
-    return { budget, actual };
+    const overspent = rows.filter((r) => r.over);
+    // Anything past 85% is a warning: still inside budget, but close enough
+    // that a controller wants to see it before the month closes.
+    const atRisk = rows.filter((r) => !r.over && r.budget > 0 && r.pct >= 85);
+    const overspendAmount = overspent.reduce(
+      (sum, r) => sum + (r.actual - r.budget),
+      0
+    );
+    return { budget, actual, overspent, atRisk, overspendAmount };
   }, [rows]);
+
+  const executionRate = totals.budget > 0 ? (totals.actual / totals.budget) * 100 : 0;
+
+  const tiles: KpiTile[] = [
+    {
+      key: "budget",
+      label: t("finance.budget.kpi.budget", "Budgeted"),
+      value: money(totals.budget),
+      hint: t("finance.budget.kpi.budget.hint", "Across all categories"),
+      icon: PiggyBank,
+      tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
+    },
+    {
+      key: "actual",
+      label: t("finance.budget.kpi.actual", "Actual spend"),
+      value: money(totals.actual),
+      hint: t("finance.budget.kpi.actual.hint", "Approved and reimbursed claims"),
+      icon: Wallet,
+      tone: "text-teal-600 bg-teal-500/12 dark:text-teal-400",
+    },
+    {
+      key: "rate",
+      label: t("finance.budget.kpi.rate", "Execution rate"),
+      value: `${Math.round(executionRate)}%`,
+      hint: t("finance.budget.kpi.rate.hint", "Actual as a share of budget"),
+      icon: Gauge,
+      tone:
+        executionRate > 100
+          ? "text-red-600 bg-red-500/12 dark:text-red-400"
+          : "text-emerald-600 bg-emerald-500/12 dark:text-emerald-400",
+    },
+    {
+      key: "over",
+      label: t("finance.budget.kpi.over", "Overspend"),
+      value: money(totals.overspendAmount),
+      hint: t("finance.budget.kpi.over.hint", "{{count}} categories over budget").replace(
+        "{{count}}",
+        String(totals.overspent.length)
+      ),
+      icon: AlertTriangle,
+      tone: "text-red-600 bg-red-500/12 dark:text-red-400",
+    },
+  ];
 
   const axisBase = {
     axisLine: { lineStyle: { color: chart.grid } },
@@ -142,6 +196,37 @@ export function BudgetVsActual() {
           "Approved and reimbursed spend against the monthly budget, by expense category."
         )}
       />
+
+      <KpiStrip tiles={tiles} />
+
+      {totals.overspent.length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="size-4" />
+          <AlertTitle>
+            {t("finance.budget.alert.over.title", "Categories over budget")}
+          </AlertTitle>
+          <AlertDescription>
+            {totals.overspent
+              .map(
+                (row) =>
+                  `${row.label} ${money(row.actual - row.budget)} (${row.pct}%)`
+              )
+              .join(" · ")}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {totals.atRisk.length > 0 && (
+        <Alert>
+          <AlertTriangle className="size-4" />
+          <AlertTitle>
+            {t("finance.budget.alert.risk.title", "Approaching budget")}
+          </AlertTitle>
+          <AlertDescription>
+            {totals.atRisk.map((row) => `${row.label} ${row.pct}%`).join(" · ")}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <Card>
         <CardHeader>

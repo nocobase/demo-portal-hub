@@ -110,6 +110,27 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
     ],
   },
   {
+    name: "hd-agents",
+    path: helpdeskRoutes.agentPerformance,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hd-agents"),
+      })),
+    resource: {
+      meta: {
+        label: "Agent performance",
+        i18nKey: "helpdesk.resources.agentPerformance",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey:
+          "helpdesk.resources.agentPerformance.description",
+        priority: 52,
+        icon: <Gauge />,
+        description: "Workload, response speed and SLA outcomes by agent.",
+        acl: false,
+      },
+    },
+  },
+  {
     name: "hd-sla",
     path: helpdeskRoutes.slaPolicies,
     lazy: () =>

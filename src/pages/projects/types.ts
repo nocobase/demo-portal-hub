@@ -15,6 +15,7 @@ export type ProjectRecord = {
   owner?: UserRef | null;
   createdAt?: string;
   updatedAt?: string;
+  completed_at?: string | null;
 };
 
 export type ProjectFormValues = {
@@ -36,6 +37,7 @@ export type TaskRecord = {
   assignee?: UserRef | null;
   createdAt?: string;
   updatedAt?: string;
+  completed_at?: string | null;
 };
 
 export type TaskFormValues = {
@@ -54,6 +56,7 @@ export type MilestoneRecord = {
   done?: boolean | null;
   project?: ProjectRecord | null;
   createdAt?: string;
+  completed_at?: string | null;
 };
 
 export type MilestoneFormValues = {

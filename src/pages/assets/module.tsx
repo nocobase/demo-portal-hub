@@ -1,4 +1,4 @@
-import { ClipboardList, Package, Wrench } from "lucide-react";
+import { ClipboardList, Package, Scale, Wrench } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
 import { assetsRoutes } from "./routes";
 
@@ -86,6 +86,28 @@ const maintenanceShowChildren: AppRouteDefinition[] = [
       })),
   },
 ];
+
+const ledgerRoute: AppRouteDefinition = {
+  name: "assets-ledger",
+  path: assetsRoutes.ledger,
+  lazy: () =>
+    import("./route-components").then((module) => ({
+      default: module.routeComponent("assets-ledger"),
+    })),
+  resource: {
+    meta: {
+      label: "Asset ledger",
+      i18nKey: "assets.resources.ledger",
+      i18nOptions: { ns: "starter" },
+      descriptionI18nKey: "assets.resources.ledger.description",
+      priority: 51,
+      icon: <Scale />,
+      description:
+        "Book value, accumulated depreciation and refresh exposure across the register.",
+      acl: false,
+    },
+  },
+};
 
 const routes: AppRouteDefinition[] = [
   {
@@ -253,6 +275,7 @@ const routes: AppRouteDefinition[] = [
       },
     ],
   },
+  ledgerRoute,
 ];
 
 export const assetsModule = { routes };

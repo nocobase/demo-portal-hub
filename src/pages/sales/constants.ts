@@ -1,4 +1,10 @@
 import type { useTranslate } from "@refinedev/core";
+export {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  toDateInputValue,
+} from "@/lib/table-kit";
 
 export const CURRENCY = "USD";
 
@@ -136,16 +142,6 @@ export const labelFor = (
     : option.label;
 };
 
-export const formatCurrency = (
-  value: number | null | undefined,
-  locale: string
-) =>
-  new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: CURRENCY,
-    maximumFractionDigits: 0,
-  }).format(Number(value ?? 0));
-
 // Compact currency for board totals, e.g. $156K.
 export const formatCurrencyCompact = (
   value: number | null | undefined,
@@ -158,23 +154,146 @@ export const formatCurrencyCompact = (
     maximumFractionDigits: 1,
   }).format(Number(value ?? 0));
 
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
+// ---------------------------------------------------------------------------
+// Dates
+// ---------------------------------------------------------------------------
 
-export const formatDateTime = (
-  value: string | null | undefined,
-  locale: string
-) =>
-  value
-    ? new Intl.DateTimeFormat(locale, {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "—";
+/** Local-date key (YYYY-MM-DD). Not toISOString() — that shifts by timezone. */
+export const todayIso = () => {
+  const now = new Date();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${now.getFullYear()}-${month}-${day}`;
+};
 
-export const toDateInputValue = (value: string | null | undefined) =>
-  value ? String(value).slice(0, 10) : "";
+export const addDaysIso = (days: number) => {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+};
+
+/** Whole days from `value` until today; negative when `value` is in the future. */
+export const daysSince = (value: string | null | undefined) => {
+  if (!value) return null;
+  const then = new Date(String(value).slice(0, 10));
+  if (Number.isNaN(then.getTime())) return null;
+  const today = new Date(todayIso());
+  return Math.round((today.getTime() - then.getTime()) / 86_400_000);
+};
+
+/** Calendar quarter (0-based) of a YYYY-MM-DD string. */
+export const quarterOf = (value: string) =>
+  Math.floor((Number(value.slice(5, 7)) - 1) / 3);
+
+// ---------------------------------------------------------------------------
+// Deal stage machine
+// ---------------------------------------------------------------------------
+
+/**
+ * Default win probability per stage. NocoBase has no probability column on
+ * hub_sales_deals, so weighted pipeline is derived from the stage the same way
+ * Salesforce seeds probability from its stage definition.
+ */
+export const STAGE_PROBABILITY: Record<string, number> = {
+  inquiry: 0.1,
+  quote: 0.3,
+  negotiation: 0.6,
+  won: 1,
+  lost: 0,
+};
+
+export const weightedAmount = (
+  amount: number | null | undefined,
+  stage: string | null | undefined
+) => Number(amount ?? 0) * (STAGE_PROBABILITY[stage ?? "inquiry"] ?? 0);
+
+/**
+ * Legal stage transitions. A deal advances one stage at a time, can be closed
+ * won/lost from any open stage, and a closed deal can only be reopened back
+ * into negotiation — arbitrary jumps are rejected by `canTransition`.
+ */
+export const STAGE_TRANSITIONS: Record<string, string[]> = {
+  inquiry: ["quote", "won", "lost"],
+  quote: ["negotiation", "won", "lost"],
+  negotiation: ["won", "lost"],
+  won: ["negotiation"],
+  lost: ["negotiation"],
+};
+
+export const nextStages = (stage: string | null | undefined) =>
+  STAGE_TRANSITIONS[stage ?? "inquiry"] ?? [];
+
+export const canTransition = (from: string | null | undefined, to: string) =>
+  nextStages(from).includes(to);
+
+// ---------------------------------------------------------------------------
+// Lead scoring
+// ---------------------------------------------------------------------------
+
+const SOURCE_POINTS: Record<string, number> = {
+  referral: 35,
+  partner: 30,
+  event: 25,
+  website: 18,
+  cold_call: 10,
+};
+
+const STATUS_POINTS: Record<string, number> = {
+  qualified: 35,
+  new: 20,
+  unqualified: 0,
+};
+
+export type LeadScoreFactor = { key: string; labelKey: string; points: number };
+
+/**
+ * Transparent 0–100 fit score. There is no score column on hub_sales_leads, so
+ * it is derived from the fields that do exist — the UI shows the breakdown
+ * rather than presenting it as a stored value.
+ */
+export const scoreLead = (lead: {
+  source?: string | null;
+  status?: string | null;
+  email?: string | null;
+  company?: string | null;
+  createdAt?: string;
+}): { score: number; factors: LeadScoreFactor[] } => {
+  const factors: LeadScoreFactor[] = [
+    {
+      key: "source",
+      labelKey: "sales.leads.score.source",
+      points: SOURCE_POINTS[lead.source ?? ""] ?? 5,
+    },
+    {
+      key: "status",
+      labelKey: "sales.leads.score.status",
+      points: STATUS_POINTS[lead.status ?? "new"] ?? 0,
+    },
+    {
+      key: "contactable",
+      labelKey: "sales.leads.score.contactable",
+      points: lead.email ? 15 : 0,
+    },
+    {
+      key: "company",
+      labelKey: "sales.leads.score.company",
+      points: lead.company ? 10 : 0,
+    },
+  ];
+  const age = daysSince(lead.createdAt);
+  factors.push({
+    key: "freshness",
+    labelKey: "sales.leads.score.freshness",
+    points: age === null ? 0 : age <= 7 ? 5 : age <= 30 ? 2 : 0,
+  });
+  const score = Math.min(
+    100,
+    factors.reduce((total, factor) => total + factor.points, 0)
+  );
+  return { score, factors };
+};
+
+export const scoreBand = (score: number): "hot" | "warm" | "cold" =>
+  score >= 70 ? "hot" : score >= 40 ? "warm" : "cold";

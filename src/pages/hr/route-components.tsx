@@ -1,4 +1,10 @@
-import { CalendarCheck, CalendarDays, Network, Users } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarDays,
+  Network,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -20,6 +26,7 @@ import { LeaveCreate, LeaveEdit } from "@/pages/hr/leave/create-edit";
 import { LeaveLayout } from "@/pages/hr/leave/list";
 import { LeaveShow } from "@/pages/hr/leave/show";
 import { LeaveCalendarPage } from "@/pages/hr/leave-calendar";
+import { LifecyclePage } from "@/pages/hr/lifecycle";
 import { OrgChartPage } from "@/pages/hr/org-chart";
 import { hrRoutes } from "@/pages/hr/routes";
 
@@ -344,6 +351,23 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         priority: 51,
         icon: <CalendarDays />,
         description: "A month view of who's off and when.",
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "hr-lifecycle",
+    path: hrRoutes.lifecycle,
+    element: <LifecyclePage />,
+    resource: {
+      meta: {
+        label: "Joiners & leavers",
+        i18nKey: "hr.resources.lifecycle",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "hr.resources.lifecycle.description",
+        priority: 52,
+        icon: <UserPlus />,
+        description: "Onboarding progress for new hires, plus who has left.",
         acl: false,
       },
     },

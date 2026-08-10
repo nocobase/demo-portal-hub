@@ -5,7 +5,18 @@ import {
   useTranslate,
 } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
-import { Check, Plus, Save, Trash2 } from "lucide-react";
+import {
+  Check,
+  ClipboardList,
+  Download,
+  Plus,
+  Save,
+  ShieldCheck,
+  Tickets,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
+import { useMemo } from "react";
 import { Link, Outlet, useParams } from "react-router";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -29,11 +40,18 @@ import {
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
 import { TICKET_PRIORITIES, labelFor } from "./constants";
+import { KpiStrip, exportCsv, type KpiTile } from "@/lib/table-kit";
 import { getSlaPolicyShowPath, helpdeskRoutes } from "./routes";
+import { slaStateFor } from "./sla";
 import { PriorityPill } from "./shared";
-import type { SlaPolicyFormValues, SlaPolicyRecord } from "./types";
+import type {
+  SlaPolicyFormValues,
+  SlaPolicyRecord,
+  TicketRecord,
+} from "./types";
 
 const RESOURCE = "hub_hd_sla_policies";
+const TICKETS_RESOURCE = "hub_hd_tickets";
 
 // ---------------------------------------------------------------------------
 // SLA policies — a plain table (no board here, unlike tickets: a policy
@@ -74,7 +92,172 @@ function SlaPoliciesPage() {
     queryOptions: { retry: false },
   });
 
-  const policies = result.data ?? [];
+  const { result: ticketsResult, query: ticketsQuery } = useList<TicketRecord>({
+    resource: TICKETS_RESOURCE,
+    pagination: { mode: "server", currentPage: 1, pageSize: 500 },
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const policies = useMemo(() => result.data ?? [], [result.data]);
+  const tickets = useMemo(() => ticketsResult.data ?? [], [ticketsResult.data]);
+
+  const compliance = useMemo(() => {
+    const byPriority = new Map<string, SlaPolicyRecord>();
+    for (const policy of policies) {
+      if (policy.priority) byPriority.set(policy.priority, policy);
+    }
+
+    const byPolicy = new Map<
+      number | string,
+      { tickets: number; breached: number; attainment: number }
+    >();
+    for (const policy of policies) {
+      const matchingTickets = tickets.filter(
+        (ticket) => ticket.priority === policy.priority
+      );
+      const policyMap = new Map<string, SlaPolicyRecord>();
+      if (policy.priority) policyMap.set(policy.priority, policy);
+      const breached = matchingTickets.filter(
+        (ticket) => slaStateFor(ticket, policyMap)?.isBreached
+      ).length;
+      const attainment = matchingTickets.length
+        ? ((matchingTickets.length - breached) / matchingTickets.length) * 100
+        : 100;
+      byPolicy.set(policy.id, {
+        tickets: matchingTickets.length,
+        breached,
+        attainment,
+      });
+    }
+
+    const coveredTickets = tickets.filter((ticket) =>
+      byPriority.has(ticket.priority ?? "")
+    );
+    const breached = coveredTickets.filter(
+      (ticket) => slaStateFor(ticket, byPriority)?.isBreached
+    ).length;
+    const attainment = coveredTickets.length
+      ? ((coveredTickets.length - breached) / coveredTickets.length) * 100
+      : 100;
+    const uncoveredPriorities = TICKET_PRIORITIES.map((option) => option.value).filter(
+      (priority) =>
+        tickets.some((ticket) => ticket.priority === priority) &&
+        !byPriority.has(priority)
+    );
+
+    return {
+      byPolicy,
+      coveredTickets: coveredTickets.length,
+      breached,
+      attainment,
+      uncoveredPriorities,
+    };
+  }, [policies, tickets]);
+
+  const policyRows = useMemo(
+    () =>
+      policies.map((policy) => ({
+        policy,
+        metrics: compliance.byPolicy.get(policy.id) ?? {
+          tickets: 0,
+          breached: 0,
+          attainment: 100,
+        },
+      })),
+    [compliance.byPolicy, policies]
+  );
+
+  const kpiTiles = useMemo<KpiTile[]>(
+    () => [
+      {
+        key: "policies",
+        label: translate("helpdesk.sla.kpi.policies", { ns: "starter" }, "Policies"),
+        value: String(policies.length),
+        icon: ClipboardList,
+        tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
+      },
+      {
+        key: "covered",
+        label: translate(
+          "helpdesk.sla.kpi.covered",
+          { ns: "starter" },
+          "Tickets covered"
+        ),
+        value: String(compliance.coveredTickets),
+        icon: Tickets,
+        tone: "text-violet-600 bg-violet-500/12 dark:text-violet-400",
+      },
+      {
+        key: "attainment",
+        label: translate(
+          "helpdesk.sla.kpi.attainment",
+          { ns: "starter" },
+          "Team attainment"
+        ),
+        value: `${Math.round(compliance.attainment)}%`,
+        icon: ShieldCheck,
+        tone: "text-emerald-600 bg-emerald-500/12 dark:text-emerald-400",
+      },
+      {
+        key: "breached",
+        label: translate("helpdesk.sla.kpi.breached", { ns: "starter" }, "Breached"),
+        value: String(compliance.breached),
+        icon: TriangleAlert,
+        tone: "text-red-600 bg-red-500/12 dark:text-red-400",
+      },
+    ],
+    [compliance, policies.length, translate]
+  );
+
+  const handleExport = () => {
+    exportCsv(
+      "helpdesk-sla-policies",
+      [
+        {
+          header: translate("helpdesk.sla.export.name", { ns: "starter" }, "Name"),
+          value: (row) => row.policy.name,
+        },
+        {
+          header: translate("helpdesk.sla.export.priority", { ns: "starter" }, "Priority"),
+          value: (row) => row.policy.priority,
+        },
+        {
+          header: translate(
+            "helpdesk.sla.export.response",
+            { ns: "starter" },
+            "Response target (mins)"
+          ),
+          value: (row) => row.policy.response_mins,
+        },
+        {
+          header: translate(
+            "helpdesk.sla.export.resolve",
+            { ns: "starter" },
+            "Resolve target (mins)"
+          ),
+          value: (row) => row.policy.resolve_mins,
+        },
+        {
+          header: translate("helpdesk.sla.columns.tickets", { ns: "starter" }, "Tickets"),
+          value: (row) => row.metrics.tickets,
+        },
+        {
+          header: translate("helpdesk.sla.columns.breached", { ns: "starter" }, "Breached"),
+          value: (row) => row.metrics.breached,
+        },
+        {
+          header: translate(
+            "helpdesk.sla.columns.attainment",
+            { ns: "starter" },
+            "Attainment %"
+          ),
+          value: (row) => Number(row.metrics.attainment.toFixed(1)),
+        },
+      ],
+      policyRows
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -95,45 +278,92 @@ function SlaPoliciesPage() {
               )}
             </p>
           </div>
-          <Button render={<Link to={helpdeskRoutes.slaPoliciesCreate} />}>
-            <Plus className="size-4" />
-            {translate("helpdesk.sla.new", { ns: "starter" }, "New policy")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="size-4" />
+              {translate("helpdesk.ops.exportCsv", { ns: "starter" }, "Export CSV")}
+            </Button>
+            <Button render={<Link to={helpdeskRoutes.slaPoliciesCreate} />}>
+              <Plus className="size-4" />
+              {translate("helpdesk.sla.new", { ns: "starter" }, "New policy")}
+            </Button>
+          </div>
         </div>
       </div>
 
+      <KpiStrip tiles={kpiTiles} />
+
+      {compliance.uncoveredPriorities.length > 0 ? (
+        <Alert>
+          <AlertTitle>
+            {translate(
+              "helpdesk.sla.uncovered.title",
+              { ns: "starter" },
+              "SLA coverage gap"
+            )}
+          </AlertTitle>
+          <AlertDescription>
+            {translate(
+              "helpdesk.sla.uncovered.description",
+              { ns: "starter" },
+              "No SLA policy covers: {{priorities}}"
+            ).replace("{{priorities}}", compliance.uncoveredPriorities.join(", "))}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
       <Card className="overflow-hidden">
         <CardContent className="p-0">
-          {query.isLoading ? (
+          {query.isLoading || ticketsQuery.isLoading ? (
             <div className="space-y-2 p-4">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
             </div>
           ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/70 text-left text-xs text-muted-foreground">
-                  <th className="px-4 py-2.5 font-medium">
-                    {translate("helpdesk.sla.columns.name", { ns: "starter" }, "Policy")}
-                  </th>
-                  <th className="px-4 py-2.5 font-medium">
-                    {translate("helpdesk.sla.columns.priority", { ns: "starter" }, "Priority")}
-                  </th>
-                  <th className="px-4 py-2.5 font-medium">
-                    {translate("helpdesk.sla.columns.response", { ns: "starter" }, "Response target")}
-                  </th>
-                  <th className="px-4 py-2.5 font-medium">
-                    {translate("helpdesk.sla.columns.resolve", { ns: "starter" }, "Resolve target")}
-                  </th>
-                  <th className="px-4 py-2.5 text-right font-medium">
-                    {translate("helpdesk.sla.columns.actions", { ns: "starter" }, "Actions")}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {policies.map((policy) => (
-                  <tr key={policy.id} className="border-b border-border/50 last:border-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-[1100px] w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border/70 text-left text-xs text-muted-foreground">
+                    <th className="px-4 py-2.5 font-medium">
+                      {translate("helpdesk.sla.columns.name", { ns: "starter" }, "Policy")}
+                    </th>
+                    <th className="px-4 py-2.5 font-medium">
+                      {translate("helpdesk.sla.columns.priority", { ns: "starter" }, "Priority")}
+                    </th>
+                    <th className="px-4 py-2.5 font-medium">
+                      {translate("helpdesk.sla.columns.response", { ns: "starter" }, "Response target")}
+                    </th>
+                    <th className="px-4 py-2.5 font-medium">
+                      {translate("helpdesk.sla.columns.resolve", { ns: "starter" }, "Resolve target")}
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
+                      {translate("helpdesk.sla.columns.tickets", { ns: "starter" }, "Tickets")}
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
+                      {translate("helpdesk.sla.columns.breached", { ns: "starter" }, "Breached")}
+                    </th>
+                    <th className="px-4 py-2.5 font-medium">
+                      {translate(
+                        "helpdesk.sla.columns.attainment",
+                        { ns: "starter" },
+                        "Attainment %"
+                      )}
+                    </th>
+                    <th className="px-4 py-2.5 text-right font-medium">
+                      {translate("helpdesk.sla.columns.actions", { ns: "starter" }, "Actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {policyRows.map(({ policy, metrics }) => (
+                    <tr
+                      key={policy.id}
+                      className={cn(
+                        "border-b border-border/50 last:border-0",
+                        metrics.breached > 0 && "bg-destructive/5"
+                      )}
+                    >
                     <td className="px-0 py-0">
                       <Link
                         to={getSlaPolicyShowPath(policy.id)}
@@ -154,6 +384,39 @@ function SlaPoliciesPage() {
                     <td className="px-4 py-3 text-muted-foreground">
                       {minutesLabel(policy.resolve_mins, translate)}
                     </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {metrics.tickets}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">
+                      {metrics.breached}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex min-w-32 items-center gap-3">
+                        <div
+                          className="h-1.5 flex-1 rounded-full bg-muted"
+                          aria-label={translate(
+                            "helpdesk.sla.attainment.label",
+                            { ns: "starter" },
+                            "SLA attainment"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "h-full rounded-full",
+                              metrics.attainment >= 95
+                                ? "bg-emerald-500"
+                                : metrics.attainment >= 85
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                            )}
+                            style={{ width: `${metrics.attainment}%` }}
+                          />
+                        </div>
+                        <span className="w-10 text-right tabular-nums">
+                          {Math.round(metrics.attainment)}%
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <DeleteButton
                         resource={RESOURCE}
@@ -165,10 +428,11 @@ function SlaPoliciesPage() {
                         <Trash2 />
                       </DeleteButton>
                     </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </CardContent>
       </Card>

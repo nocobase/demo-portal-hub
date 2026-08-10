@@ -13,6 +13,13 @@ export type DepartmentFormValues = {
   parentId: string | null;
 };
 
+/** NocoBase audit stamps, appended on the detail surfaces. */
+export type UserStamp = {
+  id: string | number;
+  nickname?: string | null;
+  username?: string | null;
+};
+
 export type EmployeeStatus = "active" | "onleave" | "terminated";
 
 export type EmployeeRecord = {
@@ -28,6 +35,8 @@ export type EmployeeRecord = {
   manager?: EmployeeRecord | null;
   createdAt?: string;
   updatedAt?: string;
+  createdBy?: UserStamp | null;
+  updatedBy?: UserStamp | null;
 };
 
 export type EmployeeFormValues = {
@@ -53,7 +62,14 @@ export type LeaveRequestRecord = {
   status?: string | null;
   employee_id?: string | number | null;
   employee?: EmployeeRecord | null;
+  approver_id?: string | number | null;
+  approver?: UserStamp | null;
+  approved_at?: string | null;
+  decision_comment?: string | null;
   createdAt?: string;
+  updatedAt?: string;
+  createdBy?: UserStamp | null;
+  updatedBy?: UserStamp | null;
 };
 
 export type LeaveRequestFormValues = {

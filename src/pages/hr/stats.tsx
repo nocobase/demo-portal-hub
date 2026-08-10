@@ -1,7 +1,7 @@
-import { useList, useTranslate } from "@refinedev/core";
+import { useTranslate } from "@refinedev/core";
 import ReactECharts from "echarts-for-react";
-import { CalendarOff, Network, UserCheck, Users } from "lucide-react";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import {
   Card,
   CardContent,
@@ -9,69 +9,91 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useChartTheme } from "@/pages/home/theme";
 import type { EmployeeRecord } from "./types";
 
-export function HrStats() {
-  const translate = useTranslate();
-  const chart = useChartTheme();
-  const { result } = useList<EmployeeRecord>({
-    resource: "hub_hr_employees",
-    pagination: { mode: "server", currentPage: 1, pageSize: 500 },
-    meta: { appends: ["department"] },
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
+type Grouping = "department" | "tenure" | "hiring";
 
-  const employees = result.data;
+/**
+ * The workforce analytics block under the employee directory: headcount mix,
+ * tenure profile and the hiring trend, all computed from the same employee
+ * rows the list already loaded. Bars drill through to a filtered directory.
+ */
+export function HrCharts({
+  employees,
+  isLoading,
+}: {
+  employees: EmployeeRecord[];
+  isLoading?: boolean;
+}) {
+  const translate = useTranslate();
+  const navigate = useNavigate();
+  const chart = useChartTheme();
+  const [grouping, setGrouping] = useState<Grouping>("department");
 
   const unassignedLabel = translate(
     "hr.stats.unassigned",
     { ns: "starter" },
     "Unassigned"
   );
+  const peopleSuffix = translate("hr.stats.peopleSuffix", { ns: "starter" }, "people");
 
-  const { headcount, active, onLeave, terminated, byDept, byTenure } = useMemo(() => {
-    const active = employees.filter((e) => e.status === "active").length;
-    const onLeave = employees.filter((e) => e.status === "onleave").length;
-    const terminated = employees.filter((e) => e.status === "terminated").length;
-    const counts = new Map<string, number>();
-    for (const emp of employees) {
-      if (emp.status === "terminated") continue;
-      const name = emp.department?.name ?? unassignedLabel;
-      counts.set(name, (counts.get(name) ?? 0) + 1);
+  const { byDept, byTenure, byHireYear, statusCounts } = useMemo(() => {
+    const deptCounts = new Map<string, { name: string; value: number; id: string }>();
+    for (const employee of employees) {
+      if (employee.status === "terminated") continue;
+      const id =
+        employee.department_id != null ? String(employee.department_id) : "";
+      const name = employee.department?.name ?? unassignedLabel;
+      const entry = deptCounts.get(id) ?? { name, value: 0, id };
+      entry.value += 1;
+      deptCounts.set(id, entry);
     }
-    const byDept = Array.from(counts.entries())
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
 
     const now = Date.now();
-    const yearsAgo = (years: number) => now - years * 365.25 * 24 * 60 * 60 * 1000;
+    const yearsAgo = (years: number) => now - years * 365.25 * 86400000;
     const tenureBuckets = [
       { key: "lt1", min: yearsAgo(1), max: Infinity },
       { key: "1to3", min: yearsAgo(3), max: yearsAgo(1) },
       { key: "3to5", min: yearsAgo(5), max: yearsAgo(3) },
       { key: "5plus", min: -Infinity, max: yearsAgo(5) },
     ];
-    const tenureCounts = new Map(tenureBuckets.map((b) => [b.key, 0]));
-    for (const emp of employees) {
-      if (emp.status === "terminated" || !emp.hire_date) continue;
-      const hired = new Date(emp.hire_date).getTime();
-      const bucket = tenureBuckets.find((b) => hired > b.min && hired <= b.max);
-      if (bucket) tenureCounts.set(bucket.key, (tenureCounts.get(bucket.key) ?? 0) + 1);
+    const tenureCounts = new Map(tenureBuckets.map((bucket) => [bucket.key, 0]));
+    const hireYears = new Map<string, number>();
+
+    for (const employee of employees) {
+      if (!employee.hire_date) continue;
+      const hired = new Date(employee.hire_date).getTime();
+      if (Number.isNaN(hired)) continue;
+      const year = String(new Date(employee.hire_date).getFullYear());
+      hireYears.set(year, (hireYears.get(year) ?? 0) + 1);
+      if (employee.status === "terminated") continue;
+      const bucket = tenureBuckets.find(
+        (item) => hired > item.min && hired <= item.max
+      );
+      if (bucket) {
+        tenureCounts.set(bucket.key, (tenureCounts.get(bucket.key) ?? 0) + 1);
+      }
     }
-    const byTenure = tenureBuckets.map((b) => ({
-      key: b.key,
-      value: tenureCounts.get(b.key) ?? 0,
-    }));
 
-    return { headcount: employees.length, active, onLeave, terminated, byDept, byTenure };
+    return {
+      byDept: [...deptCounts.values()].sort((a, b) => b.value - a.value),
+      byTenure: tenureBuckets.map((bucket) => ({
+        key: bucket.key,
+        value: tenureCounts.get(bucket.key) ?? 0,
+      })),
+      byHireYear: [...hireYears.entries()].sort((a, b) =>
+        a[0].localeCompare(b[0])
+      ),
+      statusCounts: {
+        active: employees.filter((row) => row.status === "active").length,
+        onleave: employees.filter((row) => row.status === "onleave").length,
+        terminated: employees.filter((row) => row.status === "terminated").length,
+      },
+    };
   }, [employees, unassignedLabel]);
-
-  const deptCount = byDept.length;
-
-  const peopleSuffix = translate("hr.stats.peopleSuffix", { ns: "starter" }, "people");
 
   const tenureLabels: Record<string, string> = {
     lt1: translate("hr.stats.tenure.lt1", { ns: "starter" }, "< 1 year"),
@@ -80,16 +102,106 @@ export function HrStats() {
     "5plus": translate("hr.stats.tenure.5plus", { ns: "starter" }, "5+ years"),
   };
 
+  const tooltip = {
+    backgroundColor: chart.tooltipBg,
+    borderColor: chart.tooltipBorder,
+    borderWidth: 1,
+    textStyle: { color: chart.tooltipText, fontSize: 12 },
+    valueFormatter: (value: number) => `${value} ${peopleSuffix}`,
+  };
+
+  const departmentOption = {
+    color: [chart.palette[0]],
+    grid: { left: 6, right: 16, top: 12, bottom: 8, containLabel: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, ...tooltip },
+    xAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: chart.grid } },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+      minInterval: 1,
+    },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: byDept.map((item) => item.name),
+      axisLine: { lineStyle: { color: chart.grid } },
+      axisTick: { show: false },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+    },
+    series: [
+      {
+        type: "bar",
+        data: byDept.map((item) => item.value),
+        barWidth: 14,
+        itemStyle: { borderRadius: [0, 4, 4, 0] },
+      },
+    ],
+  };
+
+  const tenureOption = {
+    color: [chart.palette[1]],
+    grid: { left: 6, right: 16, top: 12, bottom: 8, containLabel: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "shadow" }, ...tooltip },
+    xAxis: {
+      type: "category",
+      data: byTenure.map((item) => tenureLabels[item.key]),
+      axisLine: { lineStyle: { color: chart.grid } },
+      axisTick: { show: false },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+    },
+    yAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: chart.grid } },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+      minInterval: 1,
+    },
+    series: [
+      {
+        type: "bar",
+        data: byTenure.map((item) => item.value),
+        barWidth: 28,
+        itemStyle: { borderRadius: [4, 4, 0, 0] },
+      },
+    ],
+  };
+
+  const hiringOption = {
+    color: [chart.palette[2]],
+    grid: { left: 6, right: 16, top: 12, bottom: 8, containLabel: true },
+    tooltip: { trigger: "axis", axisPointer: { type: "line" }, ...tooltip },
+    xAxis: {
+      type: "category",
+      data: byHireYear.map(([year]) => year),
+      axisLine: { lineStyle: { color: chart.grid } },
+      axisTick: { show: false },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+    },
+    yAxis: {
+      type: "value",
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: chart.grid } },
+      axisLabel: { color: chart.axis, fontSize: 12 },
+      minInterval: 1,
+    },
+    series: [
+      {
+        type: "line",
+        smooth: true,
+        symbolSize: 7,
+        areaStyle: { opacity: 0.12 },
+        data: byHireYear.map(([, count]) => count),
+      },
+    ],
+  };
+
   const statusPieOption = {
     color: [chart.palette[0], chart.palette[3], chart.palette[5]],
-    tooltip: {
-      trigger: "item",
-      backgroundColor: chart.tooltipBg,
-      borderColor: chart.tooltipBorder,
-      borderWidth: 1,
-      textStyle: { color: chart.tooltipText, fontSize: 12 },
-      valueFormatter: (v: number) => `${v} ${peopleSuffix}`,
-    },
+    tooltip: { trigger: "item", ...tooltip },
     legend: {
       bottom: 0,
       textStyle: { color: chart.axis, fontSize: 12 },
@@ -107,11 +219,11 @@ export function HrStats() {
         data: [
           {
             name: translate("hr.stats.active.label", { ns: "starter" }, "Active"),
-            value: active,
+            value: statusCounts.active,
           },
           {
             name: translate("hr.stats.onLeave.label", { ns: "starter" }, "On leave"),
-            value: onLeave,
+            value: statusCounts.onleave,
           },
           {
             name: translate(
@@ -119,145 +231,100 @@ export function HrStats() {
               { ns: "starter" },
               "Terminated"
             ),
-            value: terminated,
+            value: statusCounts.terminated,
           },
         ],
       },
     ],
   };
 
-  const tenureBarOption = {
-    color: [chart.palette[1]],
-    grid: { left: 6, right: 16, top: 12, bottom: 8, containLabel: true },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      backgroundColor: chart.tooltipBg,
-      borderColor: chart.tooltipBorder,
-      borderWidth: 1,
-      textStyle: { color: chart.tooltipText, fontSize: 12 },
-      valueFormatter: (v: number) => `${v} ${peopleSuffix}`,
+  const groupings: Array<{ value: Grouping; label: string }> = [
+    {
+      value: "department",
+      label: translate("hr.stats.group.department", { ns: "starter" }, "Department"),
     },
-    xAxis: {
-      type: "category",
-      data: byTenure.map((t) => tenureLabels[t.key]),
-      axisLine: { lineStyle: { color: chart.grid } },
-      axisTick: { show: false },
-      axisLabel: { color: chart.axis, fontSize: 12 },
+    {
+      value: "tenure",
+      label: translate("hr.stats.group.tenure", { ns: "starter" }, "Tenure"),
     },
-    yAxis: {
-      type: "value",
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: { lineStyle: { color: chart.grid } },
-      axisLabel: { color: chart.axis, fontSize: 12 },
-      minInterval: 1,
+    {
+      value: "hiring",
+      label: translate("hr.stats.group.hiring", { ns: "starter" }, "Hiring trend"),
     },
-    series: [
-      {
-        type: "bar",
-        data: byTenure.map((t) => t.value),
-        barWidth: 28,
-        itemStyle: { borderRadius: [4, 4, 0, 0] },
-      },
-    ],
-  };
+  ];
 
-  const barOption = {
-    color: [chart.palette[0]],
-    grid: { left: 6, right: 16, top: 12, bottom: 8, containLabel: true },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: { type: "shadow" },
-      backgroundColor: chart.tooltipBg,
-      borderColor: chart.tooltipBorder,
-      borderWidth: 1,
-      textStyle: { color: chart.tooltipText, fontSize: 12 },
-      valueFormatter: (v: number) => `${v} ${peopleSuffix}`,
-    },
-    xAxis: {
-      type: "value",
-      axisLine: { show: false },
-      axisTick: { show: false },
-      splitLine: { lineStyle: { color: chart.grid } },
-      axisLabel: { color: chart.axis, fontSize: 12 },
-      minInterval: 1,
-    },
-    yAxis: {
-      type: "category",
-      inverse: true,
-      data: byDept.map((d) => d.name),
-      axisLine: { lineStyle: { color: chart.grid } },
-      axisTick: { show: false },
-      axisLabel: { color: chart.axis, fontSize: 12 },
-    },
-    series: [
-      {
-        type: "bar",
-        data: byDept.map((d) => d.value),
-        barWidth: 14,
-        itemStyle: { borderRadius: [0, 4, 4, 0] },
-      },
-    ],
+  const emptyText = translate(
+    "hr.stats.chart.empty",
+    { ns: "starter" },
+    "No staff assigned yet."
+  );
+
+  const primaryOption =
+    grouping === "department"
+      ? departmentOption
+      : grouping === "tenure"
+        ? tenureOption
+        : hiringOption;
+
+  const primaryHeight =
+    grouping === "department" ? Math.max(200, byDept.length * 34) : 260;
+
+  const drillDown = (params: { dataIndex: number }) => {
+    if (grouping !== "department") return;
+    const entry = byDept[params.dataIndex];
+    if (!entry) return;
+    navigate(entry.id ? `/employees?dept=${entry.id}` : "/employees");
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-      <div className="grid grid-cols-2 gap-4 xl:col-span-1">
-        <StatCard
-          label={translate("hr.stats.headcount.label", { ns: "starter" }, "Headcount")}
-          value={String(headcount)}
-          hint={translate("hr.stats.headcount.hint", { ns: "starter" }, "Total on file")}
-          icon={<Users className="size-4" />}
-          tone="text-blue-600 bg-blue-500/12 dark:text-blue-400"
-        />
-        <StatCard
-          label={translate("hr.stats.active.label", { ns: "starter" }, "Active")}
-          value={String(active)}
-          hint={translate("hr.stats.active.hint", { ns: "starter" }, "Currently working")}
-          icon={<UserCheck className="size-4" />}
-          tone="text-emerald-600 bg-emerald-500/12 dark:text-emerald-400"
-        />
-        <StatCard
-          label={translate("hr.stats.onLeave.label", { ns: "starter" }, "On leave")}
-          value={String(onLeave)}
-          hint={translate("hr.stats.onLeave.hint", { ns: "starter" }, "Away right now")}
-          icon={<CalendarOff className="size-4" />}
-          tone="text-amber-600 bg-amber-500/12 dark:text-amber-400"
-        />
-        <StatCard
-          label={translate("hr.stats.departments.label", { ns: "starter" }, "Departments")}
-          value={String(deptCount)}
-          hint={translate("hr.stats.departments.hint", { ns: "starter" }, "With staff")}
-          icon={<Network className="size-4" />}
-          tone="text-teal-600 bg-teal-500/12 dark:text-teal-400"
-        />
-      </div>
-
-      <Card className="xl:col-span-2">
+    <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.6fr_1fr]">
+      <Card>
         <CardHeader>
-          <CardTitle>
-            {translate("hr.stats.chart.title", { ns: "starter" }, "Headcount by department")}
-          </CardTitle>
-          <CardDescription>
-            {translate(
-              "hr.stats.chart.description",
-              { ns: "starter" },
-              "Active and on-leave staff per team."
-            )}
-          </CardDescription>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>
+                {translate(
+                  "hr.stats.chart.title",
+                  { ns: "starter" },
+                  "Workforce breakdown"
+                )}
+              </CardTitle>
+              <CardDescription>
+                {translate(
+                  "hr.stats.chart.description",
+                  { ns: "starter" },
+                  "Switch the dimension; click a department bar to open its people."
+                )}
+              </CardDescription>
+            </div>
+            <Tabs
+              value={grouping}
+              onValueChange={(value) => setGrouping(value as Grouping)}
+            >
+              <TabsList>
+                {groupings.map((option) => (
+                  <TabsTrigger key={option.value} value={option.value}>
+                    {option.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
         <CardContent>
-          {byDept.length === 0 ? (
+          {isLoading ? (
+            <Skeleton className="h-56 w-full" />
+          ) : employees.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              {translate("hr.stats.chart.empty", { ns: "starter" }, "No staff assigned yet.")}
+              {emptyText}
             </p>
           ) : (
             <ReactECharts
-              key={`hc-${chart.isDark}`}
-              option={barOption}
-              style={{ height: Math.max(180, byDept.length * 34) }}
+              key={`${grouping}-${chart.isDark}`}
+              option={primaryOption}
+              style={{ height: primaryHeight }}
               opts={{ renderer: "svg" }}
+              onEvents={{ click: drillDown }}
             />
           )}
         </CardContent>
@@ -266,7 +333,11 @@ export function HrStats() {
       <Card>
         <CardHeader>
           <CardTitle>
-            {translate("hr.stats.statusChart.title", { ns: "starter" }, "Status breakdown")}
+            {translate(
+              "hr.stats.statusChart.title",
+              { ns: "starter" },
+              "Status breakdown"
+            )}
           </CardTitle>
           <CardDescription>
             {translate(
@@ -277,85 +348,22 @@ export function HrStats() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {headcount === 0 ? (
+          {isLoading ? (
+            <Skeleton className="h-56 w-full" />
+          ) : employees.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              {translate("hr.stats.chart.empty", { ns: "starter" }, "No staff assigned yet.")}
+              {emptyText}
             </p>
           ) : (
             <ReactECharts
               key={`status-${chart.isDark}`}
               option={statusPieOption}
-              style={{ height: 240 }}
-              opts={{ renderer: "svg" }}
-            />
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="xl:col-span-2">
-        <CardHeader>
-          <CardTitle>
-            {translate("hr.stats.tenureChart.title", { ns: "starter" }, "Tenure")}
-          </CardTitle>
-          <CardDescription>
-            {translate(
-              "hr.stats.tenureChart.description",
-              { ns: "starter" },
-              "How long the current team has been with us."
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {headcount === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              {translate("hr.stats.chart.empty", { ns: "starter" }, "No staff assigned yet.")}
-            </p>
-          ) : (
-            <ReactECharts
-              key={`tenure-${chart.isDark}`}
-              option={tenureBarOption}
-              style={{ height: 240 }}
+              style={{ height: 260 }}
               opts={{ renderer: "svg" }}
             />
           )}
         </CardContent>
       </Card>
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  hint,
-  icon,
-  tone,
-}: {
-  label: string;
-  value: string;
-  hint: string;
-  icon: ReactNode;
-  tone: string;
-}) {
-  return (
-    <Card className="overflow-hidden">
-      <CardContent className="pt-6">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <span
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-lg",
-              tone
-            )}
-          >
-            {icon}
-          </span>
-        </div>
-        <p className="mt-2 text-3xl font-semibold tabular-nums tracking-tight">
-          {value}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">{hint}</p>
-      </CardContent>
-    </Card>
   );
 }

@@ -30,10 +30,15 @@ import { PROJECT_STATUSES, labelFor, toDateInputValue } from "../constants";
 import { UserPicker } from "../pickers";
 import { useContextualCloseTo } from "../route-surfaces";
 import type { ProjectFormValues, ProjectRecord } from "../types";
+import { projectTransitionValues } from "../transitions";
 
-const toServerValues = (values: ProjectFormValues) => {
+const toServerValues = (values: ProjectFormValues, record?: ProjectRecord | null) => {
   const { owner_id, ...rest } = values;
-  return { ...rest, owner: owner_id } as unknown as ProjectFormValues;
+  return {
+    ...rest,
+    ...projectTransitionValues(values.status, record),
+    owner: owner_id,
+  } as unknown as ProjectFormValues;
 };
 
 function ProjectFormFields({
@@ -353,7 +358,9 @@ function ProjectEditForm({ recordId }: { recordId?: string }) {
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((values) => onFinish(toServerValues(values)))}
+        onSubmit={form.handleSubmit((values) =>
+          onFinish(toServerValues(values, record))
+        )}
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">

@@ -1,4 +1,5 @@
 import type { useTranslate } from "@refinedev/core";
+export { formatDate, toDateInputValue } from "@/lib/table-kit";
 
 export const EMPLOYEE_STATUSES = [
   { value: "active", label: "Active", i18nKey: "hr.enums.employeeStatus.active" },
@@ -47,13 +48,3 @@ export const labelFor = (
     ? translate(option.i18nKey, { ns: "starter" }, option.label)
     : option.label;
 };
-
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
-
-export const toDateInputValue = (value: string | null | undefined) =>
-  value ? String(value).slice(0, 10) : "";

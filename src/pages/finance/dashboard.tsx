@@ -14,6 +14,13 @@ import { useChartTheme } from "@/pages/home/theme";
 import { EXPENSE_CATEGORIES, INVOICE_STATUSES, optionLabel } from "./constants";
 import { money, PageHeader, StatCard } from "./shared";
 import type { Expense, Invoice } from "./types";
+import {
+  invoiceAmount,
+  invoiceDisplayStatus,
+  isInvoiceOverdue,
+  useInvoiceAmounts,
+} from "./invoice-metrics";
+import { AsyncPanel } from "@/lib/table-kit";
 
 function hexA(hex: string, alpha: number): string {
   const a = Math.round(Math.max(0, Math.min(1, alpha)) * 255)
@@ -48,6 +55,7 @@ function monthKey(iso: string | null | undefined): string | null {
 export function FinanceDashboard() {
   const t = useTranslate();
   const chart = useChartTheme();
+  const invoiceAmounts = useInvoiceAmounts();
 
   const { result: expResult } = useList<Expense>({
     resource: "hub_fin_expenses",
@@ -66,10 +74,10 @@ export function FinanceDashboard() {
     let overdue = 0;
     let collected = 0;
     for (const inv of invoices) {
-      const amt = Number(inv.amount) || 0;
+      const amt = invoiceAmount(inv, invoiceAmounts.byInvoice);
       if (inv.status === "paid") collected += amt;
       else outstanding += amt;
-      if (inv.status === "overdue") overdue += amt;
+      if (isInvoiceOverdue(inv)) overdue += amt;
     }
     const pendingExpenses = expenses.filter((e) => e.status === "pending");
     const pendingAmount = pendingExpenses.reduce(
@@ -83,7 +91,7 @@ export function FinanceDashboard() {
       pendingCount: pendingExpenses.length,
       pendingAmount,
     };
-  }, [invoices, expenses]);
+  }, [invoiceAmounts.byInvoice, invoices, expenses]);
 
   // ---- Spend by category (bar) --------------------------------------------
   const spendByCategory = useMemo(() => {
@@ -103,13 +111,13 @@ export function FinanceDashboard() {
   const arByStatus = useMemo(() => {
     const totals = new Map<string, number>();
     for (const inv of invoices) {
-      const key = inv.status || "draft";
-      totals.set(key, (totals.get(key) ?? 0) + (Number(inv.amount) || 0));
+      const key = invoiceDisplayStatus(inv) || "draft";
+      totals.set(key, (totals.get(key) ?? 0) + invoiceAmount(inv, invoiceAmounts.byInvoice));
     }
     return INVOICE_STATUSES.filter((s) => (totals.get(s.value) ?? 0) > 0).map(
       (s) => ({ name: optionLabel(s, t), value: Math.round(totals.get(s.value) ?? 0) })
     );
-  }, [invoices, t]);
+  }, [invoiceAmounts.byInvoice, invoices, t]);
 
   // ---- Monthly trend: invoiced vs collected (line) ------------------------
   const trend = useMemo(() => {
@@ -117,7 +125,7 @@ export function FinanceDashboard() {
     const invoiced = new Map<string, number>();
     const collected = new Map<string, number>();
     for (const inv of invoices) {
-      const amt = Number(inv.amount) || 0;
+      const amt = invoiceAmount(inv, invoiceAmounts.byInvoice);
       const issued = monthKey(inv.issue_date);
       if (issued) invoiced.set(issued, (invoiced.get(issued) ?? 0) + amt);
       if (inv.status === "paid" && issued) {
@@ -131,7 +139,7 @@ export function FinanceDashboard() {
       invoiced: months.map((m) => Math.round(invoiced.get(m.key) ?? 0)),
       collected: months.map((m) => Math.round(collected.get(m.key) ?? 0)),
     };
-  }, [invoices, t]);
+  }, [invoiceAmounts.byInvoice, invoices, t]);
 
   const invoicedLabel = t("finance.dashboard.series.invoiced", "Invoiced");
   const collectedLabel = t("finance.dashboard.series.collected", "Collected");
@@ -299,6 +307,28 @@ export function FinanceDashboard() {
       },
     ],
   };
+
+  if (invoiceAmounts.isLoading || invoiceAmounts.isError) {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          title={t("finance.dashboard.title", "Finance")}
+          description={t(
+            "finance.dashboard.subtitle",
+            "Cash in, cash out — receivables and expense spend at a glance."
+          )}
+        />
+        <AsyncPanel
+          i18nPrefix="finance.ops"
+          isLoading={invoiceAmounts.isLoading}
+          isError={invoiceAmounts.isError}
+          onRetry={() => void invoiceAmounts.refetch()}
+        >
+          <span />
+        </AsyncPanel>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

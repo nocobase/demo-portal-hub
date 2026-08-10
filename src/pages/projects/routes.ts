@@ -11,4 +11,5 @@ export const projectRoutes = {
   milestonesEdit: "/milestones/edit/:id",
   myTasks: "/my-tasks",
   projectCalendar: "/project-calendar",
+  workload: "/workload",
 } as const;

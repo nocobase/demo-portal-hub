@@ -1,7 +1,15 @@
 import { useList, useTranslate } from "@refinedev/core";
 import { useQuery } from "@tanstack/react-query";
 import ReactECharts from "echarts-for-react";
-import { BookText, Eye, FileEdit, FileText } from "lucide-react";
+import {
+  BookText,
+  Clock,
+  Eye,
+  FileEdit,
+  FileText,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -19,7 +27,7 @@ import { useCategoryTree } from "./category-tree";
 import { ARTICLE_STATUSES, formatNumber, labelFor } from "./constants";
 import { getArticleShowPath } from "./routes";
 import { StatusPill, useLocale } from "./shared";
-import type { ArticleRecord } from "./types";
+import type { ArticleRecord, FeedbackRecord } from "./types";
 
 type AggregateRow = Record<string, string | number | null>;
 
@@ -63,6 +71,23 @@ export function KnowledgeOverview() {
   const stats = useArticleStats();
   const { tree, isLoading: treeLoading } = useCategoryTree();
 
+  const feedback = useList<FeedbackRecord>({
+    resource: "hub_kb_article_feedback",
+    pagination: { mode: "server", currentPage: 1, pageSize: 500 },
+    meta: { appends: ["article"] },
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
+  const recentlyUpdated = useList<ArticleRecord>({
+    resource: "hub_kb_articles",
+    pagination: { mode: "server", currentPage: 1, pageSize: 6 },
+    sorters: [{ field: "updatedAt", order: "desc" }],
+    meta: { appends: ["category", "author"] },
+    errorNotification: false,
+    queryOptions: { retry: false },
+  });
+
   const mostViewed = useList<ArticleRecord>({
     resource: "hub_kb_articles",
     pagination: { mode: "server", currentPage: 1, pageSize: 6 },
@@ -71,6 +96,53 @@ export function KnowledgeOverview() {
     errorNotification: false,
     queryOptions: { retry: false },
   });
+
+  // Reader sentiment per article — the basis of the "needs improvement" queue.
+  const sentiment = useMemo(() => {
+    const byArticle = new Map<
+      string,
+      { title: string; helpful: number; notHelpful: number }
+    >();
+    let helpful = 0;
+    let notHelpful = 0;
+    for (const row of feedback.result.data) {
+      const key = String(row.article_id ?? row.article?.id ?? "");
+      if (!key) continue;
+      const entry =
+        byArticle.get(key) ??
+        { title: row.article?.title ?? "", helpful: 0, notHelpful: 0 };
+      if (row.rating === "helpful") {
+        entry.helpful += 1;
+        helpful += 1;
+      } else {
+        entry.notHelpful += 1;
+        notHelpful += 1;
+      }
+      if (!entry.title && row.article?.title) entry.title = row.article.title;
+      byArticle.set(key, entry);
+    }
+    const needsWork = [...byArticle.entries()]
+      .map(([id, entry]) => ({
+        id,
+        ...entry,
+        total: entry.helpful + entry.notHelpful,
+        ratio:
+          entry.helpful + entry.notHelpful > 0
+            ? entry.helpful / (entry.helpful + entry.notHelpful)
+            : 1,
+      }))
+      .filter((entry) => entry.notHelpful > 0 && entry.ratio < 0.6)
+      .sort((a, b) => a.ratio - b.ratio || b.notHelpful - a.notHelpful)
+      .slice(0, 6);
+    const rated = helpful + notHelpful;
+    return {
+      helpful,
+      notHelpful,
+      rated,
+      score: rated ? Math.round((helpful / rated) * 100) : 0,
+      needsWork,
+    };
+  }, [feedback.result.data]);
 
   const published = stats.data?.statusCounts.get("published") ?? 0;
   const drafts = stats.data?.statusCounts.get("draft") ?? 0;
@@ -171,7 +243,7 @@ export function KnowledgeOverview() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
         <KpiCard
           loading={stats.isLoading}
           icon={<BookText className="size-4" />}
@@ -199,6 +271,32 @@ export function KnowledgeOverview() {
           label={translate("knowledge.overview.kpi.views", { ns: "starter" }, "Total views")}
           value={formatNumber(totalViews, locale)}
           sub={translate("knowledge.overview.kpi.views.sub", { ns: "starter" }, "All-time reads")}
+        />
+        <KpiCard
+          loading={feedback.query.isLoading}
+          icon={<ThumbsUp className="size-4" />}
+          label={translate("knowledge.overview.kpi.helpful", { ns: "starter" }, "Helpfulness")}
+          value={`${sentiment.score}%`}
+          sub={translate(
+            "knowledge.overview.kpi.helpful.sub",
+            { ns: "starter", count: sentiment.rated },
+            `From ${sentiment.rated} ratings`
+          )}
+        />
+        <KpiCard
+          loading={feedback.query.isLoading}
+          icon={<ThumbsDown className="size-4" />}
+          label={translate(
+            "knowledge.overview.kpi.needsWork",
+            { ns: "starter" },
+            "Needs improvement"
+          )}
+          value={formatNumber(sentiment.needsWork.length, locale)}
+          sub={translate(
+            "knowledge.overview.kpi.needsWork.sub",
+            { ns: "starter" },
+            "Rated unhelpful more often than not"
+          )}
         />
       </div>
 
@@ -239,6 +337,116 @@ export function KnowledgeOverview() {
               <Skeleton className="h-64 w-full" />
             ) : (
               <ReactECharts option={categoryOption} style={{ height: 256 }} />
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {translate(
+                "knowledge.overview.needsWork.title",
+                { ns: "starter" },
+                "Needs improvement"
+              )}
+            </CardTitle>
+            <CardDescription>
+              {translate(
+                "knowledge.overview.needsWork.description",
+                { ns: "starter" },
+                "Articles readers marked unhelpful more often than helpful."
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {feedback.query.isLoading ? (
+              <LoadingState className="min-h-40" />
+            ) : sentiment.needsWork.length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">
+                {translate(
+                  "knowledge.overview.needsWork.empty",
+                  { ns: "starter" },
+                  "Nothing is scoring badly right now."
+                )}
+              </p>
+            ) : (
+              <div className="space-y-1">
+                {sentiment.needsWork.map((entry) => (
+                  <Link
+                    key={entry.id}
+                    to={getArticleShowPath(entry.id)}
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-accent"
+                  >
+                    <p className="min-w-0 truncate text-sm font-medium">
+                      {entry.title || untitled}
+                    </p>
+                    <span className="flex shrink-0 items-center gap-2 text-xs tabular-nums">
+                      <span className="rounded-md bg-red-500/15 px-1.5 py-0.5 font-medium text-red-700 dark:text-red-300">
+                        {Math.round(entry.ratio * 100)}%
+                      </span>
+                      <span className="text-muted-foreground">
+                        {translate(
+                          "knowledge.overview.needsWork.ratings",
+                          { ns: "starter", count: entry.total },
+                          `${entry.total} ratings`
+                        )}
+                      </span>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {translate(
+                "knowledge.overview.recent.title",
+                { ns: "starter" },
+                "Recently updated"
+              )}
+            </CardTitle>
+            <CardDescription>
+              {translate(
+                "knowledge.overview.recent.description",
+                { ns: "starter" },
+                "What changed in the knowledge base last."
+              )}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {recentlyUpdated.query.isLoading ? (
+              <LoadingState className="min-h-40" />
+            ) : (
+              <div className="space-y-1">
+                {recentlyUpdated.result.data.map((article) => (
+                  <Link
+                    key={String(article.id)}
+                    to={getArticleShowPath(article.id)}
+                    className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 hover:bg-accent"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {article.title || untitled}
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {article.author?.nickname ?? ""}
+                        {article.category?.name ? ` · ${article.category.name}` : ""}
+                      </p>
+                    </div>
+                    <span className="flex shrink-0 items-center gap-1 text-xs text-muted-foreground tabular-nums">
+                      <Clock className="size-3.5" />
+                      {new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
+                        new Date(article.updatedAt ?? Date.now())
+                      )}
+                    </span>
+                  </Link>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

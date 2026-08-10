@@ -1,4 +1,5 @@
 import type { useTranslate } from "@refinedev/core";
+export { formatDate, formatNumber } from "@/lib/table-kit";
 
 export const ARTICLE_STATUSES = [
   { value: "draft", label: "Draft", i18nKey: "knowledge.enums.status.draft" },
@@ -28,16 +29,6 @@ export const labelFor = (
     ? translate(option.i18nKey, { ns: "starter" }, option.label)
     : option.label;
 };
-
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
-
-export const formatNumber = (value: number | null | undefined, locale: string) =>
-  new Intl.NumberFormat(locale).format(Number(value ?? 0));
 
 /** Split a long-text body into paragraphs for reader rendering. */
 export const toParagraphs = (body: string | null | undefined): string[] =>

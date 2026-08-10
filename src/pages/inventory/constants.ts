@@ -1,5 +1,11 @@
 import { format } from "date-fns";
 import type { useTranslate } from "@refinedev/core";
+export {
+  formatCurrency,
+  formatDate,
+  formatDateTime,
+  formatNumber,
+} from "@/lib/table-kit";
 
 export const CURRENCY = "USD";
 
@@ -50,37 +56,6 @@ export const labelFor = (
     ? translate(option.i18nKey, { ns: "starter" }, option.label)
     : option.label;
 };
-
-export const formatCurrency = (
-  value: number | null | undefined,
-  locale: string
-) =>
-  new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: CURRENCY,
-    maximumFractionDigits: 0,
-  }).format(Number(value ?? 0));
-
-export const formatNumber = (value: number | null | undefined, locale: string) =>
-  new Intl.NumberFormat(locale).format(Number(value ?? 0));
-
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
-
-export const formatDateTime = (
-  value: string | null | undefined,
-  locale: string
-) =>
-  value
-    ? new Intl.DateTimeFormat(locale, {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(new Date(value))
-    : "—";
 
 export const toDateTimeInputValue = (value: string | null | undefined) => {
   if (!value) return "";

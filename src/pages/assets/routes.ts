@@ -13,6 +13,8 @@ export const assetsRoutes = {
   maintenanceCreate: "/asset-maintenance/create",
   maintenanceEdit: "/asset-maintenance/edit/:id",
   maintenanceShow: "/asset-maintenance/show/:id",
+  // Book-value / depreciation analytics over the register
+  ledger: "/asset-ledger",
 } as const;
 
 export const getAssetShowPath = (id: string | number) =>

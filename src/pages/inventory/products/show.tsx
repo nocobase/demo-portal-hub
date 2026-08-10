@@ -149,10 +149,39 @@ function StockMovesSection({
     queryOptions: { retry: false },
   });
 
-  const onHand = useMemo(
-    () => result.data.reduce((sum, move) => sum + signedQty(move.type, move.qty), 0),
-    [result.data]
-  );
+  // Running balance: replay the moves oldest-first so every row can show the
+  // stock level before and after it, then present newest-first like a ledger.
+  const { ledger, onHand, byWarehouse } = useMemo(() => {
+    const chronological = [...result.data].sort((a, b) =>
+      String(a.moved_at ?? "").localeCompare(String(b.moved_at ?? ""))
+    );
+
+    let balance = 0;
+    const warehouses = new Map<string, { name: string; qty: number }>();
+    const replayed = chronological.map((move) => {
+      const delta = signedQty(move.type, move.qty);
+      const before = balance;
+      balance += delta;
+
+      const warehouseKey = String(move.warehouse_id ?? move.warehouse?.id ?? "");
+      if (warehouseKey) {
+        const entry = warehouses.get(warehouseKey) ?? {
+          name: move.warehouse?.name ?? "—",
+          qty: 0,
+        };
+        entry.qty += delta;
+        warehouses.set(warehouseKey, entry);
+      }
+
+      return { move, delta, before, after: balance };
+    });
+
+    return {
+      ledger: replayed.reverse(),
+      onHand: balance,
+      byWarehouse: [...warehouses.entries()].map(([id, entry]) => ({ id, ...entry })),
+    };
+  }, [result.data]);
 
   return (
     <DrawerSection
@@ -170,13 +199,28 @@ function StockMovesSection({
         )
       }
     >
+      {byWarehouse.length > 0 && (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {byWarehouse.map((entry) => (
+            <span
+              key={entry.id}
+              className="inline-flex items-center gap-2 rounded-lg border bg-muted/30 px-2.5 py-1 text-xs"
+            >
+              <span className="text-muted-foreground">{entry.name}</span>
+              <span className="font-medium tabular-nums">{entry.qty}</span>
+            </span>
+          ))}
+        </div>
+      )}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b bg-muted/40 text-left text-xs text-muted-foreground">
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.date", { ns: "starter" }, "Date")}</th>
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.type", { ns: "starter" }, "Type")}</th>
-              <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.qty", { ns: "starter" }, "Qty")}</th>
+              <th className="px-3 py-2 text-right font-medium">{translate("inventory.stockMoves.fields.qty", { ns: "starter" }, "Qty")}</th>
+              <th className="px-3 py-2 text-right font-medium">{translate("inventory.products.detail.balanceBefore", { ns: "starter" }, "Before")}</th>
+              <th className="px-3 py-2 text-right font-medium">{translate("inventory.products.detail.balanceAfter", { ns: "starter" }, "After")}</th>
               <th className="px-3 py-2 font-medium">{translate("inventory.stockMoves.fields.warehouse", { ns: "starter" }, "Warehouse")}</th>
               {embedded ? null : (
                 <th className="px-3 py-2 font-medium">{translate("inventory.common.actions", { ns: "starter" }, "Actions")}</th>
@@ -184,9 +228,9 @@ function StockMovesSection({
             </tr>
           </thead>
           <tbody className="divide-y">
-            {result.data.length === 0 ? (
+            {ledger.length === 0 ? (
               <tr>
-                <td colSpan={embedded ? 4 : 5} className="px-3 py-6 text-center text-muted-foreground">
+                <td colSpan={embedded ? 6 : 7} className="px-3 py-6 text-center text-muted-foreground">
                   {translate(
                     "inventory.products.detail.noMoves",
                     { ns: "starter" },
@@ -195,7 +239,7 @@ function StockMovesSection({
                 </td>
               </tr>
             ) : (
-              result.data.map((move) => (
+              ledger.map(({ move, delta, before, after }) => (
                 <tr key={String(move.id)}>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {formatDateTime(move.moved_at, locale)}
@@ -206,10 +250,19 @@ function StockMovesSection({
                       label={move.type ? labelFor(MOVE_TYPES, move.type, translate) : "—"}
                     />
                   </td>
-                  <td className="px-3 py-2 tabular-nums font-medium">
-                    {signedQty(move.type, move.qty) > 0 ? "+" : ""}
-                    {signedQty(move.type, move.qty)}
+                  <td
+                    className={
+                      "px-3 py-2 text-right tabular-nums font-medium " +
+                      (delta < 0 ? "text-red-600 dark:text-red-400" : "")
+                    }
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta}
                   </td>
+                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                    {before}
+                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums font-medium">{after}</td>
                   <td className="px-3 py-2">{move.warehouse?.name || "—"}</td>
                   {embedded ? null : (
                     <td className="px-3 py-2">

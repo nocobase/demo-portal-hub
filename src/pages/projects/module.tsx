@@ -1,4 +1,4 @@
-import { CalendarDays, Flag, FolderKanban, ListChecks, SquareKanban } from "lucide-react";
+import { CalendarDays, Flag, FolderKanban, Gauge, ListChecks, SquareKanban } from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -286,6 +286,26 @@ export const projectsModule = {
           priority: 51,
           icon: <CalendarDays />,
           description: "Month view of task due dates and project milestones.",
+          acl: false,
+        },
+      },
+    },
+    {
+      name: "projects-workload",
+      path: projectRoutes.workload,
+      lazy: () =>
+        import("./route-components").then((module) => ({
+          default: module.routeComponent("projects-workload"),
+        })),
+      resource: {
+        meta: {
+          label: "Resource load",
+          i18nKey: "projects.resources.workload",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "projects.resources.workload.description",
+          priority: 52,
+          icon: <Gauge />,
+          description: "Open work per person, with overdue pressure highlighted.",
           acl: false,
         },
       },

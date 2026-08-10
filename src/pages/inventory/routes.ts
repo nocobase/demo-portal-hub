@@ -1,6 +1,9 @@
 export const inventoryRoutes = {
   dashboard: "/inventory",
   reorder: "/reorder",
+  // Multi-location on-hand matrix + movement analytics
+  stockMatrix: "/stock-by-warehouse",
+  turnover: "/inventory-turnover",
   products: "/products",
   productsCreate: "/products/create",
   productsEdit: "/products/edit/:id",

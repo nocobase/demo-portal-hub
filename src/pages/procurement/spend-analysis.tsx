@@ -1,8 +1,15 @@
 import { useList, useTranslate } from "@refinedev/core";
 import ReactECharts from "echarts-for-react";
-import { BarChart3, DollarSign, PackageCheck, ReceiptText } from "lucide-react";
-import { useMemo } from "react";
+import {
+  CircleX,
+  DollarSign,
+  Download,
+  PackageCheck,
+  ReceiptText,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,15 +17,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { useChartTheme } from "@/pages/home/theme";
+import { useSupplierOrderStats } from "./aggregates";
+import type { SupplierStats } from "./aggregates";
 import { PO_STATUSES, formatCurrency, labelFor } from "./constants";
+import { AsyncPanel, KpiStrip, exportCsv } from "@/lib/table-kit";
 import { getSupplierShowPath } from "./routes";
 import { useLocale } from "./shared";
 import type { PurchaseOrderRecord } from "./types";
 
-const MONTHS_BACK = 6;
+type RangeMonths = 6 | 12 | 24;
+
+type SupplierSpendRow = SupplierStats & {
+  key: string;
+  name: string;
+  supplierId: string | number | null;
+};
+
+const RANGE_OPTIONS: RangeMonths[] = [6, 12, 24];
 
 function hexA(hex: string, alpha: number) {
   const value = hex.replace("#", "");
@@ -53,18 +69,23 @@ export function SpendAnalysisDashboard() {
   const locale = useLocale();
   const chart = useChartTheme();
   const navigate = useNavigate();
+  const [rangeMonths, setRangeMonths] = useState<RangeMonths>(12);
 
   const { result, query } = useList<PurchaseOrderRecord>({
     resource: "hub_po_purchase_orders",
     pagination: { mode: "server", currentPage: 1, pageSize: 1000 },
-    meta: { appends: ["supplier"] },
+    meta: { appends: ["supplier", "owner"] },
     errorNotification: false,
     queryOptions: { retry: false },
   });
+  const {
+    statsBySupplier,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useSupplierOrderStats();
 
-  const loading = query.isLoading;
   const orders = result.data;
-
   const unassigned = translate(
     "procurement.spend.unassigned",
     { ns: "starter" },
@@ -72,135 +93,249 @@ export function SpendAnalysisDashboard() {
   );
 
   const {
+    filteredOrders,
     kpis,
     bySupplier,
+    byBuyer,
     byStatus,
     trend,
     topSuppliers,
   } = useMemo(() => {
-    const committed = orders.filter((po) => po.status !== "cancelled");
-    const totalCommitted = committed.reduce(
+    const months = lastMonths(rangeMonths);
+    const rangeStart = months[0]?.date ?? new Date();
+    const rangeEnd = new Date(
+      rangeStart.getFullYear(),
+      rangeStart.getMonth() + rangeMonths,
+      1
+    );
+    const inRange = (po: PurchaseOrderRecord) => {
+      if (!po.order_date) return false;
+      const date = new Date(po.order_date);
+      return (
+        !Number.isNaN(date.getTime()) && date >= rangeStart && date < rangeEnd
+      );
+    };
+    const filteredOrders = orders.filter(inRange);
+    const committed = filteredOrders.filter(
+      (po) => po.status !== "cancelled"
+    );
+    const totalSpend = committed.reduce(
       (sum, po) => sum + Number(po.total ?? 0),
       0
     );
-    const received = orders.filter((po) => po.status === "received");
-    const receivedValue = received.reduce(
+    const openSpend = filteredOrders
+      .filter((po) => po.status === "draft" || po.status === "sent")
+      .reduce((sum, po) => sum + Number(po.total ?? 0), 0);
+    const receivedSpend = filteredOrders
+      .filter((po) => po.status === "received")
+      .reduce((sum, po) => sum + Number(po.total ?? 0), 0);
+    const cancelled = filteredOrders.filter(
+      (po) => po.status === "cancelled"
+    );
+    const cancelledValue = cancelled.reduce(
       (sum, po) => sum + Number(po.total ?? 0),
       0
     );
-    const avgOrder = committed.length ? totalCommitted / committed.length : 0;
 
-    const spendMap = new Map<
-      string,
-      { value: number; count: number; supplierId: string | number | null }
-    >();
-    for (const po of committed) {
-      const name = po.supplier?.name || unassigned;
-      const entry = spendMap.get(name) ?? {
-        value: 0,
-        count: 0,
-        supplierId: po.supplier_id ?? null,
+    const kpis = [
+      {
+        key: "total-spend",
+        label: translate(
+          "procurement.spendAnalysis.kpi.total.label",
+          { ns: "starter" },
+          "Total spend"
+        ),
+        value: formatCurrency(totalSpend, locale),
+        icon: DollarSign,
+        tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
+      },
+      {
+        key: "open-commitment",
+        label: translate(
+          "procurement.spendAnalysis.kpi.open.label",
+          { ns: "starter" },
+          "Open commitment"
+        ),
+        value: formatCurrency(openSpend, locale),
+        icon: ReceiptText,
+        tone: "text-amber-700 bg-amber-500/12 dark:text-amber-300",
+      },
+      {
+        key: "received",
+        label: translate(
+          "procurement.spendAnalysis.kpi.receivedRange.label",
+          { ns: "starter" },
+          "Received"
+        ),
+        value: formatCurrency(receivedSpend, locale),
+        icon: PackageCheck,
+        tone: "text-emerald-600 bg-emerald-500/12 dark:text-emerald-400",
+      },
+      {
+        key: "cancelled",
+        label: translate(
+          "procurement.spendAnalysis.kpi.cancelled.label",
+          { ns: "starter" },
+          "Cancelled value"
+        ),
+        value: formatCurrency(cancelledValue, locale),
+        hint: translate(
+          "procurement.spendAnalysis.kpi.cancelled.hint",
+          { ns: "starter", count: cancelled.length },
+          `${cancelled.length} orders cancelled`
+        ),
+        icon: CircleX,
+        tone: "text-red-600 bg-red-500/12 dark:text-red-400",
+      },
+    ];
+
+    const excludedBySupplier = new Map<string, SupplierStats>();
+    for (const po of orders) {
+      if (inRange(po) || po.supplier_id == null) continue;
+      const key = String(po.supplier_id);
+      const entry = excludedBySupplier.get(key) ?? {
+        orders: 0,
+        spend: 0,
+        openSpend: 0,
+        receivedSpend: 0,
+        cancelled: 0,
+        received: 0,
       };
-      entry.value += Number(po.total ?? 0);
-      entry.count += 1;
-      spendMap.set(name, entry);
+      const value = Number(po.total ?? 0);
+      entry.orders += 1;
+      if (po.status !== "cancelled") entry.spend += value;
+      if (po.status === "draft" || po.status === "sent") {
+        entry.openSpend += value;
+      }
+      if (po.status === "received") {
+        entry.receivedSpend += value;
+        entry.received += 1;
+      }
+      if (po.status === "cancelled") entry.cancelled += 1;
+      excludedBySupplier.set(key, entry);
     }
-    const bySupplierFull = [...spendMap.entries()]
-      .map(([name, entry]) => ({ name, ...entry }))
-      .sort((a, b) => b.value - a.value);
-    const bySupplier = bySupplierFull.slice(0, 8).reverse();
-    const topSuppliers = bySupplierFull.slice(0, 6);
-    const topSupplierName = bySupplierFull[0]?.name ?? "—";
+
+    const supplierMap = new Map<
+      string,
+      {
+        name: string;
+        supplierId: string | number | null;
+        local: SupplierStats;
+      }
+    >();
+    for (const po of filteredOrders) {
+      const supplierId = po.supplier?.id ?? po.supplier_id ?? null;
+      const key = supplierId == null ? "unassigned" : String(supplierId);
+      const entry = supplierMap.get(key) ?? {
+        name: po.supplier?.name || unassigned,
+        supplierId,
+        local: {
+          orders: 0,
+          spend: 0,
+          openSpend: 0,
+          receivedSpend: 0,
+          cancelled: 0,
+          received: 0,
+        },
+      };
+      const value = Number(po.total ?? 0);
+      entry.local.orders += 1;
+      if (po.status !== "cancelled") entry.local.spend += value;
+      if (po.status === "draft" || po.status === "sent") {
+        entry.local.openSpend += value;
+      }
+      if (po.status === "received") {
+        entry.local.receivedSpend += value;
+        entry.local.received += 1;
+      }
+      if (po.status === "cancelled") entry.local.cancelled += 1;
+      supplierMap.set(key, entry);
+    }
+
+    const supplierRows = [...supplierMap.entries()]
+      .map(([key, entry]): SupplierSpendRow => {
+        const aggregate =
+          entry.supplierId == null ? undefined : statsBySupplier.get(key);
+        const excluded = excludedBySupplier.get(key);
+        if (!aggregate) return { key, ...entry, ...entry.local };
+
+        // The shared aggregate is lifetime-based; subtracting out-of-range POs
+        // keeps its order and commitment metrics aligned with the page window.
+        return {
+          key,
+          name: entry.name,
+          supplierId: entry.supplierId,
+          orders: Math.max(0, aggregate.orders - (excluded?.orders ?? 0)),
+          spend: Math.max(0, aggregate.spend - (excluded?.spend ?? 0)),
+          openSpend: Math.max(
+            0,
+            aggregate.openSpend - (excluded?.openSpend ?? 0)
+          ),
+          receivedSpend: Math.max(
+            0,
+            aggregate.receivedSpend - (excluded?.receivedSpend ?? 0)
+          ),
+          cancelled: Math.max(
+            0,
+            aggregate.cancelled - (excluded?.cancelled ?? 0)
+          ),
+          received: Math.max(
+            0,
+            aggregate.received - (excluded?.received ?? 0)
+          ),
+        };
+      })
+      .filter((row) => row.spend > 0)
+      .sort((a, b) => b.spend - a.spend);
+    const bySupplier = supplierRows.slice(0, 8).reverse();
+    const topSuppliers = supplierRows.slice(0, 10);
+
+    const buyerMap = new Map<string, { name: string; spend: number }>();
+    for (const po of committed) {
+      const key = po.owner_id == null ? "unassigned" : String(po.owner_id);
+      const name = po.owner?.nickname || po.owner?.username || unassigned;
+      const entry = buyerMap.get(key) ?? { name, spend: 0 };
+      entry.spend += Number(po.total ?? 0);
+      buyerMap.set(key, entry);
+    }
+    const byBuyer = [...buyerMap.values()]
+      .sort((a, b) => b.spend - a.spend)
+      .slice(0, 10)
+      .reverse();
 
     const statusMap = new Map<string, number>();
-    for (const po of orders) {
+    for (const po of filteredOrders) {
       const key = po.status ?? "draft";
       statusMap.set(key, (statusMap.get(key) ?? 0) + 1);
     }
     const byStatus = PO_STATUSES.filter(
-      (s) => (statusMap.get(s.value) ?? 0) > 0
-    ).map((s) => ({
-      name: labelFor(PO_STATUSES, s.value, translate),
-      value: statusMap.get(s.value) ?? 0,
+      (status) => (statusMap.get(status.value) ?? 0) > 0
+    ).map((status) => ({
+      name: labelFor(PO_STATUSES, status.value, translate),
+      value: statusMap.get(status.value) ?? 0,
     }));
 
-    const months = lastMonths(MONTHS_BACK);
     const monthSpend = new Map<string, number>();
     for (const po of committed) {
       const key = monthKey(po.order_date);
       if (!key) continue;
       monthSpend.set(key, (monthSpend.get(key) ?? 0) + Number(po.total ?? 0));
     }
-    const trend = months.map((m) => ({
-      label: m.date.toLocaleDateString(locale, { month: "short" }),
-      value: Math.round(monthSpend.get(m.key) ?? 0),
+    const trend = months.map((month) => ({
+      label: month.date.toLocaleDateString(locale, { month: "short" }),
+      value: Math.round(monthSpend.get(month.key) ?? 0),
     }));
 
-    const kpis = [
-      {
-        label: translate(
-          "procurement.spendAnalysis.kpi.committed.label",
-          { ns: "starter" },
-          "Total committed"
-        ),
-        value: formatCurrency(totalCommitted, locale),
-        hint: translate(
-          "procurement.spendAnalysis.kpi.committed.hint",
-          { ns: "starter", count: committed.length },
-          `${committed.length} active orders`
-        ),
-        icon: DollarSign,
-        tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
-      },
-      {
-        label: translate(
-          "procurement.spendAnalysis.kpi.received.label",
-          { ns: "starter" },
-          "Received value"
-        ),
-        value: formatCurrency(receivedValue, locale),
-        hint: translate(
-          "procurement.spendAnalysis.kpi.received.hint",
-          { ns: "starter", count: received.length },
-          `${received.length} orders received`
-        ),
-        icon: PackageCheck,
-        tone: "text-emerald-600 bg-emerald-500/12 dark:text-emerald-400",
-      },
-      {
-        label: translate(
-          "procurement.spendAnalysis.kpi.avg.label",
-          { ns: "starter" },
-          "Avg. PO value"
-        ),
-        value: formatCurrency(avgOrder, locale),
-        hint: translate(
-          "procurement.spendAnalysis.kpi.avg.hint",
-          { ns: "starter" },
-          "excl. cancelled"
-        ),
-        icon: ReceiptText,
-        tone: "text-sky-600 bg-sky-500/12 dark:text-sky-400",
-      },
-      {
-        label: translate(
-          "procurement.spendAnalysis.kpi.topSupplier.label",
-          { ns: "starter" },
-          "Top supplier"
-        ),
-        value: topSupplierName,
-        hint: translate(
-          "procurement.spendAnalysis.kpi.topSupplier.hint",
-          { ns: "starter" },
-          "by committed spend"
-        ),
-        icon: BarChart3,
-        tone: "text-violet-600 bg-violet-500/12 dark:text-violet-400",
-      },
-    ];
-
-    return { kpis, bySupplier, byStatus, trend, topSuppliers };
-  }, [orders, locale, translate, unassigned]);
+    return {
+      filteredOrders,
+      kpis,
+      bySupplier,
+      byBuyer,
+      byStatus,
+      trend,
+      topSuppliers,
+    };
+  }, [orders, rangeMonths, statsBySupplier, locale, translate, unassigned]);
 
   const axisBase = {
     axisLine: { lineStyle: { color: chart.grid } },
@@ -222,7 +357,7 @@ export function SpendAnalysisDashboard() {
       trigger: "axis",
       axisPointer: { type: "shadow" },
       ...tooltipBase,
-      valueFormatter: (v: number) => formatCurrency(v, locale),
+      valueFormatter: (value: number) => formatCurrency(value, locale),
     },
     xAxis: {
       type: "value",
@@ -231,19 +366,54 @@ export function SpendAnalysisDashboard() {
       axisLabel: {
         color: chart.axis,
         fontSize: 12,
-        formatter: (v: number) => `$${Math.round(v / 1000)}k`,
+        formatter: (value: number) => `$${Math.round(value / 1000)}k`,
       },
       splitLine: { lineStyle: { color: chart.grid } },
     },
     yAxis: {
       type: "category",
-      data: bySupplier.map((s) => s.name),
+      data: bySupplier.map((supplier) => supplier.name),
       ...axisBase,
     },
     series: [
       {
         type: "bar",
-        data: bySupplier.map((s) => s.value),
+        data: bySupplier.map((supplier) => supplier.spend),
+        barWidth: 14,
+        itemStyle: { borderRadius: [0, 4, 4, 0] },
+      },
+    ],
+  };
+
+  const buyerOption = {
+    color: [chart.palette[1] ?? chart.palette[0]],
+    grid: { left: 6, right: 24, top: 10, bottom: 6, containLabel: true },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type: "shadow" },
+      ...tooltipBase,
+      valueFormatter: (value: number) => formatCurrency(value, locale),
+    },
+    xAxis: {
+      type: "value",
+      ...axisBase,
+      axisLine: { show: false },
+      axisLabel: {
+        color: chart.axis,
+        fontSize: 12,
+        formatter: (value: number) => `$${Math.round(value / 1000)}k`,
+      },
+      splitLine: { lineStyle: { color: chart.grid } },
+    },
+    yAxis: {
+      type: "category",
+      data: byBuyer.map((buyer) => buyer.name),
+      ...axisBase,
+    },
+    series: [
+      {
+        type: "bar",
+        data: byBuyer.map((buyer) => buyer.spend),
         barWidth: 14,
         itemStyle: { borderRadius: [0, 4, 4, 0] },
       },
@@ -255,11 +425,11 @@ export function SpendAnalysisDashboard() {
     tooltip: {
       trigger: "item",
       ...tooltipBase,
-      valueFormatter: (v: number) =>
+      valueFormatter: (value: number) =>
         translate(
           "procurement.spendAnalysis.chart.status.tooltip",
-          { ns: "starter", count: v },
-          `${v} orders`
+          { ns: "starter", count: value },
+          `${value} orders`
         ),
     },
     legend: {
@@ -292,12 +462,12 @@ export function SpendAnalysisDashboard() {
     tooltip: {
       trigger: "axis",
       ...tooltipBase,
-      valueFormatter: (v: number) => formatCurrency(v, locale),
+      valueFormatter: (value: number) => formatCurrency(value, locale),
     },
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: trend.map((t) => t.label),
+      data: trend.map((point) => point.label),
       ...axisBase,
     },
     yAxis: {
@@ -307,7 +477,7 @@ export function SpendAnalysisDashboard() {
       axisLabel: {
         color: chart.axis,
         fontSize: 12,
-        formatter: (v: number) => `$${Math.round(v / 1000)}k`,
+        formatter: (value: number) => `$${Math.round(value / 1000)}k`,
       },
       splitLine: { lineStyle: { color: chart.grid } },
     },
@@ -316,7 +486,7 @@ export function SpendAnalysisDashboard() {
         type: "line",
         smooth: true,
         showSymbol: false,
-        data: trend.map((t) => t.value),
+        data: trend.map((point) => point.value),
         lineStyle: { width: 3, color: chart.palette[0] },
         itemStyle: { color: chart.palette[0] },
         areaStyle: {
@@ -336,228 +506,416 @@ export function SpendAnalysisDashboard() {
     ],
   };
 
+  const handleExport = () => {
+    exportCsv(
+      translate(
+        "procurement.spendAnalysis.export.filename",
+        { ns: "starter" },
+        "supplier-spend"
+      ),
+      [
+        {
+          header: translate(
+            "procurement.suppliers.fields.name",
+            { ns: "starter" },
+            "Supplier"
+          ),
+          value: (row: SupplierSpendRow) => row.name,
+        },
+        {
+          header: translate(
+            "procurement.suppliers.fields.orders",
+            { ns: "starter" },
+            "Orders"
+          ),
+          value: (row: SupplierSpendRow) => row.orders,
+        },
+        {
+          header: translate(
+            "procurement.suppliers.fields.spend",
+            { ns: "starter" },
+            "Total spend"
+          ),
+          value: (row: SupplierSpendRow) => row.spend,
+        },
+        {
+          header: translate(
+            "procurement.suppliers.fields.openSpend",
+            { ns: "starter" },
+            "Open commitment"
+          ),
+          value: (row: SupplierSpendRow) => row.openSpend,
+        },
+        {
+          header: translate(
+            "procurement.spendAnalysis.export.received",
+            { ns: "starter" },
+            "Received"
+          ),
+          value: (row: SupplierSpendRow) => row.receivedSpend,
+        },
+        {
+          header: translate(
+            "procurement.spendAnalysis.export.cancelled",
+            { ns: "starter" },
+            "Cancelled"
+          ),
+          value: (row: SupplierSpendRow) => row.cancelled,
+        },
+      ],
+      topSuppliers
+    );
+  };
+
+  const retry = () => {
+    void query.refetch();
+    void refetchStats();
+  };
+
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="text-3xl font-semibold tracking-[-0.035em]">
-          {translate(
-            "procurement.spendAnalysis.title",
-            { ns: "starter" },
-            "Spend analysis"
-          )}
-        </h2>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-          {translate(
-            "procurement.spendAnalysis.description",
-            { ns: "starter" },
-            "Where procurement spend is going: by supplier, by order status, and over time."
-          )}
-        </p>
+      <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
+        <div>
+          <h2 className="text-3xl font-semibold tracking-[-0.035em]">
+            {translate(
+              "procurement.spendAnalysis.title",
+              { ns: "starter" },
+              "Spend analysis"
+            )}
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+            {translate(
+              "procurement.spendAnalysis.description",
+              { ns: "starter" },
+              "Where procurement spend is going: by supplier, by order status, and over time."
+            )}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div
+            className="flex items-center rounded-full border bg-muted/40 p-1"
+            role="group"
+            aria-label={translate(
+              "procurement.spendAnalysis.range.label",
+              { ns: "starter" },
+              "Time range"
+            )}
+          >
+            {RANGE_OPTIONS.map((months) => (
+              <Button
+                key={months}
+                type="button"
+                variant={rangeMonths === months ? "secondary" : "ghost"}
+                size="sm"
+                className="h-7 rounded-full px-3 text-xs"
+                aria-pressed={rangeMonths === months}
+                onClick={() => setRangeMonths(months)}
+              >
+                {translate(
+                  `procurement.spendAnalysis.range.${months}`,
+                  { ns: "starter" },
+                  `${months} months`
+                )}
+              </Button>
+            ))}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={topSuppliers.length === 0}
+            onClick={handleExport}
+          >
+            <Download className="size-4" />
+            {translate(
+              "procurement.ops.exportCsv",
+              { ns: "starter" },
+              "Export CSV"
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.label} className="overflow-hidden">
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm text-muted-foreground">{kpi.label}</p>
-                <span
-                  className={cn(
-                    "flex size-8 shrink-0 items-center justify-center rounded-lg",
-                    kpi.tone
+      <AsyncPanel i18nPrefix="procurement.ops"
+        isLoading={query.isLoading || statsLoading}
+        isError={query.isError || statsError}
+        isEmpty={filteredOrders.length === 0}
+        onRetry={retry}
+        emptyTitle={translate(
+          "procurement.spendAnalysis.empty.title",
+          { ns: "starter" },
+          "No purchase orders in this range"
+        )}
+        emptyDescription={translate(
+          "procurement.spendAnalysis.empty.description",
+          { ns: "starter" },
+          "Choose a longer time range to see procurement activity."
+        )}
+        skeletonRows={6}
+      >
+        <div className="flex flex-col gap-6">
+          <KpiStrip tiles={kpis} />
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <Card className="xl:col-span-2">
+              <CardHeader>
+                <CardTitle>
+                  {translate(
+                    "procurement.spendAnalysis.chart.supplier.title",
+                    { ns: "starter" },
+                    "Spend by supplier"
                   )}
-                >
-                  <kpi.icon className="size-4" />
-                </span>
-              </div>
-              {loading ? (
-                <Skeleton className="mt-2 h-8 w-24" />
+                </CardTitle>
+                <CardDescription>
+                  {translate(
+                    "procurement.spendAnalysis.chart.supplier.description",
+                    { ns: "starter" },
+                    "Committed spend across active purchase orders."
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {bySupplier.length === 0 ? (
+                  <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+                    {translate(
+                      "procurement.spendAnalysis.chart.supplier.empty",
+                      { ns: "starter" },
+                      "No spend to chart yet."
+                    )}
+                  </div>
+                ) : (
+                  <ReactECharts
+                    key={`supplier-${rangeMonths}-${chart.isDark}`}
+                    option={supplierOption}
+                    style={{ height: 288 }}
+                    opts={{ renderer: "svg" }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {translate(
+                    "procurement.spendAnalysis.chart.status.title",
+                    { ns: "starter" },
+                    "PO status mix"
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {translate(
+                    "procurement.spendAnalysis.chart.status.description",
+                    { ns: "starter" },
+                    "Every purchase order, by current status."
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {byStatus.length === 0 ? (
+                  <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+                    {translate(
+                      "procurement.spendAnalysis.chart.status.empty",
+                      { ns: "starter" },
+                      "No orders yet."
+                    )}
+                  </div>
+                ) : (
+                  <ReactECharts
+                    key={`status-${rangeMonths}-${chart.isDark}`}
+                    option={statusOption}
+                    style={{ height: 288 }}
+                    opts={{ renderer: "svg" }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {translate(
+                    "procurement.spendAnalysis.chart.trend.title",
+                    { ns: "starter" },
+                    "Monthly spend trend"
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {translate(
+                    "procurement.spendAnalysis.chart.trend.description",
+                    { ns: "starter", months: rangeMonths },
+                    `Committed spend by order date over the last ${rangeMonths} months.`
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ReactECharts
+                  key={`trend-${rangeMonths}-${chart.isDark}`}
+                  option={trendOption}
+                  style={{ height: 288 }}
+                  opts={{ renderer: "svg" }}
+                />
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {translate(
+                    "procurement.spendAnalysis.chart.buyer.title",
+                    { ns: "starter" },
+                    "Spend by buyer"
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {translate(
+                    "procurement.spendAnalysis.chart.buyer.description",
+                    { ns: "starter" },
+                    "Top buyers by purchase order spend."
+                  )}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {byBuyer.length === 0 ? (
+                  <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
+                    {translate(
+                      "procurement.spendAnalysis.chart.buyer.empty",
+                      { ns: "starter" },
+                      "No buyer spend to chart yet."
+                    )}
+                  </div>
+                ) : (
+                  <ReactECharts
+                    key={`buyer-${rangeMonths}-${chart.isDark}`}
+                    option={buyerOption}
+                    style={{ height: 288 }}
+                    opts={{ renderer: "svg" }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {translate(
+                  "procurement.spendAnalysis.table.title",
+                  { ns: "starter" },
+                  "Top suppliers"
+                )}
+              </CardTitle>
+              <CardDescription>
+                {translate(
+                  "procurement.spendAnalysis.table.description",
+                  { ns: "starter" },
+                  "Click a supplier to open its detail."
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {topSuppliers.length === 0 ? (
+                <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
+                  {translate(
+                    "procurement.spendAnalysis.table.empty",
+                    { ns: "starter" },
+                    "No suppliers with spend yet."
+                  )}
+                </div>
               ) : (
-                <p className="mt-1 truncate text-2xl font-semibold tabular-nums tracking-tight">
-                  {kpi.value}
-                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b text-left text-xs text-muted-foreground">
+                        <th className="px-3 py-2 font-medium">
+                          {translate(
+                            "procurement.suppliers.fields.name",
+                            { ns: "starter" },
+                            "Supplier"
+                          )}
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          {translate(
+                            "procurement.suppliers.fields.orders",
+                            { ns: "starter" },
+                            "Orders"
+                          )}
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          {translate(
+                            "procurement.suppliers.fields.spend",
+                            { ns: "starter" },
+                            "Total spend"
+                          )}
+                        </th>
+                        <th className="px-3 py-2 text-right font-medium">
+                          {translate(
+                            "procurement.suppliers.fields.openSpend",
+                            { ns: "starter" },
+                            "Open commitment"
+                          )}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {topSuppliers.map((supplier) => (
+                        <tr
+                          key={supplier.key}
+                          role={supplier.supplierId == null ? undefined : "link"}
+                          tabIndex={supplier.supplierId == null ? undefined : 0}
+                          aria-label={
+                            supplier.supplierId == null
+                              ? undefined
+                              : translate(
+                                  "procurement.spendAnalysis.table.openSupplier",
+                                  { ns: "starter", supplier: supplier.name },
+                                  `Open ${supplier.name}`
+                                )
+                          }
+                          onClick={() => {
+                            if (supplier.supplierId != null) {
+                              navigate(getSupplierShowPath(supplier.supplierId));
+                            }
+                          }}
+                          onKeyDown={(event) => {
+                            if (
+                              supplier.supplierId != null &&
+                              (event.key === "Enter" || event.key === " ")
+                            ) {
+                              event.preventDefault();
+                              navigate(getSupplierShowPath(supplier.supplierId));
+                            }
+                          }}
+                          className={
+                            supplier.supplierId == null
+                              ? "border-b last:border-0"
+                              : "cursor-pointer border-b transition-colors hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none last:border-0"
+                          }
+                        >
+                          <td className="px-3 py-3 font-medium">
+                            {supplier.name}
+                          </td>
+                          <td className="px-3 py-3 text-right tabular-nums">
+                            {supplier.orders}
+                          </td>
+                          <td className="px-3 py-3 text-right font-semibold tabular-nums">
+                            {formatCurrency(supplier.spend, locale)}
+                          </td>
+                          <td className="px-3 py-3 text-right tabular-nums">
+                            {formatCurrency(supplier.openSpend, locale)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
-              <p className="mt-1 text-xs text-muted-foreground">{kpi.hint}</p>
             </CardContent>
           </Card>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>
-              {translate(
-                "procurement.spendAnalysis.chart.supplier.title",
-                { ns: "starter" },
-                "Spend by supplier"
-              )}
-            </CardTitle>
-            <CardDescription>
-              {translate(
-                "procurement.spendAnalysis.chart.supplier.description",
-                { ns: "starter" },
-                "Committed spend across active purchase orders."
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-72 w-full" />
-            ) : bySupplier.length === 0 ? (
-              <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
-                {translate(
-                  "procurement.spendAnalysis.chart.supplier.empty",
-                  { ns: "starter" },
-                  "No spend to chart yet."
-                )}
-              </div>
-            ) : (
-              <ReactECharts
-                key={`supplier-${chart.isDark}`}
-                option={supplierOption}
-                style={{ height: 288 }}
-                opts={{ renderer: "svg" }}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {translate(
-                "procurement.spendAnalysis.chart.status.title",
-                { ns: "starter" },
-                "PO status mix"
-              )}
-            </CardTitle>
-            <CardDescription>
-              {translate(
-                "procurement.spendAnalysis.chart.status.description",
-                { ns: "starter" },
-                "Every purchase order, by current status."
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-72 w-full" />
-            ) : byStatus.length === 0 ? (
-              <div className="flex h-72 items-center justify-center text-sm text-muted-foreground">
-                {translate(
-                  "procurement.spendAnalysis.chart.status.empty",
-                  { ns: "starter" },
-                  "No orders yet."
-                )}
-              </div>
-            ) : (
-              <ReactECharts
-                key={`status-${chart.isDark}`}
-                option={statusOption}
-                style={{ height: 288 }}
-                opts={{ renderer: "svg" }}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader>
-            <CardTitle>
-              {translate(
-                "procurement.spendAnalysis.chart.trend.title",
-                { ns: "starter" },
-                "Monthly spend trend"
-              )}
-            </CardTitle>
-            <CardDescription>
-              {translate(
-                "procurement.spendAnalysis.chart.trend.description",
-                { ns: "starter", months: MONTHS_BACK },
-                `Committed spend by order date over the last ${MONTHS_BACK} months.`
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : (
-              <ReactECharts
-                key={`trend-${chart.isDark}`}
-                option={trendOption}
-                style={{ height: 256 }}
-                opts={{ renderer: "svg" }}
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {translate(
-                "procurement.spendAnalysis.table.title",
-                { ns: "starter" },
-                "Top suppliers"
-              )}
-            </CardTitle>
-            <CardDescription>
-              {translate(
-                "procurement.spendAnalysis.table.description",
-                { ns: "starter" },
-                "Click a supplier to open its detail."
-              )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : topSuppliers.length === 0 ? (
-              <div className="flex h-56 items-center justify-center text-sm text-muted-foreground">
-                {translate(
-                  "procurement.spendAnalysis.table.empty",
-                  { ns: "starter" },
-                  "No suppliers with spend yet."
-                )}
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {topSuppliers.map((s) => (
-                  <button
-                    type="button"
-                    key={s.name}
-                    disabled={s.supplierId === null}
-                    onClick={() =>
-                      s.supplierId !== null &&
-                      navigate(getSupplierShowPath(s.supplierId))
-                    }
-                    className="flex w-full items-center justify-between gap-3 rounded-lg px-2 py-2 text-left hover:bg-accent disabled:cursor-default disabled:hover:bg-transparent"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium">{s.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {translate(
-                          "procurement.spendAnalysis.table.orderCount",
-                          { ns: "starter", count: s.count },
-                          `${s.count} orders`
-                        )}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums">
-                      {formatCurrency(s.value, locale)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+        </div>
+      </AsyncPanel>
     </div>
   );
 }
-
-export default SpendAnalysisDashboard;

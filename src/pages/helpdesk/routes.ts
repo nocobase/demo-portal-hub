@@ -6,6 +6,7 @@ export const helpdeskRoutes = {
   ticketsShowStatus: "/tickets/show/:id/status",
   ticketsShowReplyEdit: "/tickets/show/:id/replies/edit/:replyId",
   dashboard: "/helpdesk/dashboard",
+  agentPerformance: "/helpdesk/agents",
   slaPolicies: "/sla-policies",
   slaPoliciesCreate: "/sla-policies/create",
   slaPoliciesShow: "/sla-policies/show/:id",

@@ -1,6 +1,12 @@
-import { useCreate, useShow, useTranslate, useUpdate } from "@refinedev/core";
-import { ArrowRightCircle, Pencil } from "lucide-react";
-import { type FormEvent, useEffect, useState } from "react";
+import {
+  useCreate,
+  useList,
+  useShow,
+  useTranslate,
+  useUpdate,
+} from "@refinedev/core";
+import { AlertTriangle, ArrowRightCircle, Pencil } from "lucide-react";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useOutlet, useParams } from "react-router";
 import { useRouteSurfaceClose } from "@nocobase/portal-sdk/routing";
 import { LoadingState } from "@/components/app-shell/loading-state";
@@ -14,13 +20,30 @@ import {
   RouteDrawer,
   RouteDrawerFooter,
 } from "@/extensions/nocobase-route-surfaces";
-import { LEAD_SOURCES, LEAD_STATUSES, formatDate, labelFor } from "../constants";
+import {
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  formatDate,
+  labelFor,
+  scoreLead,
+} from "../constants";
+import {
+  RecordNav,
+  useDrawerShortcuts,
+  useRecordNav,
+} from "../record-nav";
 import {
   useContextualCloseTo,
   useOpenContextualChild,
 } from "../route-surfaces";
-import { DetailItems, EnumBadge, useLocale } from "../shared";
-import type { LeadRecord } from "../types";
+import {
+  CopyLinkButton,
+  DetailItems,
+  EnumBadge,
+  ScorePill,
+  useLocale,
+} from "../shared";
+import type { AccountRecord, ContactRecord, LeadRecord } from "../types";
 
 export function LeadShow() {
   const translate = useTranslate();
@@ -29,6 +52,16 @@ export function LeadShow() {
   const closeTo = useContextualCloseTo();
   const { id } = useParams<{ id: string }>();
   const nestedDrawer = useOutlet();
+  const nav = useRecordNav({
+    listId: "leads",
+    currentId: id,
+    pathFor: (recordId) => `/leads/show/${recordId}`,
+  });
+  useDrawerShortcuts({
+    onPrev: nav.goPrev,
+    onNext: nav.goNext,
+    onEdit: () => openChild("edit"),
+  });
   const { result: record, query } = useShow<LeadRecord>({
     resource: "hub_sales_leads",
     id,
@@ -60,6 +93,7 @@ export function LeadShow() {
       actions={
         record ? (
           <div className="flex items-center gap-1">
+            <RecordNav state={nav} />
             <Button
               variant="default"
               size="sm"
@@ -79,6 +113,7 @@ export function LeadShow() {
                     "Convert"
                   )}
             </Button>
+            <CopyLinkButton />
             <EditButton
               resource="hub_sales_leads"
               recordItemId={record.id}
@@ -114,6 +149,7 @@ export function LeadShow() {
           </Alert>
         ) : (
           <div className="space-y-6">
+            {record ? <ScoreCard lead={record} /> : null}
             <DetailItems
               title={translate(
                 "sales.leads.detail.profile",
@@ -184,6 +220,86 @@ export function LeadShow() {
   );
 }
 
+/**
+ * The fit score has no backing column, so the card shows exactly how it was
+ * computed instead of presenting a number the user cannot audit.
+ */
+function ScoreCard({ lead }: { lead: LeadRecord }) {
+  const translate = useTranslate();
+  const { score, factors } = scoreLead(lead);
+
+  return (
+    <section className="rounded-xl border bg-card p-4">
+      <div className="flex items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-medium">
+            {translate("sales.leads.score.title", { ns: "starter" }, "Fit score")}
+          </h3>
+          <p className="text-xs text-muted-foreground">
+            {translate(
+              "sales.leads.score.hint",
+              { ns: "starter" },
+              "Derived from source, status and completeness — not a stored field."
+            )}
+          </p>
+        </div>
+        <ScorePill score={score} />
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${score}%` }}
+        />
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 sm:grid-cols-3">
+        {factors.map((factor) => (
+          <div key={factor.key} className="flex items-baseline justify-between gap-2">
+            <dt className="truncate text-xs text-muted-foreground">
+              {translate(factor.labelKey, { ns: "starter" }, factor.key)}
+            </dt>
+            <dd className="text-xs font-medium tabular-nums">
+              +{factor.points}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/**
+ * Duplicate check before conversion — an account with the same name or a
+ * contact with the same email almost always means the lead already exists.
+ */
+function useConversionDuplicates(accountName: string, email: string | null) {
+  const trimmedName = accountName.trim();
+  const { result: accounts } = useList<AccountRecord>({
+    resource: "hub_sales_accounts",
+    pagination: { mode: "server", currentPage: 1, pageSize: 5 },
+    filters: [{ field: "name", operator: "contains", value: trimmedName }],
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: trimmedName.length >= 3 },
+  });
+  const { result: contacts } = useList<ContactRecord>({
+    resource: "hub_sales_contacts",
+    pagination: { mode: "server", currentPage: 1, pageSize: 5 },
+    filters: email ? [{ field: "email", operator: "eq", value: email }] : [],
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: Boolean(email) },
+  });
+
+  return useMemo(
+    () => ({
+      accounts: accounts.data.filter(
+        (account) =>
+          account.name?.trim().toLowerCase() === trimmedName.toLowerCase()
+      ),
+      contacts: contacts.data,
+    }),
+    [accounts.data, contacts.data, trimmedName]
+  );
+}
+
 export function ConvertLead() {
   const translate = useTranslate();
   const { id } = useParams<{ id: string }>();
@@ -204,6 +320,7 @@ export function ConvertLead() {
   const [dealAmount, setDealAmount] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const duplicates = useConversionDuplicates(accountName, lead?.email ?? null);
 
   useEffect(() => {
     if (!lead) return;
@@ -297,6 +414,32 @@ export function ConvertLead() {
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            {duplicates.accounts.length > 0 ||
+            duplicates.contacts.length > 0 ? (
+              <Alert>
+                <AlertTitle className="flex items-center gap-2">
+                  <AlertTriangle className="size-4" />
+                  {translate(
+                    "sales.leads.detail.convert.duplicate.title",
+                    { ns: "starter" },
+                    "Possible duplicate"
+                  )}
+                </AlertTitle>
+                <AlertDescription>
+                  {duplicates.accounts.length > 0
+                    ? translate(
+                        "sales.leads.detail.convert.duplicate.account",
+                        { ns: "starter" },
+                        "An account named “{{name}}” already exists."
+                      ).replace("{{name}}", duplicates.accounts[0].name ?? "")
+                    : translate(
+                        "sales.leads.detail.convert.duplicate.contact",
+                        { ns: "starter" },
+                        "A contact with this email already exists: {{name}}."
+                      ).replace("{{name}}", duplicates.contacts[0].name ?? "")}
+                </AlertDescription>
               </Alert>
             ) : null}
             <div className="space-y-1.5">

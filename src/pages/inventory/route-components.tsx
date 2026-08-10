@@ -1,8 +1,10 @@
 import {
   ArrowLeftRight,
+  Grid3x3,
   LayoutDashboard,
   Package,
   PackageX,
+  Repeat,
   Warehouse,
 } from "lucide-react";
 import { useParams } from "react-router";
@@ -12,6 +14,8 @@ import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
 import { InventoryDashboard } from "./dashboard";
 import { InventoryReorder } from "./reorder";
+import { StockMatrix } from "./stock-matrix";
+import { InventoryTurnover } from "./turnover";
 import { inventoryRoutes } from "./routes";
 import { ProductCreate, ProductEdit } from "./products/form";
 import { ProductsLayout } from "./products/list";
@@ -332,6 +336,42 @@ export const inventoryModule = {
           priority: 50,
           icon: <PackageX />,
           description: "Products at or below their reorder level with a suggested reorder quantity.",
+          acl: false,
+        },
+      },
+    },
+    {
+      name: "inv-stock-matrix",
+      path: inventoryRoutes.stockMatrix,
+      element: <StockMatrix />,
+      resource: {
+        meta: {
+          label: "Stock by warehouse",
+          i18nKey: "inventory.resources.stockMatrix",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "inventory.resources.stockMatrix.description",
+          priority: 51,
+          icon: <Grid3x3 />,
+          description:
+            "On-hand quantity for every product in every location, with reorder exposure.",
+          acl: false,
+        },
+      },
+    },
+    {
+      name: "inv-turnover",
+      path: inventoryRoutes.turnover,
+      element: <InventoryTurnover />,
+      resource: {
+        meta: {
+          label: "Turnover & dead stock",
+          i18nKey: "inventory.resources.turnover",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "inventory.resources.turnover.description",
+          priority: 52,
+          icon: <Repeat />,
+          description:
+            "Which SKUs move, which sit still, and how much capital the slow ones tie up.",
           acl: false,
         },
       },

@@ -6,6 +6,8 @@ export const financeRoutes = {
   reports: "/finance/reports",
   cashFlow: "/cash-flow",
   budget: "/budget",
+  // Accounts-receivable ageing + collections worklist
+  aging: "/ar-aging",
   invoices: "/invoices",
   invoiceCreate: "/invoices/create",
   invoiceEdit: "/invoices/edit/:id",

@@ -17,7 +17,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { MOVE_TYPES, labelFor, toDateTimeInputValue } from "../constants";
+import { MOVE_TYPES, labelFor, signedQty, toDateTimeInputValue } from "../constants";
+import { useOnHandMatrix } from "../aggregates";
 import { ProductPicker, WarehousePicker } from "../pickers";
 import type { StockMoveFormValues, StockMoveRecord } from "../types";
 
@@ -53,6 +54,22 @@ export function StockMoveFormFields({
         : null,
     [record]
   );
+  const matrix = useOnHandMatrix();
+  const productId = form.watch("product_id");
+  const warehouseId = form.watch("warehouse_id");
+  const moveType = form.watch("type");
+  const availableForOutbound = useMemo(() => {
+    if (!productId || !warehouseId) return 0;
+    const current = matrix.cells.get(`${productId}::${warehouseId}`) ?? 0;
+    const editingSameCell =
+      record &&
+      String(record.product_id ?? record.product?.id ?? "") === String(productId) &&
+      String(record.warehouse_id ?? record.warehouse?.id ?? "") ===
+        String(warehouseId);
+    return editingSameCell
+      ? current - signedQty(record.type, record.qty)
+      : current;
+  }, [matrix.cells, productId, record, warehouseId]);
 
   return (
     <>
@@ -153,6 +170,40 @@ export function StockMoveFormFields({
               { ns: "starter" },
               "Enter the quantity"
             ),
+            validate: {
+              positiveInteger: (value) =>
+                (typeof value === "number" && Number.isInteger(value) && value > 0) ||
+                translate(
+                  "inventory.stockMoves.validation.qtyPositiveInteger",
+                  { ns: "starter" },
+                  "Quantity must be a positive whole number"
+                ),
+              availableStock: (value) => {
+                if (moveType !== "out" || typeof value !== "number") return true;
+                if (matrix.isLoading) {
+                  return translate(
+                    "inventory.stockMoves.validation.stockLoading",
+                    { ns: "starter" },
+                    "Wait for available stock to finish loading"
+                  );
+                }
+                if (matrix.isError) {
+                  return translate(
+                    "inventory.stockMoves.validation.stockUnavailable",
+                    { ns: "starter" },
+                    "Available stock could not be verified; try again"
+                  );
+                }
+                return (
+                  availableForOutbound - value >= 0 ||
+                  translate(
+                    "inventory.stockMoves.validation.insufficientStock",
+                    { ns: "starter", available: availableForOutbound },
+                    "Only {{available}} units are available in this warehouse"
+                  ).replace("{{available}}", String(availableForOutbound))
+                );
+              },
+            },
           }}
           render={({ field }) => (
             <FormItem>
@@ -163,6 +214,7 @@ export function StockMoveFormFields({
                     {...field}
                     value={field.value ?? ""}
                     type="number"
+                    min="1"
                     step="1"
                     placeholder={translate(
                       "inventory.stockMoves.form.qty.placeholder",

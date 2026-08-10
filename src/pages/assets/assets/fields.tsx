@@ -12,7 +12,7 @@ import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import { ASSET_CATEGORIES, ASSET_STATUSES, labelFor } from "../constants";
+import { ASSET_CATEGORIES, labelFor } from "../constants";
 import type { AssetFormValues } from "../types";
 
 export function AssetFormFields({
@@ -129,35 +129,6 @@ export function AssetFormFields({
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {translate("assets.assets.fields.status", { ns: "starter" }, "Status")}
-              </FormLabel>
-              <FormControl
-                render={
-                  <NativeSelect
-                    {...field}
-                    value={field.value ?? "in_stock"}
-                    onChange={(event) =>
-                      field.onChange(event.target.value || "in_stock")
-                    }
-                  >
-                    {ASSET_STATUSES.map((status) => (
-                      <NativeSelectOption key={status.value} value={status.value}>
-                        {labelFor(ASSET_STATUSES, status.value, translate)}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                }
-              />
-              <FormMessage />
-            </FormItem>
-          )}
-        />
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">

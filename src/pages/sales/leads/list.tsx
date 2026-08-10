@@ -1,24 +1,48 @@
 import { useTranslate } from "@refinedev/core";
-import { useTable } from "@refinedev/react-table";
-import { createColumnHelper } from "@tanstack/react-table";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowRightCircle,
+  Eye,
+  Flame,
+  Pencil,
+  Trash2,
+  UserPlus,
+} from "lucide-react";
 import { useMemo } from "react";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
-import { DataTable } from "@/components/data-table/data-table";
-import {
-  DataTableFilterCombobox,
-  DataTableFilterDropdownText,
-} from "@/components/data-table/data-table-filter";
-import { DataTableSorter } from "@/components/data-table/data-table-sorter";
 import { DeleteButton } from "@/components/resources/buttons/delete";
-import { EditButton } from "@/components/resources/buttons/edit";
-import { ShowButton } from "@/components/resources/buttons/show";
 import { ListView } from "@/components/resources/views/list-view";
-import { LEAD_SOURCES, LEAD_STATUSES, labelFor } from "../constants";
+import { Button } from "@/components/ui/button";
+import { ListToolbar } from "@/lib/table-kit";
+import {
+  BulkBar,
+  DataGrid,
+  KpiBar,
+  useCsvExport,
+  useSalesList,
+  type BuiltInView,
+  type GridColumn,
+} from "../grid";
+import {
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  addDaysIso,
+  formatDate,
+  labelFor,
+  scoreLead,
+} from "../constants";
 import { useOpenContextualChild } from "../route-surfaces";
-import { EnumBadge } from "../shared";
+import {
+  EnumBadge,
+  ScorePill,
+  useCurrentUserId,
+  useLocale,
+  useOwnerOptions,
+  userLabel,
+} from "../shared";
 import type { LeadRecord } from "../types";
+
+const APPENDS = ["owner"];
 
 export function LeadsLayout() {
   return (
@@ -34,183 +58,352 @@ export function LeadsLayout() {
 
 function LeadList() {
   const translate = useTranslate();
+  const locale = useLocale();
   const openChild = useOpenContextualChild();
+  const currentUserId = useCurrentUserId();
+  const ownerOptions = useOwnerOptions();
 
-  const statusOptions = useMemo(
-    () =>
-      LEAD_STATUSES.map((status) => ({
-        value: status.value,
-        label: labelFor(LEAD_STATUSES, status.value, translate),
-      })),
-    [translate]
-  );
-  const sourceOptions = useMemo(
-    () =>
-      LEAD_SOURCES.map((source) => ({
-        value: source.value,
-        label: labelFor(LEAD_SOURCES, source.value, translate),
-      })),
-    [translate]
-  );
-
-  const columns = useMemo(() => {
-    const columnHelper = createColumnHelper<LeadRecord>();
-    return [
-      columnHelper.accessor("name", {
-        id: "name",
-        header: ({ column, table }) => (
-          <div className="flex items-center gap-1">
-            <span>
-              {translate("sales.leads.fields.name", { ns: "starter" }, "Name")}
-            </span>
-            <DataTableSorter column={column} />
-            <DataTableFilterDropdownText
-              column={column}
-              table={table}
-              defaultOperator="contains"
-              operators={["contains", "eq", "startswith"]}
-            />
-          </div>
+  const views = useMemo<BuiltInView[]>(
+    () => [
+      {
+        id: "all",
+        label: translate("sales.leads.views.all", { ns: "starter" }, "All leads"),
+        sort: { field: "createdAt", order: "desc" },
+      },
+      {
+        id: "new",
+        label: translate(
+          "sales.leads.views.untouched",
+          { ns: "starter" },
+          "New & unworked"
         ),
-        enableSorting: true,
-        cell: ({ getValue, row }) => (
+        filters: [{ field: "status", operator: "eq", value: "new" }],
+        sort: { field: "createdAt", order: "desc" },
+      },
+      {
+        id: "qualified",
+        label: translate(
+          "sales.leads.views.qualified",
+          { ns: "starter" },
+          "Qualified"
+        ),
+        filters: [{ field: "status", operator: "eq", value: "qualified" }],
+        sort: { field: "createdAt", order: "desc" },
+      },
+      {
+        id: "mine",
+        label: translate("sales.leads.views.mine", { ns: "starter" }, "My leads"),
+        filters: currentUserId
+          ? [{ field: "owner_id", operator: "eq", value: currentUserId }]
+          : [],
+        sort: { field: "createdAt", order: "desc" },
+      },
+      {
+        id: "week",
+        label: translate(
+          "sales.leads.views.thisWeek",
+          { ns: "starter" },
+          "Captured this week"
+        ),
+        filters: [
+          { field: "createdAt", operator: "gte", value: addDaysIso(-7) },
+        ],
+        sort: { field: "createdAt", order: "desc" },
+      },
+    ],
+    [currentUserId, translate]
+  );
+
+  const state = useSalesList<LeadRecord>({
+    listId: "leads",
+    resource: "hub_sales_leads",
+    searchField: "name",
+    defaultSort: { field: "createdAt", order: "desc" },
+    views,
+    appends: APPENDS,
+    initiallyHidden: ["email"],
+  });
+
+  const columns = useMemo<Array<GridColumn<LeadRecord>>>(
+    () => [
+      {
+        id: "score",
+        header: translate("sales.leads.columns.score", { ns: "starter" }, "Score"),
+        width: "5.5rem",
+        cell: (record) => <ScorePill score={scoreLead(record).score} />,
+        csv: (record) => String(scoreLead(record).score),
+      },
+      {
+        id: "name",
+        header: translate("sales.leads.fields.name", { ns: "starter" }, "Name"),
+        sortField: "name",
+        cell: (record) => (
           <button
             type="button"
-            className="font-medium text-left text-primary underline-offset-2 hover:underline"
-            onClick={() => openChild(`show/${row.original.id}`)}
+            className="text-left font-medium text-primary underline-offset-2 hover:underline"
+            onClick={() => openChild(`show/${record.id}`)}
           >
-            {getValue() || "—"}
+            {record.name || "—"}
           </button>
         ),
-      }),
-      columnHelper.accessor("company", {
+        csv: (record) => record.name ?? "",
+      },
+      {
         id: "company",
-        header: translate(
-          "sales.leads.fields.company",
-          { ns: "starter" },
-          "Company"
-        ),
-        enableSorting: false,
-        cell: ({ getValue }) => getValue() || "—",
-      }),
-      columnHelper.accessor("email", {
+        header: translate("sales.leads.fields.company", { ns: "starter" }, "Company"),
+        cell: (record) => record.company || "—",
+        csv: (record) => record.company ?? "",
+      },
+      {
         id: "email",
         header: translate("sales.leads.fields.email", { ns: "starter" }, "Email"),
-        enableSorting: false,
-        cell: ({ getValue }) => getValue() || "—",
-      }),
-      columnHelper.accessor("source", {
-        id: "source",
-        header: ({ column, table }) => (
-          <div className="flex items-center gap-1">
-            <span>
-              {translate("sales.leads.fields.source", { ns: "starter" }, "Source")}
-            </span>
-            <DataTableFilterCombobox
-              column={column}
-              table={table}
-              options={sourceOptions}
-              defaultOperator="eq"
-              operators={["eq", "in"]}
-            />
-          </div>
-        ),
-        enableSorting: false,
-        cell: ({ getValue }) => {
-          const value = getValue();
-          return value ? (
-            <EnumBadge value={value} label={labelFor(LEAD_SOURCES, value, translate)} />
+        cell: (record) =>
+          record.email ? (
+            <a
+              href={`mailto:${record.email}`}
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              {record.email}
+            </a>
           ) : (
             "—"
-          );
-        },
-      }),
-      columnHelper.accessor("status", {
-        id: "status",
-        header: ({ column, table }) => (
-          <div className="flex items-center gap-1">
-            <span>
-              {translate("sales.leads.fields.status", { ns: "starter" }, "Status")}
-            </span>
-            <DataTableFilterCombobox
-              column={column}
-              table={table}
-              options={statusOptions}
-              defaultOperator="eq"
-              operators={["eq"]}
+          ),
+        csv: (record) => record.email ?? "",
+      },
+      {
+        id: "source",
+        header: translate("sales.leads.fields.source", { ns: "starter" }, "Source"),
+        width: "9rem",
+        cell: (record) =>
+          record.source ? (
+            <EnumBadge
+              value={record.source}
+              label={labelFor(LEAD_SOURCES, record.source, translate)}
             />
-          </div>
+          ) : (
+            "—"
+          ),
+        csv: (record) => labelFor(LEAD_SOURCES, record.source, translate),
+      },
+      {
+        id: "status",
+        header: translate("sales.leads.fields.status", { ns: "starter" }, "Status"),
+        width: "8rem",
+        cell: (record) => (
+          <EnumBadge
+            value={record.status ?? "new"}
+            label={labelFor(LEAD_STATUSES, record.status ?? "new", translate)}
+          />
         ),
-        enableSorting: false,
-        cell: ({ getValue }) => {
-          const value = getValue() ?? "new";
-          return (
-            <EnumBadge value={value} label={labelFor(LEAD_STATUSES, value, translate)} />
-          );
-        },
-      }),
-      columnHelper.accessor((record) => record.owner, {
+        csv: (record) => labelFor(LEAD_STATUSES, record.status ?? "new", translate),
+      },
+      {
         id: "owner",
         header: translate("sales.leads.fields.owner", { ns: "starter" }, "Owner"),
-        enableSorting: false,
-        cell: ({ getValue }) => {
-          const owner = getValue();
-          return owner ? owner.nickname || owner.username || "—" : "—";
-        },
-      }),
-      columnHelper.display({
-        id: "actions",
-        header: translate("sales.common.actions", { ns: "starter" }, "Actions"),
-        enableSorting: false,
-        size: 144,
-        cell: ({ row }) => (
-          <div className="flex items-center gap-1">
-            <ShowButton
-              resource="hub_sales_leads"
-              recordItemId={row.original.id}
+        width: "10rem",
+        cell: (record) => userLabel(record.owner),
+        csv: (record) => userLabel(record.owner),
+      },
+      {
+        id: "createdAt",
+        header: translate("sales.leads.columns.captured", { ns: "starter" }, "Captured"),
+        sortField: "createdAt",
+        width: "9rem",
+        cell: (record) => formatDate(record.createdAt, locale),
+        csv: (record) => record.createdAt?.slice(0, 10) ?? "",
+      },
+    ],
+    [locale, openChild, translate]
+  );
+
+  const { exportCsv, exporting } = useCsvExport<LeadRecord>({
+    resource: "hub_sales_leads",
+    filters: state.filters,
+    sorters: state.sorters,
+    appends: APPENDS,
+    columns,
+    filename: "leads.csv",
+  });
+
+  const hot = state.rows.filter(
+    (record) => scoreLead(record).score >= 70
+  ).length;
+
+  return (
+    <ListView resource="hub_sales_leads">
+      <KpiBar
+        loading={state.query.isLoading}
+        tiles={[
+          {
+            id: "count",
+            label: translate("sales.leads.kpi.count", { ns: "starter" }, "Leads in view"),
+            value: String(state.total),
+            icon: UserPlus,
+          },
+          {
+            id: "new",
+            label: translate("sales.leads.kpi.new", { ns: "starter" }, "New & unworked"),
+            value:
+              state.viewId === "new"
+                ? String(state.total)
+                : translate("sales.leads.kpi.view", { ns: "starter" }, "View"),
+            hint: translate(
+              "sales.leads.kpi.new.hint",
+              { ns: "starter" },
+              "Never contacted"
+            ),
+            tone: "warning",
+            active: state.viewId === "new",
+            onClick: () => state.applyView("new"),
+          },
+          {
+            id: "qualified",
+            label: translate("sales.leads.kpi.qualified", { ns: "starter" }, "Qualified"),
+            value:
+              state.viewId === "qualified"
+                ? String(state.total)
+                : translate("sales.leads.kpi.view", { ns: "starter" }, "View"),
+            hint: translate(
+              "sales.leads.kpi.qualified.hint",
+              { ns: "starter" },
+              "Ready to convert"
+            ),
+            tone: "positive",
+            active: state.viewId === "qualified",
+            onClick: () => state.applyView("qualified"),
+          },
+          {
+            id: "hot",
+            label: translate("sales.leads.kpi.hot", { ns: "starter" }, "Hot on this page"),
+            value: String(hot),
+            hint: translate(
+              "sales.leads.kpi.hot.hint",
+              { ns: "starter" },
+              "Fit score 70+"
+            ),
+            tone: "danger",
+            icon: Flame,
+          },
+        ]}
+      />
+
+      <ListToolbar
+        state={{ ...state, columns }}
+        facets={[
+          {
+            field: "status",
+            label: translate("sales.leads.fields.status", { ns: "starter" }, "Status"),
+            options: LEAD_STATUSES.map((status) => ({
+              value: status.value,
+              label: labelFor(LEAD_STATUSES, status.value, translate),
+            })),
+          },
+          {
+            field: "source",
+            label: translate("sales.leads.fields.source", { ns: "starter" }, "Source"),
+            options: LEAD_SOURCES.map((source) => ({
+              value: source.value,
+              label: labelFor(LEAD_SOURCES, source.value, translate),
+            })),
+          },
+          {
+            field: "owner_id",
+            label: translate("sales.leads.fields.owner", { ns: "starter" }, "Owner"),
+            options: ownerOptions,
+          },
+        ]}
+        searchPlaceholder={translate(
+          "sales.leads.searchPlaceholder",
+          { ns: "starter" },
+          "Search leads…"
+        )}
+        onExport={exportCsv}
+        exporting={exporting}
+      />
+
+      <DataGrid
+        state={state}
+        columns={columns}
+        onRowOpen={(record) => openChild(`show/${record.id}`)}
+        emptyTitle={translate(
+          "sales.leads.empty.title",
+          { ns: "starter" },
+          "No leads in this view"
+        )}
+        emptyDescription={translate(
+          "sales.leads.empty.description",
+          { ns: "starter" },
+          "Inbound and prospected leads land here for qualification."
+        )}
+        rowActions={(record) => (
+          <>
+            <Button
               variant="ghost"
-              size="icon"
-              onClick={() => openChild(`show/${row.original.id}`)}
+              size="icon-sm"
+              disabled={record.status === "qualified"}
+              onClick={() => openChild(`show/${record.id}/convert`)}
+              aria-label={translate(
+                "sales.leads.detail.convert",
+                { ns: "starter" },
+                "Convert"
+              )}
+            >
+              <ArrowRightCircle />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => openChild(`show/${record.id}`)}
             >
               <Eye />
-            </ShowButton>
-            <EditButton
-              resource="hub_sales_leads"
-              recordItemId={row.original.id}
+            </Button>
+            <Button
               variant="ghost"
-              size="icon"
-              onClick={() => openChild(`edit/${row.original.id}`)}
+              size="icon-sm"
+              onClick={() => openChild(`edit/${record.id}`)}
             >
               <Pencil />
-            </EditButton>
+            </Button>
             <DeleteButton
               resource="hub_sales_leads"
-              recordItemId={row.original.id}
+              recordItemId={record.id}
               variant="ghost"
-              size="icon"
+              size="icon-sm"
               className="text-destructive hover:text-destructive"
             >
               <Trash2 />
             </DeleteButton>
-          </div>
-        ),
-      }),
-    ];
-  }, [openChild, sourceOptions, statusOptions, translate]);
+          </>
+        )}
+      />
 
-  const table = useTable<LeadRecord>({
-    columns,
-    refineCoreProps: {
-      resource: "hub_sales_leads",
-      syncWithLocation: false,
-      meta: { appends: ["owner"] },
-      sorters: { initial: [{ field: "createdAt", order: "desc" }] },
-    },
-  });
-
-  return (
-    <ListView resource="hub_sales_leads">
-      <DataTable table={table} />
+      <BulkBar
+        resource="hub_sales_leads"
+        selected={state.selected}
+        onClear={() => state.setSelected([])}
+        onDone={() => {
+          state.setSelected([]);
+          void state.query.refetch();
+        }}
+        fieldActions={[
+          {
+            field: "status",
+            label: translate("sales.leads.fields.status", { ns: "starter" }, "Status"),
+            options: LEAD_STATUSES.map((status) => ({
+              value: status.value,
+              label: labelFor(LEAD_STATUSES, status.value, translate),
+            })),
+          },
+          {
+            field: "source",
+            label: translate("sales.leads.fields.source", { ns: "starter" }, "Source"),
+            options: LEAD_SOURCES.map((source) => ({
+              value: source.value,
+              label: labelFor(LEAD_SOURCES, source.value, translate),
+            })),
+          },
+        ]}
+      />
     </ListView>
   );
 }

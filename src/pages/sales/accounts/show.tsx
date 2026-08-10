@@ -1,37 +1,59 @@
 import { useList, useShow, useTranslate } from "@refinedev/core";
-import { Eye, Mail, Pencil, Phone, Plus, Trash2, Users } from "lucide-react";
-import { useMemo } from "react";
+import {
+  Eye,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { DeleteButton } from "@/components/resources/buttons/delete";
 import { EditButton } from "@/components/resources/buttons/edit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
+import { cn } from "@/lib/utils";
 import {
   ACTIVITY_TYPES,
   DEAL_STAGES,
   INDUSTRIES,
+  OPEN_DEAL_STAGES,
+  daysSince,
   formatCurrency,
   formatDate,
   formatDateTime,
   labelFor,
 } from "../constants";
 import {
+  RecordNav,
+  useDrawerShortcuts,
+  useRecordNav,
+} from "../record-nav";
+import {
   useContextualCloseTo,
   useOpenContextualChild,
 } from "../route-surfaces";
 import {
+  activityIcon,
+  CopyLinkButton,
   DetailItems,
   DrawerSection,
   EmptyRow,
   EnumBadge,
+  MiniStat,
   SimpleTable,
   useLocale,
+  userLabel,
 } from "../shared";
-import type { AccountRecord, ActivityRecord, ContactRecord, DealRecord } from "../types";
+import type {
+  AccountRecord,
+  ActivityRecord,
+  ContactRecord,
+  DealRecord,
+} from "../types";
 
 export function AccountShow() {
   const translate = useTranslate();
@@ -40,15 +62,79 @@ export function AccountShow() {
   const closeTo = useContextualCloseTo();
   const { id } = useParams<{ id: string }>();
   const nestedDrawer = useOutlet();
+  const [tab, setTab] = useState("overview");
+  const nav = useRecordNav({
+    listId: "accounts",
+    currentId: id,
+    pathFor: (recordId) => `/accounts/show/${recordId}`,
+  });
+  useDrawerShortcuts({
+    onPrev: nav.goPrev,
+    onNext: nav.goNext,
+    onEdit: () => openChild("edit"),
+  });
+
   const { result: record, query } = useShow<AccountRecord>({
     resource: "hub_sales_accounts",
     id,
     meta: { appends: ["owner"] },
   });
 
+  const { result: deals } = useList<DealRecord>({
+    resource: "hub_sales_deals",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "expected_close_date", order: "asc" }],
+    filters: id ? [{ field: "account_id", operator: "eq", value: id }] : [],
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: Boolean(id) },
+  });
+
+  const { result: contacts } = useList<ContactRecord>({
+    resource: "hub_sales_contacts",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "name", order: "asc" }],
+    filters: id ? [{ field: "account_id", operator: "eq", value: id }] : [],
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: Boolean(id) },
+  });
+
+  const dealIds = useMemo(
+    () => deals.data.map((deal) => deal.id),
+    [deals.data]
+  );
+
+  const { result: activities } = useList<ActivityRecord>({
+    resource: "hub_sales_activities",
+    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
+    sorters: [{ field: "date", order: "desc" }],
+    filters:
+      dealIds.length > 0
+        ? [{ field: "deal_id", operator: "in", value: dealIds }]
+        : [],
+    meta: { appends: ["deal"] },
+    errorNotification: false,
+    queryOptions: { retry: false, enabled: dealIds.length > 0 },
+  });
+
+  const rollup = useMemo(() => {
+    let open = 0;
+    let won = 0;
+    for (const deal of deals.data) {
+      const amount = Number(deal.amount ?? 0);
+      if (OPEN_DEAL_STAGES.includes(deal.stage ?? "")) open += amount;
+      if (deal.stage === "won") won += amount;
+    }
+    const lastTouch = activities.data[0]?.date ?? null;
+    return { open, won, lastTouch, lastTouchDays: daysSince(lastTouch) };
+  }, [deals.data, activities.data]);
+
   const displayName =
     record?.name ||
-    translate("sales.accounts.detail.unnamed", { ns: "starter" }, "Unnamed account");
+    translate(
+      "sales.accounts.detail.unnamed",
+      { ns: "starter" },
+      "Unnamed account"
+    );
 
   return (
     <RouteDrawer
@@ -69,15 +155,19 @@ export function AccountShow() {
       nested={nestedDrawer}
       actions={
         record ? (
-          <EditButton
-            resource="hub_sales_accounts"
-            recordItemId={record.id}
-            variant="outline"
-            size="icon-sm"
-            onClick={() => openChild("edit")}
-          >
-            <Pencil />
-          </EditButton>
+          <div className="flex items-center gap-1">
+            <RecordNav state={nav} />
+            <CopyLinkButton />
+            <EditButton
+              resource="hub_sales_accounts"
+              recordItemId={record.id}
+              variant="outline"
+              size="icon-sm"
+              onClick={() => openChild("edit")}
+            >
+              <Pencil />
+            </EditButton>
+          </div>
         ) : null
       }
     >
@@ -102,78 +192,172 @@ export function AccountShow() {
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="space-y-6">
-            <DetailItems
-              title={translate(
-                "sales.accounts.detail.profile",
-                { ns: "starter" },
-                "Profile"
-              )}
-              items={[
-                [
-                  translate(
-                    "sales.accounts.fields.industry",
+          <div className="space-y-5">
+            {/* Relationship header — the numbers a rep needs before a call. */}
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              <MiniStat
+                label={translate(
+                  "sales.accounts.stat.openPipeline",
+                  { ns: "starter" },
+                  "Open pipeline"
+                )}
+                value={formatCurrency(rollup.open, locale)}
+              />
+              <MiniStat
+                label={translate(
+                  "sales.accounts.stat.won",
+                  { ns: "starter" },
+                  "Closed won"
+                )}
+                value={formatCurrency(rollup.won, locale)}
+                tone="positive"
+              />
+              <MiniStat
+                label={translate(
+                  "sales.accounts.stat.deals",
+                  { ns: "starter" },
+                  "Deals"
+                )}
+                value={String(deals.data.length)}
+              />
+              <MiniStat
+                label={translate(
+                  "sales.accounts.stat.lastTouch",
+                  { ns: "starter" },
+                  "Last touch"
+                )}
+                value={
+                  rollup.lastTouchDays === null
+                    ? "—"
+                    : translate(
+                        "sales.deals.columns.daysAgo",
+                        { ns: "starter" },
+                        "{{days}}d ago"
+                      ).replace("{{days}}", String(rollup.lastTouchDays))
+                }
+                tone={
+                  rollup.lastTouchDays !== null && rollup.lastTouchDays > 30
+                    ? "warning"
+                    : "default"
+                }
+              />
+            </div>
+
+            <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
+              <TabsList variant="line">
+                <TabsTrigger value="overview">
+                  {translate(
+                    "sales.accounts.tabs.overview",
                     { ns: "starter" },
-                    "Industry"
-                  ),
-                  record?.industry
-                    ? labelFor(INDUSTRIES, record.industry, translate)
-                    : "—",
-                ],
-                [
-                  translate(
-                    "sales.accounts.fields.owner",
+                    "Overview"
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="contacts">
+                  {translate(
+                    "sales.accounts.detail.contacts",
                     { ns: "starter" },
-                    "Owner"
-                  ),
-                  record?.owner
-                    ? record.owner.nickname || record.owner.username || "—"
-                    : "—",
-                ],
-                [
-                  translate(
-                    "sales.accounts.fields.website",
+                    "Contacts"
+                  )}
+                  <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                    {contacts.data.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="deals">
+                  {translate("sales.accounts.detail.deals", { ns: "starter" }, "Deals")}
+                  <span className="ml-1 text-xs text-muted-foreground tabular-nums">
+                    {deals.data.length}
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="timeline">
+                  {translate(
+                    "sales.accounts.detail.timeline",
                     { ns: "starter" },
-                    "Website"
-                  ),
-                  record?.website ? (
-                    <a
-                      key="website"
-                      href={record.website}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-primary underline-offset-2 hover:underline"
-                    >
-                      {record.website}
-                    </a>
-                  ) : (
-                    "—"
-                  ),
-                ],
-                [
-                  translate(
-                    "sales.accounts.fields.accountSince",
+                    "Timeline"
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="pt-4">
+                <DetailItems
+                  title={translate(
+                    "sales.accounts.detail.profile",
                     { ns: "starter" },
-                    "Account since"
-                  ),
-                  formatDate(record?.createdAt, locale),
-                ],
-              ]}
-            />
-            {id ? (
-              <>
-                <Separator />
-                <ContactsSection accountId={id} openChild={openChild} />
-                <Separator />
+                    "Profile"
+                  )}
+                  items={[
+                    [
+                      translate(
+                        "sales.accounts.fields.industry",
+                        { ns: "starter" },
+                        "Industry"
+                      ),
+                      record?.industry
+                        ? labelFor(INDUSTRIES, record.industry, translate)
+                        : "—",
+                    ],
+                    [
+                      translate(
+                        "sales.accounts.fields.owner",
+                        { ns: "starter" },
+                        "Owner"
+                      ),
+                      userLabel(record?.owner),
+                    ],
+                    [
+                      translate(
+                        "sales.accounts.fields.website",
+                        { ns: "starter" },
+                        "Website"
+                      ),
+                      record?.website ? (
+                        <a
+                          key="website"
+                          href={record.website}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary underline-offset-2 hover:underline"
+                        >
+                          {record.website}
+                        </a>
+                      ) : (
+                        "—"
+                      ),
+                    ],
+                    [
+                      translate(
+                        "sales.accounts.fields.accountSince",
+                        { ns: "starter" },
+                        "Account since"
+                      ),
+                      formatDate(record?.createdAt, locale),
+                    ],
+                  ]}
+                />
+              </TabsContent>
+
+              <TabsContent value="contacts" className="pt-4">
+                <ContactsSection
+                  contacts={contacts.data}
+                  openChild={openChild}
+                />
+              </TabsContent>
+
+              <TabsContent value="deals" className="pt-4">
                 <DealsSection
-                  accountId={id}
+                  deals={deals.data}
                   locale={locale}
                   openChild={openChild}
                 />
-                <Separator />
-                <TimelineSection accountId={id} locale={locale} />
-              </>
-            ) : null}
+              </TabsContent>
+
+              <TabsContent value="timeline" className="pt-4">
+                <TimelineSection
+                  activities={activities.data}
+                  locale={locale}
+                  hasDeals={dealIds.length > 0}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         )}
       </div>
@@ -183,37 +367,14 @@ export function AccountShow() {
 
 type OpenChild = (to: string) => void;
 
-function AddLink({
-  onClick,
-  label,
-}: {
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <Button variant="outline" size="sm" onClick={onClick}>
-      <Plus />
-      {label}
-    </Button>
-  );
-}
-
 function ContactsSection({
-  accountId,
+  contacts,
   openChild,
 }: {
-  accountId: string;
+  contacts: ContactRecord[];
   openChild: OpenChild;
 }) {
   const translate = useTranslate();
-  const { result } = useList<ContactRecord>({
-    resource: "hub_sales_contacts",
-    pagination: { mode: "server", currentPage: 1, pageSize: 50 },
-    sorters: [{ field: "name", order: "asc" }],
-    filters: [{ field: "account_id", operator: "eq", value: accountId }],
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
 
   return (
     <DrawerSection
@@ -223,30 +384,30 @@ function ContactsSection({
         "Contacts"
       )}
       action={
-        <AddLink
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => openChild("contacts/create")}
-          label={translate(
+        >
+          <Plus />
+          {translate(
             "sales.contacts.actions.add",
             { ns: "starter" },
             "Add contact"
           )}
-        />
+        </Button>
       }
     >
       <SimpleTable
         headers={[
           translate("sales.contacts.fields.name", { ns: "starter" }, "Name"),
-          translate(
-            "sales.contacts.fields.jobTitle",
-            { ns: "starter" },
-            "Job title"
-          ),
+          translate("sales.contacts.fields.jobTitle", { ns: "starter" }, "Job title"),
           translate("sales.contacts.fields.email", { ns: "starter" }, "Email"),
           translate("sales.contacts.fields.phone", { ns: "starter" }, "Phone"),
           translate("sales.common.actions", { ns: "starter" }, "Actions"),
         ]}
       >
-        {result.data.length === 0 ? (
+        {contacts.length === 0 ? (
           <EmptyRow
             colSpan={5}
             text={translate(
@@ -256,8 +417,8 @@ function ContactsSection({
             )}
           />
         ) : (
-          result.data.map((contact) => (
-            <tr key={String(contact.id)}>
+          contacts.map((contact) => (
+            <tr key={String(contact.id)} className="group/row">
               <td className="px-3 py-2 font-medium">
                 <button
                   type="button"
@@ -272,13 +433,24 @@ function ContactsSection({
                 </button>
               </td>
               <td className="px-3 py-2">{contact.title || "—"}</td>
-              <td className="px-3 py-2">{contact.email || "—"}</td>
+              <td className="px-3 py-2">
+                {contact.email ? (
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    {contact.email}
+                  </a>
+                ) : (
+                  "—"
+                )}
+              </td>
               <td className="px-3 py-2">{contact.phone || "—"}</td>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 md:opacity-0 md:group-hover/row:opacity-100">
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() =>
                       openChild(
                         `contacts/show/${encodeURIComponent(String(contact.id))}`
@@ -289,7 +461,7 @@ function ContactsSection({
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() =>
                       openChild(
                         `contacts/edit/${encodeURIComponent(String(contact.id))}`
@@ -302,7 +474,7 @@ function ContactsSection({
                     resource="hub_sales_contacts"
                     recordItemId={contact.id}
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 />
@@ -318,36 +490,28 @@ function ContactsSection({
 }
 
 function DealsSection({
-  accountId,
+  deals,
   locale,
   openChild,
 }: {
-  accountId: string;
+  deals: DealRecord[];
   locale: string;
   openChild: OpenChild;
 }) {
   const translate = useTranslate();
-  const { result } = useList<DealRecord>({
-    resource: "hub_sales_deals",
-    pagination: { mode: "server", currentPage: 1, pageSize: 50 },
-    sorters: [{ field: "createdAt", order: "desc" }],
-    filters: [{ field: "account_id", operator: "eq", value: accountId }],
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
 
   return (
     <DrawerSection
-      title={translate(
-        "sales.accounts.detail.deals",
-        { ns: "starter" },
-        "Deals"
-      )}
+      title={translate("sales.accounts.detail.deals", { ns: "starter" }, "Deals")}
       action={
-        <AddLink
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => openChild("deals/create")}
-          label={translate("sales.deals.actions.add", { ns: "starter" }, "Add deal")}
-        />
+        >
+          <Plus />
+          {translate("sales.deals.actions.add", { ns: "starter" }, "Add deal")}
+        </Button>
       }
     >
       <SimpleTable
@@ -363,7 +527,7 @@ function DealsSection({
           translate("sales.common.actions", { ns: "starter" }, "Actions"),
         ]}
       >
-        {result.data.length === 0 ? (
+        {deals.length === 0 ? (
           <EmptyRow
             colSpan={5}
             text={translate(
@@ -373,16 +537,14 @@ function DealsSection({
             )}
           />
         ) : (
-          result.data.map((deal) => (
-            <tr key={String(deal.id)}>
+          deals.map((deal) => (
+            <tr key={String(deal.id)} className="group/row">
               <td className="px-3 py-2 font-medium">
                 <button
                   type="button"
                   className="text-left text-primary underline-offset-2 hover:underline"
                   onClick={() =>
-                    openChild(
-                      `deals/show/${encodeURIComponent(String(deal.id))}`
-                    )
+                    openChild(`deals/show/${encodeURIComponent(String(deal.id))}`)
                   }
                 >
                   {deal.title || "—"}
@@ -401,10 +563,10 @@ function DealsSection({
                 {formatDate(deal.expected_close_date, locale)}
               </td>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 md:opacity-0 md:group-hover/row:opacity-100">
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() =>
                       openChild(
                         `deals/show/${encodeURIComponent(String(deal.id))}`
@@ -415,7 +577,7 @@ function DealsSection({
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     onClick={() =>
                       openChild(
                         `deals/edit/${encodeURIComponent(String(deal.id))}`
@@ -428,7 +590,7 @@ function DealsSection({
                     resource="hub_sales_deals"
                     recordItemId={deal.id}
                     variant="ghost"
-                    size="icon"
+                    size="icon-sm"
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 />
@@ -443,103 +605,86 @@ function DealsSection({
   );
 }
 
-function activityIcon(type: string | null | undefined) {
-  switch (type) {
-    case "email":
-      return Mail;
-    case "meeting":
-      return Users;
-    default:
-      return Phone;
-  }
-}
-
-// Cross-entity timeline: pulls this account's deals, then every activity
-// logged against any of those deals, merged into one chronological feed.
+/**
+ * Cross-entity timeline: every activity logged against any of this account's
+ * deals, merged into one chronological feed.
+ */
 function TimelineSection({
-  accountId,
+  activities,
   locale,
+  hasDeals,
 }: {
-  accountId: string;
+  activities: ActivityRecord[];
   locale: string;
+  hasDeals: boolean;
 }) {
   const translate = useTranslate();
-  const { result: dealsResult } = useList<DealRecord>({
-    resource: "hub_sales_deals",
-    pagination: { mode: "server", currentPage: 1, pageSize: 100 },
-    filters: [{ field: "account_id", operator: "eq", value: accountId }],
-    errorNotification: false,
-    queryOptions: { retry: false },
-  });
-  const dealIds = useMemo(
-    () => dealsResult.data.map((deal) => deal.id),
-    [dealsResult.data]
-  );
 
-  const { result: activitiesResult } = useList<ActivityRecord>({
-    resource: "hub_sales_activities",
-    pagination: { mode: "server", currentPage: 1, pageSize: 50 },
-    sorters: [{ field: "date", order: "desc" }],
-    filters:
-      dealIds.length > 0
-        ? [{ field: "deal_id", operator: "in", value: dealIds }]
-        : [],
-    meta: { appends: ["deal"] },
-    errorNotification: false,
-    queryOptions: { retry: false, enabled: dealIds.length > 0 },
-  });
+  if (!hasDeals || activities.length === 0) {
+    return (
+      <p className="rounded-lg border border-dashed px-4 py-10 text-center text-sm text-muted-foreground">
+        {translate(
+          "sales.accounts.detail.timeline.empty",
+          { ns: "starter" },
+          "No activity logged for this account's deals yet."
+        )}
+      </p>
+    );
+  }
 
   return (
-    <DrawerSection
-      title={translate(
-        "sales.accounts.detail.timeline",
-        { ns: "starter" },
-        "Timeline"
-      )}
-    >
-      {dealIds.length === 0 || activitiesResult.data.length === 0 ? (
-        <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-          {translate(
-            "sales.accounts.detail.timeline.empty",
-            { ns: "starter" },
-            "No activity logged for this account's deals yet."
-          )}
-        </p>
-      ) : (
-        <ol className="space-y-3">
-          {activitiesResult.data.map((activity) => {
-            const Icon = activityIcon(activity.type);
-            return (
-              <li key={String(activity.id)} className="flex gap-3">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-blue-500/12 text-blue-600 dark:text-blue-400">
-                  <Icon className="size-3.5" />
+    <ol className="relative space-y-4 border-l pl-5">
+      {activities.map((activity) => {
+        const Icon = activityIcon(activity.type);
+        const age = daysSince(activity.date);
+        return (
+          <li key={String(activity.id)} className="relative">
+            <span
+              className={cn(
+                "absolute -left-[1.9rem] flex size-6 items-center justify-center rounded-full ring-4 ring-background",
+                "bg-blue-500/12 text-blue-600 dark:text-blue-400"
+              )}
+            >
+              <Icon className="size-3" />
+            </span>
+            <div className="space-y-0.5">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-2">
+                <span className="text-sm font-medium">
+                  {activity.subject || "—"}
                 </span>
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-2">
-                    <span className="text-sm font-medium">
-                      {activity.subject || "—"}
-                    </span>
-                    <span className="text-xs whitespace-nowrap text-muted-foreground">
-                      {formatDateTime(activity.date, locale)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <EnumBadge
-                      value={activity.type ?? "call"}
-                      label={labelFor(ACTIVITY_TYPES, activity.type ?? "call", translate)}
-                    />
-                    {activity.deal?.title ? (
-                      <span className="text-xs text-muted-foreground">
-                        {activity.deal.title}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ol>
-      )}
-    </DrawerSection>
+                <span className="text-xs whitespace-nowrap text-muted-foreground">
+                  {formatDateTime(activity.date, locale)}
+                  {age !== null
+                    ? ` · ${translate(
+                        "sales.deals.columns.daysAgo",
+                        { ns: "starter" },
+                        "{{days}}d ago"
+                      ).replace("{{days}}", String(age))}`
+                    : ""}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <EnumBadge
+                  value={activity.type ?? "call"}
+                  label={labelFor(
+                    ACTIVITY_TYPES,
+                    activity.type ?? "call",
+                    translate
+                  )}
+                />
+                {activity.deal?.title ? (
+                  <span className="text-xs text-muted-foreground">
+                    {activity.deal.title}
+                  </span>
+                ) : null}
+              </div>
+              {activity.notes ? (
+                <p className="text-xs text-muted-foreground">{activity.notes}</p>
+              ) : null}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

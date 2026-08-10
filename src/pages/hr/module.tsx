@@ -1,4 +1,10 @@
-import { CalendarCheck, CalendarDays, Network, Users } from "lucide-react";
+import {
+  CalendarCheck,
+  CalendarDays,
+  Network,
+  UserPlus,
+  Users,
+} from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -309,6 +315,26 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         priority: 51,
         icon: <CalendarDays />,
         description: "A month view of who's off and when.",
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "hr-lifecycle",
+    path: hrRoutes.lifecycle,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("hr-lifecycle"),
+      })),
+    resource: {
+      meta: {
+        label: "Joiners & leavers",
+        i18nKey: "hr.resources.lifecycle",
+        i18nOptions: { ns: "starter" },
+        descriptionI18nKey: "hr.resources.lifecycle.description",
+        priority: 52,
+        icon: <UserPlus />,
+        description: "Onboarding progress for new hires, plus who has left.",
         acl: false,
       },
     },

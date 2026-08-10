@@ -17,7 +17,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RouteDrawer } from "@/extensions/nocobase-route-surfaces";
 import {
-  TASK_PRIORITIES,
   TASK_STATUSES,
   formatDate,
   labelFor,
@@ -32,12 +31,12 @@ import {
   DetailItems,
   DrawerSection,
   EmptyRow,
-  EnumBadge,
   PriorityPill,
   SimpleTable,
   useLocale,
 } from "../shared";
 import type { ChecklistRecord, TaskRecord } from "../types";
+import { taskTransitionValues } from "../transitions";
 
 export function TaskShow() {
   const locale = useLocale();
@@ -128,7 +127,7 @@ export function TaskShow() {
                         updateTask({
                           resource: "hub_pj_tasks",
                           id: record.id,
-                          values: { status: value },
+                          values: taskTransitionValues(value ?? "todo", record),
                         })
                       }
                     >

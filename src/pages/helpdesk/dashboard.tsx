@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { AsyncPanel } from "@/lib/table-kit";
 import { useChartTheme } from "@/pages/home/theme";
 import {
   TICKET_PRIORITIES,
@@ -21,34 +22,37 @@ import {
 import { getTicketShowPath } from "./routes";
 import { userLabel } from "./shared";
 import type { TicketRecord } from "./types";
+import { slaStateFor, slaTone, useSlaByPriority } from "./sla";
 
 const RESOURCE = "hub_hd_tickets";
 const OPEN_STATUSES = new Set(["open", "pending"]);
 
-/** Hours-to-breach thresholds per priority, used to derive SLA health. */
-const SLA_HOURS: Record<string, number> = {
-  urgent: 4,
-  high: 24,
-  med: 72,
-  low: 120,
-};
-
 type SlaBucket = "onTrack" | "atRisk" | "breached";
 
-function slaBucketFor(ticket: TicketRecord): SlaBucket {
-  const threshold = SLA_HOURS[ticket.priority ?? "med"] ?? SLA_HOURS.med;
-  const ageHours = ticket.createdAt
-    ? (Date.now() - new Date(ticket.createdAt).getTime()) / 3600000
-    : 0;
-  if (ageHours >= threshold) return "breached";
-  if (ageHours >= threshold * 0.7) return "atRisk";
-  return "onTrack";
+function slaBucketFor(
+  ticket: TicketRecord,
+  policies: ReturnType<typeof useSlaByPriority>["byPriority"]
+): SlaBucket {
+  const state = slaStateFor(ticket, policies);
+  if (!state) return "atRisk";
+  const tone = slaTone(state);
+  return tone === "breached"
+    ? "breached"
+    : tone === "risk"
+      ? "atRisk"
+      : "onTrack";
 }
 
 export function HelpdeskDashboard() {
   const translate = useTranslate();
   const chart = useChartTheme();
   const navigate = useNavigate();
+  const {
+    byPriority: slaPolicies,
+    isLoading: slaLoading,
+    isError: slaError,
+    refetch: refetchSla,
+  } = useSlaByPriority();
 
   const { result, query } = useList<TicketRecord>({
     resource: RESOURCE,
@@ -59,7 +63,7 @@ export function HelpdeskDashboard() {
     queryOptions: { retry: false },
   });
 
-  const loading = query.isLoading;
+  const loading = query.isLoading || slaLoading;
   const tickets = result.data ?? [];
   const open = useMemo(
     () => tickets.filter((t) => OPEN_STATUSES.has(t.status ?? "")),
@@ -70,16 +74,17 @@ export function HelpdeskDashboard() {
     const buckets = { onTrack: 0, atRisk: 0, breached: 0 };
     const breachedList: TicketRecord[] = [];
     for (const ticket of open) {
-      const bucket = slaBucketFor(ticket);
+      const bucket = slaBucketFor(ticket, slaPolicies);
       buckets[bucket] += 1;
       if (bucket !== "onTrack") breachedList.push(ticket);
     }
     breachedList.sort((a, b) => {
-      const rank = (t: TicketRecord) => (slaBucketFor(t) === "breached" ? 0 : 1);
+      const rank = (t: TicketRecord) =>
+        slaBucketFor(t, slaPolicies) === "breached" ? 0 : 1;
       return rank(a) - rank(b);
     });
     return { buckets, watchlist: breachedList.slice(0, 8) };
-  }, [open]);
+  }, [open, slaPolicies]);
 
   const slaHealth = open.length
     ? Math.round((sla.buckets.onTrack / open.length) * 100)
@@ -172,6 +177,31 @@ export function HelpdeskDashboard() {
       },
     ],
   };
+
+  if (query.isError || slaError) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center text-muted-foreground">
+            <Breadcrumb />
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight">
+            {translate("helpdesk.dashboard.title", { ns: "starter" }, "Workload & SLA")}
+          </h2>
+        </div>
+        <AsyncPanel
+          i18nPrefix="helpdesk.ops"
+          isError
+          onRetry={() => {
+            void query.refetch();
+            void refetchSla();
+          }}
+        >
+          <span />
+        </AsyncPanel>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -334,7 +364,7 @@ export function HelpdeskDashboard() {
           ) : (
             <div className="space-y-1">
               {sla.watchlist.map((ticket) => {
-                const bucket = slaBucketFor(ticket);
+                const bucket = slaBucketFor(ticket, slaPolicies);
                 return (
                   <button
                     type="button"

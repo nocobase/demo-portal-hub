@@ -1,5 +1,10 @@
 import { useGetLocale, useList, useTranslate } from "@refinedev/core";
-import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AlertTriangle,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
@@ -9,11 +14,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { LEAVE_STATUSES, LEAVE_TYPES, labelFor } from "./constants";
 import { badgeClassFor } from "./constants";
+import { useDepartmentOptions } from "./pickers";
+import { ErrorState } from "@/lib/table-kit";
 import type { LeaveRequestRecord } from "./types";
 
 const CELLS_PER_WEEK = 7;
 const WEEKS_IN_GRID = 6;
 const MAX_CHIPS_PER_DAY = 3;
+/** A day with this many people away is flagged as a coverage risk. */
+const COVERAGE_RISK_THRESHOLD = 3;
 
 function ymd(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
@@ -41,6 +50,10 @@ export function LeaveCalendarPage() {
   const locale = getLocale();
   const navigate = useNavigate();
   const [month, setMonth] = useState<Date>(() => startOfMonth(new Date()));
+  const [departmentFilter, setDepartmentFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const { options: departmentOptions } = useDepartmentOptions();
 
   const { result, query } = useList<LeaveRequestRecord>({
     resource: "hub_hr_leave_requests",
@@ -51,11 +64,31 @@ export function LeaveCalendarPage() {
     queryOptions: { retry: false },
   });
 
+  // Department / type / status narrowing happens client-side: the month view
+  // already holds the full request set, and this keeps the filters instant.
+  const visibleLeaves = useMemo(
+    () =>
+      result.data.filter((leave) => {
+        if (
+          departmentFilter &&
+          String(leave.employee?.department_id ?? "") !== departmentFilter
+        ) {
+          return false;
+        }
+        if (typeFilter && (leave.type ?? "annual") !== typeFilter) return false;
+        if (statusFilter && (leave.status ?? "pending") !== statusFilter) {
+          return false;
+        }
+        return true;
+      }),
+    [departmentFilter, result.data, statusFilter, typeFilter]
+  );
+
   // Expand each leave request's [start_date, end_date] span into a per-day
   // lookup so a calendar cell can just look up its own date key.
   const byDay = useMemo(() => {
     const map = new Map<string, LeaveRequestRecord[]>();
-    for (const leave of result.data) {
+    for (const leave of visibleLeaves) {
       const startRaw = leave.start_date;
       const endRaw = leave.end_date || leave.start_date;
       if (!startRaw) continue;
@@ -74,7 +107,7 @@ export function LeaveCalendarPage() {
       }
     }
     return map;
-  }, [result.data]);
+  }, [visibleLeaves]);
 
   const cells = useMemo(() => {
     const first = startOfMonth(month);
@@ -89,6 +122,18 @@ export function LeaveCalendarPage() {
       };
     });
   }, [month, byDay]);
+
+  // Coverage risk: the busiest in-month day, surfaced above the grid.
+  const busiest = useMemo(() => {
+    let top: { key: string; count: number } | null = null;
+    for (const cell of cells) {
+      if (!cell.inMonth) continue;
+      if (!top || cell.leaves.length > top.count) {
+        top = { key: ymd(cell.date), count: cell.leaves.length };
+      }
+    }
+    return top;
+  }, [cells]);
 
   const weekdayLabels = useMemo(() => {
     const base = addDays(startOfMonth(new Date()), -startOfMonth(new Date()).getDay());
@@ -162,6 +207,67 @@ export function LeaveCalendarPage() {
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={departmentFilter}
+            onChange={(event) => setDepartmentFilter(event.currentTarget.value)}
+            className="h-9 rounded-md border border-input bg-transparent px-2.5 text-sm shadow-xs"
+          >
+            <option value="">
+              {translate(
+                "hr.employees.allDepartments",
+                { ns: "starter" },
+                "All departments"
+              )}
+            </option>
+            {departmentOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <select
+            value={typeFilter}
+            onChange={(event) => setTypeFilter(event.currentTarget.value)}
+            className="h-9 rounded-md border border-input bg-transparent px-2.5 text-sm shadow-xs"
+          >
+            <option value="">
+              {translate("hr.leave.allTypes", { ns: "starter" }, "All types")}
+            </option>
+            {LEAVE_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>
+                {labelFor(LEAVE_TYPES, type.value, translate)}
+              </option>
+            ))}
+          </select>
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.currentTarget.value)}
+            className="h-9 rounded-md border border-input bg-transparent px-2.5 text-sm shadow-xs"
+          >
+            <option value="">
+              {translate("hr.leave.allStatuses", { ns: "starter" }, "All statuses")}
+            </option>
+            {LEAVE_STATUSES.map((status) => (
+              <option key={status.value} value={status.value}>
+                {labelFor(LEAVE_STATUSES, status.value, translate)}
+              </option>
+            ))}
+          </select>
+        </div>
+        {busiest && busiest.count >= COVERAGE_RISK_THRESHOLD ? (
+          <p className="flex items-center gap-1.5 rounded-md border border-amber-500/40 bg-amber-500/5 px-2.5 py-1.5 text-xs font-medium text-amber-700 dark:text-amber-400">
+            <AlertTriangle className="size-3.5" />
+            {translate(
+              "hr.leaveCalendar.coverageRisk",
+              { ns: "starter", count: busiest.count, date: busiest.key },
+              `Peak of ${busiest.count} people away on ${busiest.key}`
+            )}
+          </p>
+        ) : null}
+      </div>
+
       <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
           <CalendarDays className="size-3.5" />
@@ -182,7 +288,9 @@ export function LeaveCalendarPage() {
 
       <Card>
         <CardContent className="p-2 sm:p-3">
-          {query.isLoading ? (
+          {query.isError ? (
+            <ErrorState i18nPrefix="hr.toolkit" onRetry={() => query.refetch()} />
+          ) : query.isLoading ? (
             <LoadingState className="min-h-96" />
           ) : (
             <div className="overflow-x-auto">
@@ -205,16 +313,27 @@ export function LeaveCalendarPage() {
                         key={ymd(cell.date)}
                         className={cn(
                           "flex min-h-28 flex-col gap-1 bg-card p-1.5",
-                          !cell.inMonth && "bg-muted/20 text-muted-foreground/50"
+                          !cell.inMonth && "bg-muted/20 text-muted-foreground/50",
+                          cell.inMonth &&
+                            cell.leaves.length >= COVERAGE_RISK_THRESHOLD &&
+                            "bg-amber-500/5 ring-1 ring-inset ring-amber-500/30"
                         )}
                       >
-                        <span
-                          className={cn(
-                            "flex size-5 items-center justify-center rounded-full text-xs tabular-nums",
-                            cell.isToday && "bg-primary font-semibold text-primary-foreground"
-                          )}
-                        >
-                          {cell.date.getDate()}
+                        <span className="flex items-center justify-between gap-1">
+                          <span
+                            className={cn(
+                              "flex size-5 items-center justify-center rounded-full text-xs tabular-nums",
+                              cell.isToday &&
+                                "bg-primary font-semibold text-primary-foreground"
+                            )}
+                          >
+                            {cell.date.getDate()}
+                          </span>
+                          {cell.inMonth && cell.leaves.length > 0 ? (
+                            <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+                              {cell.leaves.length}
+                            </span>
+                          ) : null}
                         </span>
                         <div className="flex flex-1 flex-col gap-1">
                           {cell.leaves.slice(0, MAX_CHIPS_PER_DAY).map((leave) => (

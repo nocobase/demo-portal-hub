@@ -1,4 +1,4 @@
-import { type HttpError, useTranslate } from "@refinedev/core";
+import { type HttpError, useList, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { useEffect, useRef } from "react";
 import { type UseFormReturn } from "react-hook-form";
@@ -23,11 +23,19 @@ import {
 import { toDateInputValue } from "../constants";
 import { ProjectPicker } from "../pickers";
 import { useContextualCloseTo } from "../route-surfaces";
-import type { MilestoneFormValues, MilestoneRecord } from "../types";
+import type { MilestoneFormValues, MilestoneRecord, ProjectRecord } from "../types";
+import { milestoneTransitionValues } from "../transitions";
 
-const toServerValues = (values: MilestoneFormValues) => {
+const toServerValues = (
+  values: MilestoneFormValues,
+  record?: MilestoneRecord | null
+) => {
   const { project_id, ...rest } = values;
-  return { ...rest, project: project_id } as unknown as MilestoneFormValues;
+  return {
+    ...rest,
+    ...milestoneTransitionValues(values.done, record),
+    project: project_id,
+  } as unknown as MilestoneFormValues;
 };
 
 function MilestoneFormFields({
@@ -40,6 +48,14 @@ function MilestoneFormFields({
   record?: MilestoneRecord | null;
 }) {
   const translate = useTranslate();
+  const projectId = form.watch("project_id");
+  const selectedProject = useList<ProjectRecord>({
+    resource: "hub_pj_projects",
+    pagination: { mode: "server", currentPage: 1, pageSize: 1 },
+    filters: [{ field: "id", operator: "eq", value: projectId }],
+    errorNotification: false,
+    queryOptions: { enabled: Boolean(projectId), retry: false },
+  }).result.data[0];
   const projectInitial = record?.project
     ? { value: String(record.project.id), label: record.project.name ?? "—" }
     : null;
@@ -112,6 +128,22 @@ function MilestoneFormFields({
       <FormField
         control={form.control}
         name="due_date"
+        rules={{
+          validate: (value) =>
+            !value ||
+            !selectedProject ||
+            !(
+              (selectedProject.start_date &&
+                value < selectedProject.start_date.slice(0, 10)) ||
+              (selectedProject.due_date &&
+                value > selectedProject.due_date.slice(0, 10))
+            ) ||
+            translate(
+              "projects.milestones.fields.targetDate.outsideProject",
+              { ns: "starter" },
+              "Target date must fall within the selected project's date range"
+            ),
+        }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>
@@ -300,7 +332,9 @@ function MilestoneEditForm({
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((values) => onFinish(toServerValues(values)))}
+        onSubmit={form.handleSubmit((values) =>
+          onFinish(toServerValues(values, record))
+        )}
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">

@@ -1,4 +1,4 @@
-import { CalendarDays, Flag, FolderKanban, ListChecks, SquareKanban } from "lucide-react";
+import { CalendarDays, Flag, FolderKanban, Gauge, ListChecks, SquareKanban } from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -16,6 +16,7 @@ import { ProjectsLayout } from "@/pages/projects/projects/list";
 import { ProjectCreate, ProjectEdit } from "@/pages/projects/projects/form";
 import { ProjectShow } from "@/pages/projects/projects/show";
 import { projectRoutes } from "@/pages/projects/routes";
+import { WorkloadPage } from "@/pages/projects/workload";
 import { TaskBoardPage } from "@/pages/projects/tasks/board";
 import { ChecklistCreate, ChecklistEdit } from "@/pages/projects/tasks/checklist";
 import { TaskCreate, TaskEdit } from "@/pages/projects/tasks/form";
@@ -344,6 +345,23 @@ export const projectsModule = {
           priority: 51,
           icon: <CalendarDays />,
           description: "Month view of task due dates and project milestones.",
+          acl: false,
+        },
+      },
+    },
+    {
+      name: "projects-workload",
+      path: projectRoutes.workload,
+      element: <WorkloadPage />,
+      resource: {
+        meta: {
+          label: "Resource load",
+          i18nKey: "projects.resources.workload",
+          i18nOptions: { ns: "starter" },
+          descriptionI18nKey: "projects.resources.workload.description",
+          priority: 52,
+          icon: <Gauge />,
+          description: "Open work per person, with overdue pressure highlighted.",
           acl: false,
         },
       },

@@ -1,4 +1,12 @@
-import { BarChart3, CreditCard, PieChart, PiggyBank, Receipt, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  CalendarClock,
+  CreditCard,
+  PieChart,
+  PiggyBank,
+  Receipt,
+  TrendingUp,
+} from "lucide-react";
 
 import {
   defineAppRoutes,
@@ -233,6 +241,24 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         i18nOptions: { ns: "starter" },
         priority: 51,
         icon: <PiggyBank />,
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "finance-aging",
+    path: financeRoutes.aging,
+    lazy: () =>
+      import("./route-components").then((module) => ({
+        default: module.routeComponent("finance-aging"),
+      })),
+    resource: {
+      meta: {
+        label: "AR aging",
+        i18nKey: "finance.resources.aging",
+        i18nOptions: { ns: "starter" },
+        priority: 52,
+        icon: <CalendarClock />,
         acl: false,
       },
     },

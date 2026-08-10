@@ -14,6 +14,7 @@ import {
 } from "../route-surfaces";
 import { DetailItems, EnumBadge, useLocale } from "../shared";
 import type { MilestoneRecord } from "../types";
+import { milestoneTransitionValues } from "../transitions";
 
 export function MilestoneShow() {
   const locale = useLocale();
@@ -138,7 +139,7 @@ export function MilestoneShow() {
                   updateMilestone({
                     resource: "hub_pj_milestones",
                     id: record.id,
-                    values: { done: !isDone },
+                    values: milestoneTransitionValues(!isDone, record),
                   })
                 }
               >

@@ -2,6 +2,7 @@
 // The React UI owns these enums; the backend stores plain strings.
 
 import type { useTranslate } from "@refinedev/core";
+export { formatDate, toDateInputValue } from "@/lib/table-kit";
 
 export const PROJECT_STATUSES = [
   { value: "planning", label: "Planning", i18nKey: "projects.enums.projectStatus.planning" },
@@ -52,16 +53,6 @@ export const labelFor = (
     ? translate(option.i18nKey, { ns: "starter" }, option.label)
     : option.label;
 };
-
-export const formatDate = (value: string | null | undefined, locale: string) =>
-  value
-    ? new Intl.DateTimeFormat(locale, { dateStyle: "medium" }).format(
-        new Date(value)
-      )
-    : "—";
-
-export const toDateInputValue = (value: string | null | undefined) =>
-  value ? String(value).slice(0, 10) : "";
 
 export const todayIso = () => new Date().toISOString().slice(0, 10);
 

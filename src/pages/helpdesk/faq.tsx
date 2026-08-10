@@ -1,6 +1,15 @@
 import { type HttpError, useList, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import {
+  BookOpenText,
+  CircleAlert,
+  Download,
+  FolderTree,
+  Pencil,
+  Plus,
+  Search,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useParams } from "react-router";
 import { Breadcrumb } from "@/components/app-shell/breadcrumb";
@@ -21,7 +30,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { useRouteSurfaceClose } from "@nocobase/portal-sdk/routing";
 import {
@@ -29,7 +37,9 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
+import { AsyncPanel, KpiStrip, exportCsv, type KpiTile } from "@/lib/table-kit";
 import { getFaqEditPath, helpdeskRoutes } from "./routes";
+import { CategoryBadge } from "./shared";
 import type { FaqFormValues, FaqRecord } from "./types";
 
 const RESOURCE = "hub_hd_faqs";
@@ -51,6 +61,7 @@ export function FaqPage() {
 function FaqContent() {
   const translate = useTranslate();
   const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   const { result, query } = useList<FaqRecord>({
     resource: RESOURCE,
@@ -62,16 +73,33 @@ function FaqContent() {
 
   const faqs = result.data ?? [];
 
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const faq of faqs) {
+      const category = faq.category?.trim();
+      if (category) counts.set(category, (counts.get(category) ?? 0) + 1);
+    }
+    return [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [faqs]);
+
+  const uncategorisedCount = useMemo(
+    () => faqs.filter((faq) => !faq.category?.trim()).length,
+    [faqs]
+  );
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
-    if (!term) return faqs;
-    return faqs.filter(
-      (faq) =>
+    return faqs.filter((faq) => {
+      const matchesCategory =
+        selectedCategory === null || faq.category?.trim() === selectedCategory;
+      const matchesSearch =
+        !term ||
         faq.question?.toLowerCase().includes(term) ||
         faq.answer?.toLowerCase().includes(term) ||
-        faq.category?.toLowerCase().includes(term)
-    );
-  }, [faqs, search]);
+        faq.category?.toLowerCase().includes(term);
+      return matchesCategory && matchesSearch;
+    });
+  }, [faqs, search, selectedCategory]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, FaqRecord[]>();
@@ -84,6 +112,61 @@ function FaqContent() {
     }
     return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [filtered, translate]);
+
+  const kpiTiles = useMemo<KpiTile[]>(
+    () => [
+      {
+        key: "articles",
+        label: translate("helpdesk.faq.kpi.articles", { ns: "starter" }, "Articles"),
+        value: String(faqs.length),
+        icon: BookOpenText,
+        tone: "text-blue-600 bg-blue-500/12 dark:text-blue-400",
+      },
+      {
+        key: "categories",
+        label: translate("helpdesk.faq.kpi.categories", { ns: "starter" }, "Categories"),
+        value: String(categoryCounts.length),
+        icon: FolderTree,
+        tone: "text-violet-600 bg-violet-500/12 dark:text-violet-400",
+      },
+      {
+        key: "uncategorised",
+        label: translate(
+          "helpdesk.faq.kpi.uncategorised",
+          { ns: "starter" },
+          "Uncategorised"
+        ),
+        value: String(uncategorisedCount),
+        icon: CircleAlert,
+        tone:
+          uncategorisedCount > 0
+            ? "text-red-600 bg-red-500/12 dark:text-red-400"
+            : "text-emerald-600 bg-emerald-500/12 dark:text-emerald-400",
+      },
+    ],
+    [categoryCounts.length, faqs.length, translate, uncategorisedCount]
+  );
+
+  const handleExport = () => {
+    exportCsv(
+      "helpdesk-faq",
+      [
+        {
+          header: translate("helpdesk.faq.export.question", { ns: "starter" }, "Question"),
+          value: (faq) => faq.question,
+        },
+        {
+          header: translate("helpdesk.faq.export.answer", { ns: "starter" }, "Answer"),
+          value: (faq) => faq.answer,
+        },
+        {
+          header: translate("helpdesk.faq.export.category", { ns: "starter" }, "Category"),
+          value: (faq) => faq.category,
+        },
+      ],
+      filtered
+    );
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -104,28 +187,61 @@ function FaqContent() {
               )}
             </p>
           </div>
-          <Button render={<Link to={helpdeskRoutes.faqCreate} />}>
-            <Plus className="size-4" />
-            {translate("helpdesk.faq.new", { ns: "starter" }, "New question")}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={handleExport}>
+              <Download className="size-4" />
+              {translate("helpdesk.ops.exportCsv", { ns: "starter" }, "Export CSV")}
+            </Button>
+            <Button render={<Link to={helpdeskRoutes.faqCreate} />}>
+              <Plus className="size-4" />
+              {translate("helpdesk.faq.new", { ns: "starter" }, "New question")}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 sm:max-w-md">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={translate(
-              "helpdesk.faq.search.placeholder",
-              { ns: "starter" },
-              "Search questions and answers..."
-            )}
-            className="pl-9"
-          />
+      <KpiStrip tiles={kpiTiles} />
+
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative w-full lg:max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={translate(
+                "helpdesk.faq.search.placeholder",
+                { ns: "starter" },
+                "Search questions and answers..."
+              )}
+              className="pl-9"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={selectedCategory === null ? "default" : "outline"}
+              size="sm"
+              className="rounded-full"
+              onClick={() => setSelectedCategory(null)}
+            >
+              {translate("helpdesk.faq.filters.all", { ns: "starter" }, "All")}
+              <span className="tabular-nums">{faqs.length}</span>
+            </Button>
+            {categoryCounts.map(([category, count]) => (
+              <Button
+                key={category}
+                variant={selectedCategory === category ? "default" : "outline"}
+                size="sm"
+                className="rounded-full"
+                onClick={() => setSelectedCategory(category)}
+              >
+                <CategoryBadge value={category} label={category} />
+                <span className="tabular-nums">{count}</span>
+              </Button>
+            ))}
+          </div>
         </div>
-        {search.trim() ? (
+        {search.trim() || selectedCategory !== null ? (
           <span className="text-xs text-muted-foreground tabular-nums">
             {translate(
               "helpdesk.faq.resultCount",
@@ -136,17 +252,23 @@ function FaqContent() {
         ) : null}
       </div>
 
-      {query.isLoading ? (
-        <div className="space-y-2">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
-        </div>
-      ) : grouped.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border/70 px-3 py-10 text-center text-sm text-muted-foreground">
-          {translate("helpdesk.faq.empty", { ns: "starter" }, "No questions match your search.")}
-        </p>
-      ) : (
+      <AsyncPanel i18nPrefix="helpdesk.ops"
+        isLoading={query.isLoading}
+        isError={query.isError}
+        isEmpty={grouped.length === 0}
+        onRetry={() => void query.refetch()}
+        emptyTitle={translate(
+          "helpdesk.faq.empty",
+          { ns: "starter" },
+          "No questions match your search."
+        )}
+        emptyDescription={translate(
+          "helpdesk.faq.empty.description",
+          { ns: "starter" },
+          "Try another search or category."
+        )}
+        skeletonRows={3}
+      >
         <div className="space-y-6">
           {grouped.map(([category, items]) => (
             <div key={category} className="space-y-2">
@@ -186,7 +308,7 @@ function FaqContent() {
             </div>
           ))}
         </div>
-      )}
+      </AsyncPanel>
     </div>
   );
 }

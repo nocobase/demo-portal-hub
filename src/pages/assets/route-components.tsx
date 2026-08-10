@@ -1,4 +1,4 @@
-import { ClipboardList, Package, Wrench } from "lucide-react";
+import { ClipboardList, Package, Scale, Wrench } from "lucide-react";
 import type { AppRouteDefinition } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
@@ -19,6 +19,7 @@ import {
 } from "./maintenance/create-edit";
 import { MaintenanceShow } from "./maintenance/show";
 import { MaintenanceLayout } from "./maintenance/layout";
+import { AssetLedger } from "./ledger";
 import { assetsRoutes } from "./routes";
 
 const denied = <AccessDenied />;
@@ -141,6 +142,25 @@ const maintenanceShowChildren: AppRouteDefinition[] = [
     ),
   },
 ];
+
+const ledgerRoute: AppRouteDefinition = {
+  name: "assets-ledger",
+  path: assetsRoutes.ledger,
+  element: <AssetLedger />,
+  resource: {
+    meta: {
+      label: "Asset ledger",
+      i18nKey: "assets.resources.ledger",
+      i18nOptions: { ns: "starter" },
+      descriptionI18nKey: "assets.resources.ledger.description",
+      priority: 51,
+      icon: <Scale />,
+      description:
+        "Book value, accumulated depreciation and refresh exposure across the register.",
+      acl: false,
+    },
+  },
+};
 
 const routes: AppRouteDefinition[] = [
   {
@@ -320,6 +340,7 @@ const routes: AppRouteDefinition[] = [
       },
     ],
   },
+  ledgerRoute,
 ];
 
 export const assetsModule = { routes };

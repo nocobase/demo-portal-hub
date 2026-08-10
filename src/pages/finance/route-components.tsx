@@ -1,4 +1,12 @@
-import { BarChart3, CreditCard, PieChart, PiggyBank, Receipt, TrendingUp } from "lucide-react";
+import {
+  BarChart3,
+  CalendarClock,
+  CreditCard,
+  PieChart,
+  PiggyBank,
+  Receipt,
+  TrendingUp,
+} from "lucide-react";
 import { useParams } from "react-router";
 
 import {
@@ -7,6 +15,7 @@ import {
 } from "@nocobase/portal-sdk/routing";
 import { AccessDenied } from "@/components/access-control/access-denied";
 import { CanAccess } from "@/components/access-control/can-access";
+import { ArAging } from "@/pages/finance/aging";
 import { BudgetVsActual } from "@/pages/finance/budget";
 import { CashFlow } from "@/pages/finance/cash-flow";
 import { FinanceDashboard } from "@/pages/finance/dashboard";
@@ -257,6 +266,21 @@ const routes: AppRouteDefinition[] = defineAppRoutes([
         i18nOptions: { ns: "starter" },
         priority: 51,
         icon: <PiggyBank />,
+        acl: false,
+      },
+    },
+  },
+  {
+    name: "finance-aging",
+    path: financeRoutes.aging,
+    element: <ArAging />,
+    resource: {
+      meta: {
+        label: "AR aging",
+        i18nKey: "finance.resources.aging",
+        i18nOptions: { ns: "starter" },
+        priority: 52,
+        icon: <CalendarClock />,
         acl: false,
       },
     },

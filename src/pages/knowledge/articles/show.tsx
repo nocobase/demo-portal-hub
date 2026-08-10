@@ -2,14 +2,20 @@ import { useList, useShow, useTranslate, useUpdate } from "@refinedev/core";
 import {
   ArrowLeft,
   Calendar,
+  Clock,
   Eye,
+  Link2,
+  ListTree,
   MessageSquareText,
   Pencil,
+  Printer,
+  Send,
   ThumbsDown,
   ThumbsUp,
+  Undo2,
   User,
 } from "lucide-react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, Outlet, useOutlet, useParams } from "react-router";
 import { LoadingState } from "@/components/app-shell/loading-state";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -38,7 +44,35 @@ import {
   StatusPill,
   useLocale,
 } from "../shared";
+import { cn } from "@/lib/utils";
 import type { ArticleRecord, FeedbackRecord } from "../types";
+
+const WORDS_PER_MINUTE = 220;
+
+/** Minutes to read, from the raw body word count. */
+function readingMinutes(body: string | null | undefined): number {
+  const words = (body ?? "").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
+}
+
+/**
+ * Markdown-style headings in the body become a jump list. Bodies without
+ * headings simply get no table of contents rather than a fabricated one.
+ */
+function extractHeadings(body: string | null | undefined) {
+  const out: Array<{ id: string; text: string; level: number }> = [];
+  for (const line of (body ?? "").split("\n")) {
+    const match = /^(#{1,3})\s+(.*\S)\s*$/.exec(line);
+    if (!match) continue;
+    const text = match[2];
+    out.push({
+      id: `section-${out.length}-${text.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
+      text,
+      level: match[1].length,
+    });
+  }
+  return out;
+}
 
 export function ArticleShow({ idParam = "id" }: { idParam?: string }) {
   const translate = useTranslate();
@@ -71,6 +105,25 @@ export function ArticleShow({ idParam = "id" }: { idParam?: string }) {
   }, [record, id, update]);
 
   const paragraphs = useMemo(() => toParagraphs(record?.body), [record?.body]);
+  const headings = useMemo(() => extractHeadings(record?.body), [record?.body]);
+  const minutes = readingMinutes(record?.body);
+  const [copied, setCopied] = useState(false);
+
+  const isPublished = (record?.status ?? "draft") === "published";
+  const togglePublished = () => {
+    if (!record || !id) return;
+    update({
+      resource: "hub_kb_articles",
+      id,
+      values: { status: isPublished ? "draft" : "published" },
+      successNotification: {
+        type: "success",
+        message: isPublished
+          ? translate("knowledge.reader.unpublished", { ns: "starter" }, "Moved to draft")
+          : translate("knowledge.reader.published", { ns: "starter" }, "Article published"),
+      },
+    });
+  };
 
   const feedback = useList<FeedbackRecord>({
     resource: "hub_kb_article_feedback",
@@ -125,7 +178,38 @@ export function ArticleShow({ idParam = "id" }: { idParam?: string }) {
           {translate("knowledge.reader.back", { ns: "starter" }, "Back to articles")}
         </Button>
         {record ? (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant={isPublished ? "outline" : "default"}
+              size="sm"
+              onClick={togglePublished}
+            >
+              {isPublished ? <Undo2 /> : <Send />}
+              {isPublished
+                ? translate("knowledge.reader.unpublish", { ns: "starter" }, "Move to draft")
+                : translate("knowledge.reader.publish", { ns: "starter" }, "Publish")}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={translate("knowledge.reader.copyLink", { ns: "starter" }, "Copy link")}
+              onClick={() => {
+                if (typeof window === "undefined") return;
+                void navigator.clipboard?.writeText(window.location.href);
+                setCopied(true);
+                window.setTimeout(() => setCopied(false), 1500);
+              }}
+            >
+              <Link2 className={cn("size-4", copied && "text-emerald-600")} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-sm"
+              title={translate("knowledge.reader.print", { ns: "starter" }, "Print")}
+              onClick={() => window.print()}
+            >
+              <Printer className="size-4" />
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -199,8 +283,73 @@ export function ArticleShow({ idParam = "id" }: { idParam?: string }) {
                 {formatNumber(record.views, locale)}{" "}
                 {translate("knowledge.reader.views", { ns: "starter" }, "views")}
               </span>
+              <span className="flex items-center gap-1.5 tabular-nums">
+                <Clock className="size-4" />
+                {translate(
+                  "knowledge.reader.readingTime",
+                  { ns: "starter", count: minutes },
+                  `${minutes} min read`
+                )}
+              </span>
             </div>
           </header>
+
+          {feedbackRows.length > 0 ? (
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {translate(
+                    "knowledge.reader.helpfulness",
+                    { ns: "starter" },
+                    "Reader helpfulness"
+                  )}
+                </span>
+                <span className="tabular-nums">
+                  {Math.round((helpfulCount / feedbackRows.length) * 100)}% ·{" "}
+                  {translate(
+                    "knowledge.reader.ratingCount",
+                    { ns: "starter", count: feedbackRows.length },
+                    `${feedbackRows.length} ratings`
+                  )}
+                </span>
+              </div>
+              <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  className="bg-emerald-500"
+                  style={{
+                    width: `${(helpfulCount / feedbackRows.length) * 100}%`,
+                  }}
+                />
+                <div
+                  className="bg-red-500"
+                  style={{
+                    width: `${(notHelpfulCount / feedbackRows.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          ) : null}
+
+          {headings.length > 1 ? (
+            <nav className="rounded-lg border bg-muted/30 p-4">
+              <p className="flex items-center gap-1.5 pb-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                <ListTree className="size-3.5" />
+                {translate("knowledge.reader.toc", { ns: "starter" }, "On this page")}
+              </p>
+              <ol className="space-y-1">
+                {headings.map((heading) => (
+                  <li key={heading.id} style={{ paddingLeft: (heading.level - 1) * 12 }}>
+                    <a
+                      href={`#${heading.id}`}
+                      className="text-sm text-primary underline-offset-2 hover:underline"
+                    >
+                      {heading.text}
+                    </a>
+                  </li>
+                ))}
+              </ol>
+            </nav>
+          ) : null}
 
           <Separator />
 
@@ -343,6 +492,24 @@ export function ArticleShowDrawer({ idParam = "articleId" }: { idParam?: string 
   });
 
   const paragraphs = useMemo(() => toParagraphs(record?.body), [record?.body]);
+  const minutes = readingMinutes(record?.body);
+  const { mutate: update } = useUpdate();
+
+  const isPublished = (record?.status ?? "draft") === "published";
+  const togglePublished = () => {
+    if (!record || !id) return;
+    update({
+      resource: "hub_kb_articles",
+      id,
+      values: { status: isPublished ? "draft" : "published" },
+      successNotification: {
+        type: "success",
+        message: isPublished
+          ? translate("knowledge.reader.unpublished", { ns: "starter" }, "Moved to draft")
+          : translate("knowledge.reader.published", { ns: "starter" }, "Article published"),
+      },
+    });
+  };
 
   const feedback = useList<FeedbackRecord>({
     resource: "hub_kb_article_feedback",
@@ -381,15 +548,31 @@ export function ArticleShowDrawer({ idParam = "articleId" }: { idParam?: string 
       nested={nested}
       actions={
         record ? (
-          <Button
-            variant="outline"
-            size="sm"
-            nativeButton={false}
-            render={<Link to={getArticleShowPath(record.id)} />}
-          >
-            <Eye />
-            {translate("knowledge.articles.drawer.show.openFull", { ns: "starter" }, "Open full")}
-          </Button>
+          <div className="flex items-center gap-2">
+            <span className="hidden items-center gap-1 text-xs text-muted-foreground tabular-nums sm:flex">
+              <Clock className="size-3.5" />
+              {translate(
+                "knowledge.reader.readingTime",
+                { ns: "starter", count: minutes },
+                `${minutes} min read`
+              )}
+            </span>
+            <Button variant="outline" size="sm" onClick={togglePublished}>
+              {isPublished ? <Undo2 /> : <Send />}
+              {isPublished
+                ? translate("knowledge.reader.unpublish", { ns: "starter" }, "Move to draft")
+                : translate("knowledge.reader.publish", { ns: "starter" }, "Publish")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link to={getArticleShowPath(record.id)} />}
+            >
+              <Eye />
+              {translate("knowledge.articles.drawer.show.openFull", { ns: "starter" }, "Open full")}
+            </Button>
+          </div>
         ) : null
       }
     >

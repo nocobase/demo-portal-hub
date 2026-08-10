@@ -1,4 +1,4 @@
-import { type HttpError, useShow, useTranslate } from "@refinedev/core";
+import { type HttpError, useList, useShow, useTranslate } from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { useParams } from "react-router";
@@ -53,6 +53,7 @@ const toServerValues = (values: FeedbackFormValues, articleId?: string) =>
 
 function ArticleFeedbackForm({ articleId }: { articleId?: string }) {
   const translate = useTranslate();
+  const locale = useLocale();
   const close = useRouteSurfaceClose();
   const {
     refineCore: { onFinish },
@@ -70,6 +71,18 @@ function ArticleFeedbackForm({ articleId }: { articleId?: string }) {
     },
   });
 
+  const feedback = useList<FeedbackRecord>({
+    resource: "hub_kb_article_feedback",
+    pagination: { mode: "server", currentPage: 1, pageSize: 200 },
+    sorters: [{ field: "createdAt", order: "desc" }],
+    filters: articleId
+      ? [{ field: "article_id", operator: "eq", value: articleId }]
+      : [],
+    meta: { appends: ["author"] },
+    errorNotification: false,
+    queryOptions: { enabled: Boolean(articleId), retry: false },
+  });
+
   const rating = form.watch("rating");
 
   return (
@@ -79,6 +92,13 @@ function ArticleFeedbackForm({ articleId }: { articleId?: string }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
+          <FeedbackSummary
+            rows={feedback.result.data ?? []}
+            isLoading={feedback.query.isLoading}
+            isError={feedback.query.isError}
+            locale={locale}
+          />
+
           <FormField
             control={form.control}
             name="rating"
@@ -154,6 +174,162 @@ function ArticleFeedbackForm({ articleId }: { articleId?: string }) {
         </RouteDrawerFooter>
       </form>
     </Form>
+  );
+}
+
+function FeedbackSummary({
+  rows,
+  isLoading,
+  isError,
+  locale,
+}: {
+  rows: FeedbackRecord[];
+  isLoading: boolean;
+  isError: boolean;
+  locale: string;
+}) {
+  const translate = useTranslate();
+  const helpfulCount = rows.filter((row) => row.rating === "helpful").length;
+  const notHelpfulCount = rows.filter(
+    (row) => row.rating === "not_helpful"
+  ).length;
+  const comments = rows
+    .filter((row) => Boolean(row.comment?.trim()))
+    .slice(0, 3);
+  const helpfulPercent =
+    rows.length > 0 ? Math.round((helpfulCount / rows.length) * 100) : 0;
+
+  return (
+    <section className="space-y-3 rounded-lg border bg-muted/20 p-4">
+      <h3 className="text-sm font-medium">
+        {translate(
+          "knowledge.feedback.summary.title",
+          { ns: "starter" },
+          "Feedback summary"
+        )}
+      </h3>
+      {isLoading ? (
+        <p className="text-sm text-muted-foreground">
+          {translate(
+            "knowledge.feedback.summary.loading",
+            { ns: "starter" },
+            "Loading feedback..."
+          )}
+        </p>
+      ) : isError ? (
+        <p className="text-sm text-muted-foreground">
+          {translate(
+            "knowledge.feedback.summary.error",
+            { ns: "starter" },
+            "Unable to load the feedback summary."
+          )}
+        </p>
+      ) : rows.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {translate(
+            "knowledge.feedback.panel.empty",
+            { ns: "starter" },
+            "No feedback yet. Be the first to weigh in."
+          )}
+        </p>
+      ) : (
+        <>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>
+                {translate(
+                  "knowledge.reader.helpfulness",
+                  { ns: "starter" },
+                  "Reader helpfulness"
+                )}
+              </span>
+              <span className="tabular-nums">
+                {helpfulPercent}% ·{" "}
+                {translate(
+                  "knowledge.reader.ratingCount",
+                  { ns: "starter", count: rows.length },
+                  `${rows.length} ratings`
+                )}
+              </span>
+            </div>
+            <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="bg-emerald-500"
+                style={{ width: `${(helpfulCount / rows.length) * 100}%` }}
+              />
+              <div
+                className="bg-red-500"
+                style={{
+                  width: `${(notHelpfulCount / rows.length) * 100}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {comments.length > 0 ? (
+            <div className="space-y-2 border-t border-border/60 pt-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                {translate(
+                  "knowledge.feedback.summary.recentComments",
+                  { ns: "starter" },
+                  "Recent comments"
+                )}
+              </p>
+              <ul className="space-y-3">
+                {comments.map((row) => {
+                  const helpful = row.rating === "helpful";
+                  return (
+                    <li key={String(row.id)} className="space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium",
+                            helpful
+                              ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+                              : "bg-red-500/15 text-red-700 dark:text-red-300"
+                          )}
+                        >
+                          {helpful ? (
+                            <ThumbsUp className="size-3" />
+                          ) : (
+                            <ThumbsDown className="size-3" />
+                          )}
+                          {helpful
+                            ? translate(
+                                "knowledge.feedback.rating.helpful",
+                                { ns: "starter" },
+                                "Helpful"
+                              )
+                            : translate(
+                                "knowledge.feedback.rating.notHelpful",
+                                { ns: "starter" },
+                                "Not helpful"
+                              )}
+                        </span>
+                        <span className="text-xs font-medium">
+                          {row.author?.nickname ??
+                            translate(
+                              "knowledge.reader.author.unknown",
+                              { ns: "starter" },
+                              "Unknown author"
+                            )}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDate(row.createdAt, locale)}
+                        </span>
+                      </div>
+                      <p className="text-sm leading-5 text-muted-foreground">
+                        {row.comment}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </>
+      )}
+    </section>
   );
 }
 

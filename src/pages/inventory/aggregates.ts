@@ -43,7 +43,12 @@ export function useOnHandBy(dimension: StockDimension) {
     return map;
   }, [query.data]);
 
-  return { totals, isLoading: query.isLoading };
+  return {
+    totals,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }
 
 /**
@@ -79,4 +84,83 @@ export function useStockMoveTotals() {
       isLoading: query.isLoading,
     };
   }, [query.data, query.isLoading]);
+}
+
+/**
+ * On-hand units per product *per warehouse* — the multi-location stock matrix
+ * every WMS-style inventory module leads with. Same server-side sum as
+ * `useOnHandBy`, with both keys in the grouping so no stock move is fetched.
+ */
+export function useOnHandMatrix() {
+  const query = useQuery({
+    queryKey: ["inventory", "on-hand-matrix"],
+    queryFn: () =>
+      nocobaseClient.action<AggregateRow[]>("hub_inv_stock_moves", "query", {
+        body: {
+          measures: [{ field: ["qty"], aggregation: "sum", alias: "qty" }],
+          dimensions: [
+            { field: ["product_id"], alias: "productId" },
+            { field: ["warehouse_id"], alias: "warehouseId" },
+            { field: ["type"], alias: "type" },
+          ],
+        },
+      }),
+  });
+
+  const cells = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of query.data ?? []) {
+      if (row.productId == null || row.warehouseId == null) continue;
+      const key = `${row.productId}::${row.warehouseId}`;
+      const qty = Number(row.qty ?? 0);
+      map.set(key, (map.get(key) ?? 0) + (row.type === "out" ? -qty : qty));
+    }
+    return map;
+  }, [query.data]);
+
+  return {
+    cells,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
+}
+
+/**
+ * Units shipped out per product since `sinceIso` — the demand signal behind
+ * turnover and dead-stock analysis. Filtered and summed on the server.
+ */
+export function useOutboundSince(sinceIso: string) {
+  const query = useQuery({
+    queryKey: ["inventory", "outbound-since", sinceIso],
+    queryFn: () =>
+      nocobaseClient.action<AggregateRow[]>("hub_inv_stock_moves", "query", {
+        body: {
+          measures: [{ field: ["qty"], aggregation: "sum", alias: "qty" }],
+          dimensions: [{ field: ["product_id"], alias: "productId" }],
+          filter: {
+            $and: [
+              { type: { $eq: "out" } },
+              { moved_at: { $dateAfter: sinceIso } },
+            ],
+          },
+        },
+      }),
+  });
+
+  const totals = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const row of query.data ?? []) {
+      if (row.productId == null) continue;
+      map.set(String(row.productId), Number(row.qty ?? 0));
+    }
+    return map;
+  }, [query.data]);
+
+  return {
+    totals,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }

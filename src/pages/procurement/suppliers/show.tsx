@@ -167,7 +167,76 @@ function SupplierOrdersSection({
     .filter((po) => po.status !== "cancelled")
     .reduce((sum, po) => sum + Number(po.total ?? 0), 0);
 
+  // Vendor scorecard from the order history: how much has actually landed, how
+  // much is still in flight, and how often an order gets cancelled.
+  const performance = (() => {
+    const received = orders.filter((po) => po.status === "received");
+    const cancelled = orders.filter((po) => po.status === "cancelled");
+    const open = orders.filter(
+      (po) => po.status === "draft" || po.status === "sent"
+    );
+    const receivedValue = received.reduce(
+      (sum, po) => sum + Number(po.total ?? 0),
+      0
+    );
+    const billable = orders.length - cancelled.length;
+    return {
+      orderCount: orders.length,
+      fulfilmentRate: billable > 0 ? (received.length / billable) * 100 : 0,
+      cancellationRate:
+        orders.length > 0 ? (cancelled.length / orders.length) * 100 : 0,
+      averageOrderValue: billable > 0 ? spend / billable : 0,
+      receivedValue,
+      openValue: open.reduce((sum, po) => sum + Number(po.total ?? 0), 0),
+    };
+  })();
+
+  const metrics: Array<[string, string]> = [
+    [
+      translate("procurement.suppliers.performance.orders", { ns: "starter" }, "Orders placed"),
+      String(performance.orderCount),
+    ],
+    [
+      translate("procurement.suppliers.performance.fulfilment", { ns: "starter" }, "Fulfilment rate"),
+      `${Math.round(performance.fulfilmentRate)}%`,
+    ],
+    [
+      translate("procurement.suppliers.performance.cancellation", { ns: "starter" }, "Cancellation rate"),
+      `${Math.round(performance.cancellationRate)}%`,
+    ],
+    [
+      translate("procurement.suppliers.performance.aov", { ns: "starter" }, "Average order value"),
+      formatCurrency(performance.averageOrderValue, locale),
+    ],
+    [
+      translate("procurement.suppliers.performance.received", { ns: "starter" }, "Value received"),
+      formatCurrency(performance.receivedValue, locale),
+    ],
+    [
+      translate("procurement.suppliers.performance.open", { ns: "starter" }, "Open commitment"),
+      formatCurrency(performance.openValue, locale),
+    ],
+  ];
+
   return (
+    <>
+    <DrawerSection
+      title={translate(
+        "procurement.suppliers.performance.title",
+        { ns: "starter" },
+        "Performance"
+      )}
+    >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {metrics.map(([label, value]) => (
+          <div key={label} className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">{label}</p>
+            <p className="mt-1 text-lg font-semibold tabular-nums">{value}</p>
+          </div>
+        ))}
+      </div>
+    </DrawerSection>
+
     <DrawerSection
       title={translate("procurement.suppliers.orders.title", { ns: "starter" }, "Purchase orders")}
       action={
@@ -241,5 +310,6 @@ function SupplierOrdersSection({
         </table>
       </div>
     </DrawerSection>
+    </>
   );
 }

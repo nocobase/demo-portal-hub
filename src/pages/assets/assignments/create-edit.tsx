@@ -1,6 +1,12 @@
-import { type HttpError, useTranslate, useUpdate } from "@refinedev/core";
+import {
+  type HttpError,
+  useDelete,
+  useNotification,
+  useTranslate,
+  useUpdate,
+} from "@refinedev/core";
 import { useForm } from "@refinedev/react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -18,6 +24,7 @@ import type {
   AssignmentRecord,
 } from "../types";
 import { AssignmentFormFields } from "./fields";
+import { runAssignmentAssetTransition } from "./transitions";
 
 // --- General create (from the Assignments list) -----------------------------
 
@@ -81,7 +88,9 @@ function AssignmentForm({
 }) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
-  const { mutate: updateAsset } = useUpdate<AssetRecord>();
+  const notify = useNotification();
+  const { mutateAsync: updateAsset } = useUpdate<AssetRecord>();
+  const { mutateAsync: deleteAssignment } = useDelete<AssignmentRecord>();
   const {
     refineCore: { onFinish },
     ...form
@@ -90,18 +99,43 @@ function AssignmentForm({
       resource: "hub_as_assignments",
       action: "create",
       redirect: false,
-      onMutationSuccess: (data) => {
+      successNotification: false,
+      onMutationSuccess: async (data) => {
+        const assignmentId = data?.data?.id;
         const assetId =
           presetAssetId ?? (data?.data?.asset_id as string | number | undefined);
-        // Assigning a device marks it as assigned.
-        if (assetId != null) {
-          updateAsset({
-            resource: "hub_as_assets",
-            id: assetId,
-            values: { status: "assigned" },
+        try {
+          await runAssignmentAssetTransition({
+            updateAssignment: () => Promise.resolve(),
+            updateAsset: () =>
+              assetId == null
+                ? Promise.resolve()
+                : updateAsset({
+                    resource: "hub_as_assets",
+                    id: assetId,
+                    values: { status: "assigned" },
+                    successNotification: false,
+                  }),
+            rollbackAssignment: () =>
+              assignmentId == null
+                ? Promise.resolve()
+                : deleteAssignment({
+                    resource: "hub_as_assignments",
+                    id: assignmentId,
+                    successNotification: false,
+                  }),
+          });
+          close({ skipBeforeClose: true });
+        } catch {
+          notify.open?.({
+            type: "error",
+            message: translate(
+              "assets.assignments.createFailed",
+              { ns: "starter" },
+              "The asset status could not be updated, so the new assignment was rolled back."
+            ),
           });
         }
-        close({ skipBeforeClose: true });
       },
     },
     defaultValues: {
@@ -170,9 +204,12 @@ export const AssignmentEdit = ({
 function AssignmentEditForm({ id }: { id?: string }) {
   const translate = useTranslate();
   const close = useRouteSurfaceClose();
-  const { mutate: updateAsset } = useUpdate<AssetRecord>();
+  const notify = useNotification();
+  const { mutateAsync: updateAsset } = useUpdate<AssetRecord>();
+  const { mutateAsync: restoreAssignment } = useUpdate<AssignmentRecord>();
+  const original = useRef<AssignmentRecord | null>(null);
   const {
-    refineCore: { onFinish },
+    refineCore: { onFinish, query },
     ...form
   } = useForm<AssignmentRecord, HttpError, AssignmentFormValues>({
     refineCoreProps: {
@@ -180,23 +217,61 @@ function AssignmentEditForm({ id }: { id?: string }) {
       action: "edit",
       id,
       redirect: false,
-      onMutationSuccess: (data, variables) => {
+      successNotification: false,
+      onMutationSuccess: async (data) => {
         const record = data?.data as AssignmentRecord | undefined;
         const assetId = record?.asset_id ?? form.getValues("asset_id");
-        const returned = (variables as AssignmentFormValues | undefined)
-          ?.returned_date;
-        // Keep the asset status in sync with the return state.
-        if (assetId != null) {
-          updateAsset({
-            resource: "hub_as_assets",
-            id: assetId,
-            values: { status: returned ? "in_stock" : "assigned" },
+        const returned = form.getValues("returned_date");
+        try {
+          await runAssignmentAssetTransition({
+            updateAssignment: () => Promise.resolve(),
+            updateAsset: () =>
+              assetId == null
+                ? Promise.resolve()
+                : updateAsset({
+                    resource: "hub_as_assets",
+                    id: assetId,
+                    values: { status: returned ? "in_stock" : "assigned" },
+                    successNotification: false,
+                  }),
+            rollbackAssignment: () => {
+              const previous = original.current;
+              return previous
+                ? restoreAssignment({
+                    resource: "hub_as_assignments",
+                    id: previous.id,
+                    values: {
+                      asset_id: previous.asset_id ?? null,
+                      assignee_id: previous.assignee_id ?? null,
+                      assigned_date: previous.assigned_date ?? null,
+                      returned_date: previous.returned_date ?? null,
+                      note: previous.note ?? "",
+                    },
+                    successNotification: false,
+                  })
+                : Promise.resolve();
+            },
+          });
+          close({ skipBeforeClose: true });
+        } catch {
+          notify.open?.({
+            type: "error",
+            message: translate(
+              "assets.assignments.editFailed",
+              { ns: "starter" },
+              "The asset status could not be updated, so the assignment changes were restored."
+            ),
           });
         }
-        close({ skipBeforeClose: true });
       },
     },
   });
+
+  useEffect(() => {
+    if (!original.current && query?.data?.data) {
+      original.current = query.data.data;
+    }
+  }, [query?.data?.data]);
 
   // Normalize loaded ISO dates for the native date inputs.
   const assignedValue = form.watch("assigned_date");
@@ -219,7 +294,7 @@ function AssignmentEditForm({ id }: { id?: string }) {
         className="flex min-h-0 flex-1 flex-col"
       >
         <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
-          <AssignmentFormFields form={form} showReturned />
+          <AssignmentFormFields form={form} showReturned lockAsset />
         </div>
         <RouteDrawerFooter className="flex-row justify-end">
           <Button type="button" variant="outline" onClick={() => close()}>
