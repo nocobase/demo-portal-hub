@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "Hilang",
   "sales.enums.leadStatus.new": "Baru",
   "sales.enums.leadStatus.qualified": "Terkualifikasi",
+  "sales.enums.leadStatus.converted": "Terkonversi",
   "sales.enums.leadStatus.unqualified": "Tidak memenuhi syarat",
   "sales.enums.leadSource.website": "Situs web",
   "sales.enums.leadSource.referral": "Rujukan",

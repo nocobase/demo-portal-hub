@@ -26,6 +26,7 @@ import {
 import {
   LEAD_SOURCES,
   LEAD_STATUSES,
+  MANUAL_LEAD_STATUSES,
   addDaysIso,
   formatDate,
   labelFor,
@@ -89,6 +90,16 @@ function LeadList() {
         ),
         filters: [{ field: "status", operator: "eq", value: "qualified" }],
         sort: { field: "createdAt", order: "desc" },
+      },
+      {
+        id: "converted",
+        label: translate(
+          "sales.leads.views.converted",
+          { ns: "starter" },
+          "Converted"
+        ),
+        filters: [{ field: "status", operator: "eq", value: "converted" }],
+        sort: { field: "converted_at", order: "desc" },
       },
       {
         id: "mine",
@@ -273,6 +284,22 @@ function LeadList() {
             onClick: () => state.applyView("qualified"),
           },
           {
+            id: "converted",
+            label: translate("sales.leads.kpi.converted", { ns: "starter" }, "Converted"),
+            value:
+              state.viewId === "converted"
+                ? String(state.total)
+                : translate("sales.leads.kpi.view", { ns: "starter" }, "View"),
+            hint: translate(
+              "sales.leads.kpi.converted.hint",
+              { ns: "starter" },
+              "Became an account"
+            ),
+            tone: "positive",
+            active: state.viewId === "converted",
+            onClick: () => state.applyView("converted"),
+          },
+          {
             id: "hot",
             label: translate("sales.leads.kpi.hot", { ns: "starter" }, "Hot on this page"),
             value: String(hot),
@@ -340,7 +367,7 @@ function LeadList() {
             <Button
               variant="ghost"
               size="icon-sm"
-              disabled={record.status === "qualified"}
+              disabled={record.status === "converted"}
               onClick={() => openChild(`show/${record.id}/convert`)}
               aria-label={translate(
                 "sales.leads.detail.convert",
@@ -389,9 +416,9 @@ function LeadList() {
           {
             field: "status",
             label: translate("sales.leads.fields.status", { ns: "starter" }, "Status"),
-            options: LEAD_STATUSES.map((status) => ({
+            options: MANUAL_LEAD_STATUSES.map((status) => ({
               value: status.value,
-              label: labelFor(LEAD_STATUSES, status.value, translate),
+              label: labelFor(MANUAL_LEAD_STATUSES, status.value, translate),
             })),
           },
           {

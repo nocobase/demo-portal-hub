@@ -73,6 +73,11 @@ export type LeadRecord = {
   status?: string | null;
   owner_id?: string | number | null;
   owner?: UserRef | null;
+  converted_at?: string | null;
+  converted_account_id?: string | number | null;
+  converted_contact_id?: string | number | null;
+  converted_deal_id?: string | number | null;
+  conversion_key?: string | null;
   createdAt?: string;
 };
 

@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "Ztraceno",
   "sales.enums.leadStatus.new": "Nový",
   "sales.enums.leadStatus.qualified": "Kvalifikovaný",
+  "sales.enums.leadStatus.converted": "Konvertovaný",
   "sales.enums.leadStatus.unqualified": "Nekvalifikovaný",
   "sales.enums.leadSource.website": "Webová stránka",
   "sales.enums.leadSource.referral": "Doporučení",

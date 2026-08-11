@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "אבוד",
   "sales.enums.leadStatus.new": "חדש",
   "sales.enums.leadStatus.qualified": "כשיר",
+  "sales.enums.leadStatus.converted": "הומר",
   "sales.enums.leadStatus.unqualified": "לא כשיר",
   "sales.enums.leadSource.website": "אתר אינטרנט",
   "sales.enums.leadSource.referral": "הפניה",

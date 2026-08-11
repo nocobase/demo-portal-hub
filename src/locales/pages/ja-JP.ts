@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "失注",
   "sales.enums.leadStatus.new": "新規",
   "sales.enums.leadStatus.qualified": "見込みあり",
+  "sales.enums.leadStatus.converted": "転換済み",
   "sales.enums.leadStatus.unqualified": "対象外",
   "sales.enums.leadSource.website": "Webサイト",
   "sales.enums.leadSource.referral": "紹介",

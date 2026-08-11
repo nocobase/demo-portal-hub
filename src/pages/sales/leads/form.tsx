@@ -11,7 +11,7 @@ import {
   RouteDrawerFooter,
   useRefineUnsavedChangesGuard,
 } from "@/extensions/nocobase-route-surfaces";
-import { LEAD_SOURCES, LEAD_STATUSES } from "../constants";
+import { LEAD_SOURCES, MANUAL_LEAD_STATUSES } from "../constants";
 import { useContextualCloseTo } from "../route-surfaces";
 import type { LeadFormValues, LeadRecord } from "../types";
 import { LeadFormFields } from "./fields";
@@ -101,7 +101,7 @@ function LeadCreateForm() {
         name: "status",
         title: translate("sales.leads.field.status", { ns: "starter" }, "Status"),
         type: "string",
-        enum: [...LEAD_STATUSES],
+        enum: [...MANUAL_LEAD_STATUSES],
       },
     ],
     [translate]
@@ -123,7 +123,9 @@ function LeadCreateForm() {
     },
     instructions:
       "A lead that has only just made contact is new. Use qualified or unqualified " +
-      "only when the text says the lead has already been assessed.",
+      "only when the text says the lead has already been assessed. Never set converted " +
+      "by hand — the conversion flow writes it together with the account, contact and " +
+      "deal it produced.",
   });
 
   return (

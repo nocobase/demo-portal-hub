@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "مفقود",
   "sales.enums.leadStatus.new": "جديد",
   "sales.enums.leadStatus.qualified": "مؤهّل",
+  "sales.enums.leadStatus.converted": "تم التحويل",
   "sales.enums.leadStatus.unqualified": "غير مؤهل",
   "sales.enums.leadSource.website": "موقع الويب",
   "sales.enums.leadSource.referral": "إحالة",

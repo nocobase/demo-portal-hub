@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "สูญหาย",
   "sales.enums.leadStatus.new": "ใหม่",
   "sales.enums.leadStatus.qualified": "ผ่านคุณสมบัติ",
+  "sales.enums.leadStatus.converted": "แปลงแล้ว",
   "sales.enums.leadStatus.unqualified": "ไม่มีคุณสมบัติ",
   "sales.enums.leadSource.website": "เว็บไซต์",
   "sales.enums.leadSource.referral": "การแนะนำ",

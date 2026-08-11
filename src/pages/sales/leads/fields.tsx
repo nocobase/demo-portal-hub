@@ -16,7 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { LEAD_SOURCES, LEAD_STATUSES, labelFor } from "../constants";
+import {
+  LEAD_SOURCES,
+  LEAD_STATUSES,
+  MANUAL_LEAD_STATUSES,
+  labelFor,
+} from "../constants";
 import { OwnerPicker } from "../pickers";
 import type { LeadFormValues, LeadRecord } from "../types";
 
@@ -193,9 +198,9 @@ export function LeadFormFields({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {LEAD_STATUSES.map((status) => (
+                      {MANUAL_LEAD_STATUSES.map((status) => (
                         <SelectItem key={status.value} value={status.value}>
-                          {labelFor(LEAD_STATUSES, status.value, translate)}
+                          {labelFor(MANUAL_LEAD_STATUSES, status.value, translate)}
                         </SelectItem>
                       ))}
                     </SelectContent>

@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "Đã thua",
   "sales.enums.leadStatus.new": "Tạo mới",
   "sales.enums.leadStatus.qualified": "Đủ điều kiện",
+  "sales.enums.leadStatus.converted": "Đã chuyển đổi",
   "sales.enums.leadStatus.unqualified": "Không đủ điều kiện",
   "sales.enums.leadSource.website": "Trang web",
   "sales.enums.leadSource.referral": "Giới thiệu",

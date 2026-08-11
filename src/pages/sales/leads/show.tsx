@@ -71,7 +71,7 @@ export function LeadShow() {
   const displayName =
     record?.name ||
     translate("sales.leads.detail.unnamed", { ns: "starter" }, "Unnamed lead");
-  const converted = record?.status === "qualified";
+  const converted = record?.status === "converted";
 
   return (
     <RouteDrawer
@@ -342,6 +342,16 @@ export function ConvertLead() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!lead || !id) return;
+    if (lead.status === "converted") {
+      setError(
+        translate(
+          "sales.leads.detail.convert.alreadyConverted",
+          { ns: "starter" },
+          "This lead has already been converted."
+        )
+      );
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -351,7 +361,7 @@ export function ConvertLead() {
         values: { name: accountName, owner: ownerId },
       });
       const accountId = accountResult?.data?.id;
-      await createContact({
+      const contactResult = await createContact({
         resource: "hub_sales_contacts",
         values: {
           name: contactName,
@@ -359,7 +369,7 @@ export function ConvertLead() {
           account: accountId ?? null,
         },
       });
-      await createDeal({
+      const dealResult = await createDeal({
         resource: "hub_sales_deals",
         values: {
           title: dealTitle,
@@ -369,10 +379,19 @@ export function ConvertLead() {
           owner: ownerId,
         },
       });
+      // The lead is flipped last, and it records where it went — a lead in
+      // `converted` without these three targets would be a dangling state.
       await updateLead({
         resource: "hub_sales_leads",
         id,
-        values: { status: "qualified" },
+        values: {
+          status: "converted",
+          converted_account: accountId ?? null,
+          converted_contact: contactResult?.data?.id ?? null,
+          converted_deal: dealResult?.data?.id ?? null,
+          converted_at: new Date().toISOString(),
+          conversion_key: `hub-lead-${id}`,
+        },
       });
       close({ skipBeforeClose: true });
     } catch {

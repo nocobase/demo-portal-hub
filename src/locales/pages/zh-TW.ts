@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "輸單",
   "sales.enums.leadStatus.new": "新建",
   "sales.enums.leadStatus.qualified": "已甄別",
+  "sales.enums.leadStatus.converted": "已轉化",
   "sales.enums.leadStatus.unqualified": "未通過",
   "sales.enums.leadSource.website": "網站",
   "sales.enums.leadSource.referral": "轉介紹",

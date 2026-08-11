@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "Förlorade",
   "sales.enums.leadStatus.new": "Ny",
   "sales.enums.leadStatus.qualified": "Kvalificerad",
+  "sales.enums.leadStatus.converted": "Konverterad",
   "sales.enums.leadStatus.unqualified": "Okvalificerad",
   "sales.enums.leadSource.website": "Webbplats",
   "sales.enums.leadSource.referral": "Hänvisning",

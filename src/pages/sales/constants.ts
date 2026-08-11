@@ -24,6 +24,7 @@ export const DEAL_STAGES = [
 // Open stages contribute to "pipeline value".
 export const OPEN_DEAL_STAGES = ["inquiry", "quote", "negotiation"];
 
+/** Full status set for display, filtering, scoring and exports. */
 export const LEAD_STATUSES = [
   { value: "new", label: "New", i18nKey: "sales.enums.leadStatus.new" },
   {
@@ -32,11 +33,24 @@ export const LEAD_STATUSES = [
     i18nKey: "sales.enums.leadStatus.qualified",
   },
   {
+    value: "converted",
+    label: "Converted",
+    i18nKey: "sales.enums.leadStatus.converted",
+  },
+  {
     value: "unqualified",
     label: "Unqualified",
     i18nKey: "sales.enums.leadStatus.unqualified",
   },
 ] as const;
+
+/**
+ * Statuses a user may assign directly. `converted` is intentionally excluded:
+ * only the conversion workflow may set it together with its related records.
+ */
+export const MANUAL_LEAD_STATUSES = LEAD_STATUSES.filter(
+  (status) => status.value !== "converted"
+);
 
 export const LEAD_SOURCES = [
   { value: "website", label: "Website", i18nKey: "sales.enums.leadSource.website" },
@@ -106,6 +120,7 @@ const BADGE_CLASSES: Record<string, string> = {
   // lead statuses
   new: "bg-blue-500/15 text-blue-700 dark:text-blue-300",
   qualified: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300",
+  converted: "bg-purple-500/15 text-purple-700 dark:text-purple-300",
   unqualified: "bg-muted text-muted-foreground",
   // lead sources
   website: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300",
@@ -241,6 +256,7 @@ const SOURCE_POINTS: Record<string, number> = {
 };
 
 const STATUS_POINTS: Record<string, number> = {
+  converted: 40,
   qualified: 35,
   new: 20,
   unqualified: 0,

@@ -47,6 +47,7 @@ export const salesLocale = {
     // Enums — lead status
     "sales.enums.leadStatus.new": "New",
     "sales.enums.leadStatus.qualified": "Qualified",
+    "sales.enums.leadStatus.converted": "Converted",
     "sales.enums.leadStatus.unqualified": "Unqualified",
     // Enums — lead source
     "sales.enums.leadSource.website": "Website",
@@ -246,6 +247,8 @@ export const salesLocale = {
     "sales.leads.detail.convert.submitting": "Converting...",
     "sales.leads.detail.convert.error":
       "Conversion failed. Check the fields and try again.",
+    "sales.leads.detail.convert.alreadyConverted":
+      "This lead has already been converted.",
 
     // Activities
     "sales.activities.drawer.create.title": "Log activity",
@@ -395,6 +398,7 @@ export const salesLocale = {
     "sales.leads.views.all": "All leads",
     "sales.leads.views.untouched": "New & unworked",
     "sales.leads.views.qualified": "Qualified",
+    "sales.leads.views.converted": "Converted",
     "sales.leads.views.mine": "My leads",
     "sales.leads.views.thisWeek": "Captured this week",
     "sales.leads.columns.score": "Score",
@@ -405,6 +409,8 @@ export const salesLocale = {
     "sales.leads.kpi.new.hint": "Never contacted",
     "sales.leads.kpi.qualified": "Qualified",
     "sales.leads.kpi.qualified.hint": "Ready to convert",
+    "sales.leads.kpi.converted": "Converted",
+    "sales.leads.kpi.converted.hint": "Became an account",
     "sales.leads.kpi.hot": "Hot on this page",
     "sales.leads.kpi.hot.hint": "Fit score 70+",
     "sales.leads.searchPlaceholder": "Search leads…",
@@ -509,6 +515,7 @@ export const salesLocale = {
     // Enums — lead status
     "sales.enums.leadStatus.new": "新建",
     "sales.enums.leadStatus.qualified": "已甄别",
+    "sales.enums.leadStatus.converted": "已转化",
     "sales.enums.leadStatus.unqualified": "未通过",
     // Enums — lead source
     "sales.enums.leadSource.website": "官网",
@@ -695,6 +702,7 @@ export const salesLocale = {
     "sales.leads.detail.convert.submit": "转化线索",
     "sales.leads.detail.convert.submitting": "转化中...",
     "sales.leads.detail.convert.error": "转化失败，请检查字段后重试。",
+    "sales.leads.detail.convert.alreadyConverted": "该线索已转化，不能重复转化。",
 
     // Activities
     "sales.activities.drawer.create.title": "记录活动",
@@ -840,6 +848,7 @@ export const salesLocale = {
     "sales.leads.views.all": "全部线索",
     "sales.leads.views.untouched": "新线索未跟进",
     "sales.leads.views.qualified": "已确认",
+    "sales.leads.views.converted": "已转化",
     "sales.leads.views.mine": "我的线索",
     "sales.leads.views.thisWeek": "本周新增",
     "sales.leads.columns.score": "评分",
@@ -850,6 +859,8 @@ export const salesLocale = {
     "sales.leads.kpi.new.hint": "尚未联系过",
     "sales.leads.kpi.qualified": "已确认",
     "sales.leads.kpi.qualified.hint": "可以转换",
+    "sales.leads.kpi.converted": "已转化",
+    "sales.leads.kpi.converted.hint": "已建成客户",
     "sales.leads.kpi.hot": "本页高分线索",
     "sales.leads.kpi.hot.hint": "匹配分 70 以上",
     "sales.leads.searchPlaceholder": "搜索线索…",

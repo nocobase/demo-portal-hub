@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "खोया",
   "sales.enums.leadStatus.new": "नया",
   "sales.enums.leadStatus.qualified": "योग्य",
+  "sales.enums.leadStatus.converted": "परिवर्तित",
   "sales.enums.leadStatus.unqualified": "अयोग्य",
   "sales.enums.leadSource.website": "वेबसाइट",
   "sales.enums.leadSource.referral": "रेफरल",

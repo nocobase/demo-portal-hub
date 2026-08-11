@@ -89,8 +89,8 @@ Data model (collection - purpose; key fields):
       fields: stage (inquiry|quote|negotiation|won|lost), expected_close_date, title, account_id, owner_id, amount
       relations: activities -> hub_sales_activities, account -> hub_sales_accounts, owner -> users
   hub_sales_leads - leads
-      fields: status (new|qualified|unqualified), source (website|referral|event|cold_call|partner), company, name, owner_id, email
-      relations: owner -> users
+      fields: status (new|qualified|converted|unqualified), source (website|referral|event|cold_call|partner), company, name, owner_id, email, converted_account_id, converted_contact_id, converted_deal_id, converted_at, conversion_key
+      relations: owner -> users, converted_account -> hub_sales_accounts, converted_contact -> hub_sales_contacts, converted_deal -> hub_sales_deals
 
 Pages:
   /accounts, /activities, /articles, /asset-maintenance, /asset-registry, /assignments, /budget, /cash-flow, /categories, /contacts, /deals, /departments, /employees, /expenses, /faq, /finance, /forecast, /inventory, /invoices, /kb-overview, /kb-search, /kb-tags, /leads, /leave, /leave-calendar, /milestones, /my-tasks, /org-chart, /overview, /procurement-spend, /products, /project-calendar, /projects, /purchase-orders, /reorder, /sales-calendar, /sla-policies, /stock-moves, /suppliers, /tasks, /tickets, /warehouses

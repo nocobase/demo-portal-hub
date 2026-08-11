@@ -1428,6 +1428,7 @@ export const pagesLocale = {
   "sales.enums.dealStage.lost": "Kaybedilen",
   "sales.enums.leadStatus.new": "Yeni",
   "sales.enums.leadStatus.qualified": "Nitelikli",
+  "sales.enums.leadStatus.converted": "Dönüştürüldü",
   "sales.enums.leadStatus.unqualified": "Nitelikli değil",
   "sales.enums.leadSource.website": "Web sitesi",
   "sales.enums.leadSource.referral": "Yönlendirme",
